@@ -52,6 +52,8 @@
   td, th { text-align:left; padding:5px 8px; border-top:1px solid var(--line); vertical-align:top; }
   th { color:var(--dim); font-weight:500; }
   code { font-family:ui-monospace,Menlo,monospace; color:var(--accent); }
+  footer { max-width:960px; margin:0 auto; padding:0 16px 32px; font-size:12px; color:var(--dim); }
+  footer a { color:var(--dim); }
   [hidden] { display:none !important; }
 </style>
 </head>
@@ -69,6 +71,7 @@
         <select id="style">
           <option value="default" selected>Default</option>
           <option value="chill">Chillstep</option>
+          <option value="metal">Rock / Metal</option>
         </select>
       </label>
       <label>Lead
@@ -77,7 +80,7 @@
           <option value="synth">Synth</option>
         </select>
       </label>
-      <label title="Chillstep only: overall pace of the melody. Each section still varies around it.">Melody pace
+      <label title="Chillstep and Rock/Metal: overall pace of the lead melody. Each section still varies around it.">Melody pace
         <select id="gap">
           <option value="4">Busy</option>
           <option value="8" selected>Medium</option>
@@ -141,7 +144,8 @@
         <tr><td><code>" ' `</code> <code>;</code> <code>?</code></td><td>Bell tones.</td></tr>
         <tr><td>Space, <code>, . :</code></td><td>Rest. Tabs mid-line are a longer rest.</td></tr>
         <tr><td>Newline</td><td>A short rest, snapped to the next 8th note. Blank lines add no extra pause.</td></tr>
-        <tr><td>Chillstep style</td><td>About 70 BPM with the melody stretched out and thinned to a few long notes on a steady rhythmic grid that lines up with the drums. Each line is a section with its own pace (mostly slow, sometimes medium, occasionally lively) that opens on its chord root and stays near it, with quiet stepwise filler notes smoothing any leaps; the Melody pace menu (Busy / Medium / Relaxed) shifts all the paces together. A darker piano lead, sub bass, a slow filtered pad, and a big reverb. A half-time drum groove plays underneath (kick on 1, snare on 3, swung hats), and the percussion characters become quiet ghost ticks.</td></tr>
+        <tr><td>Chillstep style</td><td>About 70 BPM with the melody stretched out and thinned to a few long notes on a steady rhythmic grid that lines up with the drums. Each line is a section with its own pace (mostly slow, sometimes medium, occasionally lively) that opens on its chord root and stays near it, with quiet stepwise filler notes smoothing any leaps; the Melody pace menu (Busy / Medium / Relaxed) shifts all the paces together. A darker piano lead, sub bass, a slow filtered pad, and a big reverb. A steady half-time drum groove plays underneath (kick on 1, snare on 3, swung hats) and the kick gently ducks the pad and bass so the drums stay present.</td></tr>
+        <tr><td>Rock / Metal style</td><td>About 150 BPM in Phrygian. Each line is a riff section: palm-muted guitar chugs on straight 8ths, a gallop, a syncopated half-time rhythm, or a driving run. The riff keeps going across line breaks. Only one part speeds up at a time: some sections have the lead run up and down the scale in 8ths over a steady rhythm, and others end in a half-bar burst of 16th chugs and double kick while the lead rests. Common letters chug on the section's root note and rarer ones move up the scale, brackets add power chords, the bass is its own part (several bar shapes that rotate, walking notes that follow the words in the line, and a walk up into the next section's root), and the drums follow the riff with a crash and snare roll into each new section, plus accents from the code (`=` adds kicks, math operators add hats, comparisons add ghost snares). A lead guitar with vibrato plays over the other sections, mostly a note per beat or per 8th with stepwise pickup notes; each section centers on a different scale step so it keeps moving. Guitar and bass are real recorded samples through a distortion and speaker-style filter chain.</td></tr>
         <tr><td>Evolving harmony</td><td>Each line's text picks its own chord root and register; every fourth line returns to the tonic. The melody lands on a chord tone on each beat, the step size depends on the letter pair (not just the letter), word-ending notes are longer, word starts are accented, and each line swells in pitch and volume. Turn it off for the plain mapping.</td></tr>
         <tr><td>Background track</td><td>Canon: the melody is echoed an octave up, a beat or a bar or two later, as a soft sine tone panned slightly right (just the melody, no bass, chords or drums). Alternating lines: odd lines play in the foreground while even lines play at the same time as a lower background voice, each on its own clock. The background cursor is blue.</td></tr>
         <tr><td>Indentation</td><td>Sets the bass note played at the start of each line.</td></tr>
@@ -150,6 +154,11 @@
   </section>
 </main>
 
+<footer>
+  Sounds: <a href="https://tonejs.github.io/">Tone.js</a>. Piano samples: Salamander Grand Piano by Alexander Holm (CC BY 3.0).
+  Guitar and bass samples: <a href="https://github.com/nbrosowsky/tonejs-instruments">tonejs-instruments</a> (CC BY 3.0).
+  Code box: <a href="https://medv.io/codejar/">CodeJar</a> and <a href="https://prismjs.com/">Prism</a>.
+</footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
 <script>
@@ -163,6 +172,43 @@ const PIANO_URLS = {};
 for (let o = 3; o <= 6; o++) {
   for (const [n, f] of [['C', 'C'], ['D#', 'Ds'], ['F#', 'Fs'], ['A', 'A']]) PIANO_URLS[n + o] = f + o + '.mp3';
 }
+// Rock/metal guitar and bass samples from the tonejs-instruments library (CC BY 3.0).
+const INSTR_BASE = 'https://nbrosowsky.github.io/tonejs-instruments/samples/';
+const GUITAR_FILES = { 'C#2': 'Cs2', E2: 'E2', 'F#2': 'Fs2', A2: 'A2', C3: 'C3', 'D#3': 'Ds3', 'F#3': 'Fs3', A3: 'A3',
+  C4: 'C4', 'D#4': 'Ds4', 'F#4': 'Fs4', A4: 'A4', C5: 'C5', 'D#5': 'Ds5', 'F#5': 'Fs5', A5: 'A5', C6: 'C6' };
+const BASS_FILES = { 'A#1': 'As1', 'C#1': 'Cs1', E1: 'E1', G1: 'G1', 'A#2': 'As2', 'C#2': 'Cs2', E2: 'E2', G2: 'G2',
+  'A#3': 'As3', 'C#3': 'Cs3', E3: 'E3', G3: 'G3' };
+// Riff note (scale steps above the section's root) by letter rank in FREQ: common letters chug on the root.
+const METAL_RIFF = [0,0,0,0,2,0,1,3,0,4, 2,3,4,1, 5,2,3,4, 5,1, 6, 2,3,4,5,6];
+// Rhythm patterns per bar (16 units): straight 8ths, gallop, and a syncopated half-time chug.
+const RIFFS = [
+  [0, 2, 4, 6, 8, 10, 12, 14],
+  [0, 2, 3, 4, 6, 7, 8, 10, 11, 12, 14, 15],
+  [0, 3, 4, 6, 8, 11, 12, 14],
+];
+// Bar-to-bar variation, so a riff doesn't loop unchanged: four rhythm variants for straight sections, a
+// move of the riff's root on every second bar (scale steps, picked per section), and four bass bar shapes
+// as [position in bar, semitones above the bar's bass root, length in units].
+const STRAIGHT_VARIANTS = [
+  [0, 2, 4, 6, 8, 10, 12, 14],
+  [0, 2, 4, 7, 8, 10, 12, 15],
+  [0, 2, 4, 6, 8, 10, 12, 14, 15],
+  [0, 3, 4, 6, 8, 11, 12, 14],
+];
+const BAR_ROOT_MOVE = [0, 3, 4, 2, 1];
+const BASS_BARS = [
+  [[0, 0, 3.4], [4, 0, 3.4], [8, 0, 3.4], [12, 0, 3.4]],          // a root on every beat
+  [[0, 0, 7.4], [8, 0, 3.4], [12, 7, 3.4]],                        // long root, root, fifth
+  [[0, 0, 3.4], [4, 12, 3.4], [8, 0, 3.4], [12, 7, 3.4]],          // root, octave, root, fifth
+  [[0, 0, 14]],                                                    // one long root
+];
+// Bass note (scale steps above the section's root) by length of the word it sits on.
+const BASS_WORD = [0, 0, 0, 2, 3, 4, 1, 5];
+const LEAD_PICKS = [0, 1, 1, 1, 2, 2];           // metal lead pace per section: mostly beats and 8ths, some slower
+const LEAD_SHIFT = h => [0, 2, 4, -2, 3][(h >> 5) % 5];   // each section's lead centers on a different scale step
+// Riff type per section, from the line's text hash. 3 is a burst section: the rhythm guitar plays steady 8ths
+// (pattern 0) while the lead runs the scale in 8ths and the drums drive on 8ths.
+const RIFF_PICK = [0, 0, 1, 1, 2, 3];
 const CHILL_SLOW = 1.5;                         // how much chillstep stretches the melody's timeline
 const PROG = [0, 3, 4, 2];                        // pad chord roots by nesting depth
 const BASS = [0, 4, 2, 5, 3];                     // bass degrees by indent level
@@ -208,7 +254,7 @@ function composeTrack(items, key, scale, bg, vary, chill) {
   const n = scale.length, ev = [];
   const sh = bg ? -12 : 0;
   const push = o => ev.push({ tr: bg ? 1 : 0, ...o });
-  const lead = d => degToMidi(57 + key + sh + (chill ? -5 : 0), scale, d);
+  const lead = d => degToMidi((chill ? 48 : 60) + key + sh, scale, d);   // same tonic as pad/bass (C + key)
   const pad  = d => degToMidi(48 + key, scale, d);
   const bass = d => degToMidi(36 + key, scale, d);
   const top  = d => degToMidi(72 + key + sh, scale, d);
@@ -277,7 +323,7 @@ function composeTrack(items, key, scale, bg, vary, chill) {
           v = Math.min(1, (0.5 + (wl === 1 ? 0.2 : 0) + (upper ? 0.25 : 0)) * (0.85 + 0.15 * swell(j)));
         }
         const g = Math.min(pos + off, hi + 4);
-        push({ t, i, k: 'lead', m: lead(g), d, v, w: wl, g, a: root, s: seg, h });
+        push({ t, i, k: 'lead', m: lead(g), d, v, w: wl, g, a: root, s: seg, h, rk: rank });
         t += d;
       } else if (/[0-9]/.test(c)) {
         push({ t, i, k: 'digit', m: degToMidi(60 + key + sh, scale, +c), d: 1, v: 0.7 });
@@ -330,16 +376,13 @@ function composeTrack(items, key, scale, bg, vary, chill) {
 //  - A section opens on its "source note" (the line's chord root) and stays within a few steps of
 //    it, so leaps happen between sections; stepwise filler notes smooth leaps that remain.
 // Chords and bells are thinned, digits go quiet, and the character-driven percussion is reduced to
-// quiet ghost ticks. A half-time drum pattern is laid on top by chillDrums().
+// silent. A steady half-time drum pattern is laid on top by chillDrums().
 function chillify(r, base) {
   const S = CHILL_SLOW;
   const ev = r.events.map(e => {
     const o = { ...e, t: e.t * S };
     if (e.d) o.d = e.d * S;
-    if (e.k === 'digit') { o.k = 'rest'; delete o.m; }
-    else if (e.k === 'kick') { o.k = 'hat'; o.v = 0.3; }
-    else if (e.k === 'hat') o.v = 0.4;
-    else if (e.k === 'snare') o.v = 0.25;
+    if (['digit', 'kick', 'hat', 'snare'].includes(e.k)) { o.k = 'rest'; delete o.m; delete o.v; }
     return o;
   });
   const thin = (kind, minGap) => {
@@ -352,8 +395,13 @@ function chillify(r, base) {
   thin('pad', 18);
   thin('bell', 12);
 
-  // Candidate melody letters, grouped by section. The originals stay as rests so the cursor still
-  // walks through the text.
+  const groups = groupLeads(ev);
+  return { events: ev.concat(gridMelody(r, groups, base, true)), t: r.t * S };
+}
+
+// Pulls the melody letters out of an event list, grouped by section (code line). The originals stay
+// in the list as rests so the cursor still walks through the text.
+function groupLeads(ev) {
   const groups = new Map();
   for (const e of ev) {
     if (e.k !== 'lead') continue;
@@ -361,12 +409,28 @@ function chillify(r, base) {
     groups.get(e.s).push({ ...e });
     e.k = 'rest'; delete e.m;
   }
+  return groups;
+}
 
+// Folds x back into [lo, hi] like a bouncing ball, so values outside the window keep moving instead of
+// all landing on the same edge.
+function fold(x, lo, hi) {
+  const span = hi - lo, period = 2 * span;
+  const y = (((x - lo) % period) + period) % period;
+  return lo + (y > span ? period - y : y);
+}
+
+// Builds a sparse, grid-aligned melody from the section groups (see chillify for the rules).
+// Options (o): picks (which of the slow/medium/lively paces each hash picks), shift(h) (moves a
+// section's anchor away from its root), and fold/lo/hi (keep notes in a window by folding rather
+// than clamping).
+function gridMelody(r, groups, base, withFillers, o = {}) {
+  const picks = o.picks || [0, 0, 0, 1, 1, 2];
   const paces = [base * 2, base, base / 2];            // slow, medium, lively (units; 16 = 1 bar)
   const kept = [];
   let lastT = -99;
   for (const grp of groups.values()) {
-    const pace = paces[[0, 0, 0, 1, 1, 2][grp[0].h % 6]];
+    const pace = paces[picks[grp[0].h % 6]];
     const end = grp[grp.length - 1].t;
     for (let s = Math.round(grp[0].t / pace) * pace; s <= end + pace / 2; s += pace) {
       if (s <= lastT + 1) continue;
@@ -386,12 +450,15 @@ function chillify(r, base) {
   const anchors = new Map();
   const near = (a, c) => a + Math.round((c - a) / n) * n;       // degree matching a (mod n) nearest c
   for (const e of kept) {
-    if (!anchors.has(e.s)) { anchors.set(e.s, near(e.a, n + 1)); e.g = anchors.get(e.s); }
-    else { const A = anchors.get(e.s); e.g = A + Math.max(-3, Math.min(4, e.g - A)); }
+    if (!anchors.has(e.s)) { anchors.set(e.s, near(e.a, n + 1) + (o.shift ? o.shift(e.h) : 0)); e.g = anchors.get(e.s); }
+    else {
+      const A = anchors.get(e.s), u = e.g - A;
+      e.g = A + (o.fold ? fold(u, o.lo, o.hi) : Math.max(-3, Math.min(4, u)));
+    }
     e.m = lead(e.g);
   }
   const fillers = [];
-  kept.forEach((a, j) => {
+  if (withFillers) kept.forEach((a, j) => {
     const b = kept[j + 1];
     if (!b || b.t - a.t < 4) return;
     const leap = b.g - a.g, size = Math.abs(leap), dir = Math.sign(leap);
@@ -402,7 +469,129 @@ function chillify(r, base) {
     }
     a.d = Math.max(2, Math.min(a.d, b.t - a.t - steps * len));
   });
-  return { events: ev.concat(kept, fillers), t: r.t * S };
+  return kept.concat(fillers);
+}
+
+// Rock/metal feel, no time stretch. Each code line is a section with a riff rhythm picked from its
+// text (straight 8ths, gallop, or syncopated half-time):
+//  - Rhythm guitar palm-mute chugs on the riff's slots. Common letters stay on the section's root and
+//    rarer ones move up the scale, so the riff is mostly root-heavy with occasional movement.
+//    A section opens on a ringing power chord, and opening brackets add power-chord stabs.
+//  - The bass doubles every chug, and the drums follow the riff (see metalDrums).
+//  - A sparse lead guitar line is built with the same grid melody as chillstep.
+// Character-driven drums, pads, bells and digits go quiet.
+function metalify(r, key, scale, base) {
+  const n = r.n;
+  const root = d => degToMidi(36 + key, scale, d);
+  const ev = r.events.map(e => {
+    const o = { ...e };
+    if (e.k === 'bass') { o.k = 'rest'; delete o.m; }
+    else if (e.k === 'pad' && e.d === 4) { o.k = 'power'; o.m = e.m[0] - 12; o.v = 0.85; }   // opening bracket: power chord stab
+    else if (['pad', 'bell', 'digit'].includes(e.k)) { o.k = 'rest'; delete o.m; }
+    else if (e.k === 'kick') o.v = 0.55;        // code-driven drum accents: = kick, math hat, comparison snare ghost
+    else if (e.k === 'hat') o.v = 0.5;
+    else if (e.k === 'snare') o.v = 0.4;
+    return o;
+  });
+  const groups = groupLeads(ev);
+  const list = [...groups.values()];
+  const end = Math.ceil(r.t / 16) * 16;
+  const out = [], sections = [], runs = [], calm = new Map();
+  const bassDrop = key >= 4 ? 12 : 0;     // bass an octave under the guitar when that stays above its lowest samples
+  const bassNote = m => m - bassDrop;
+  const near = (a, c) => a + Math.round((c - a) / n) * n;       // degree matching a (mod n) nearest c
+  // The lead sits an octave lower than the shared melody range (roughly E4-E5, where guitar leads live and
+  // the samples are closest to their recorded pitch). Up near G6 the shifted samples turn thin and flute-like.
+  const lowLead = d => r.lead(d - n);
+  list.forEach((grp, gi) => {
+    const h = grp[0].h, pick = RIFF_PICK[h % 6], a = grp[0].a;
+    // A section's riff runs from its first letter until the next section starts, so the guitar never
+    // drops out across line breaks. The first section starts at the very beginning.
+    const spanStart = gi === 0 ? 0 : grp[0].t;
+    const spanEnd = gi + 1 < list.length ? list[gi + 1][0].t : end;
+    // Some sections end in a burst of 16ths leading into the next one.
+    const fillFrom = pick !== 3 && spanEnd - spanStart >= 24 && (h >> 2) % 3 === 0 ? spanEnd - 8 : null;
+    const slots = [];
+    const bar0 = Math.floor(spanStart / 16);
+    const move = bi => (bi % 2 === 1 ? BAR_ROOT_MOVE[(h >> 4) % 5] : 0);      // the riff's root shifts on every second bar
+    // Only one part speeds up at a time: in a burst section the lead takes the fast run while the rhythm
+    // guitar holds steady 8ths, and in a section-ending fill the guitar speeds up while the lead rests.
+    for (let bar = bar0 * 16; bar < spanEnd; bar += 16) {
+      const bi = bar / 16 - bar0;
+      const pat = pick === 0 || pick === 3 ? STRAIGHT_VARIANTS[(bi + (h >> 2)) % 4]
+        : pick === 1 && bi % 4 === 3 ? RIFFS[0] : RIFFS[pick];
+      for (const p of pat) {
+        const t = bar + p;
+        if (t >= spanStart && t < spanEnd && (fillFrom === null || t < fillFrom)) slots.push(t);
+      }
+    }
+    if (fillFrom !== null) for (let t = Math.ceil(fillFrom); t < spanEnd; t++) slots.push(t);
+
+    let first = true;
+    for (const t of slots) {
+      let nearest = null, nd = 2;
+      for (const c of grp) { const d = Math.abs(c.t - t); if (d < nd) { nd = d; nearest = c; } }
+      const bi = Math.floor(t / 16) - bar0;
+      // The last hit of most bars is a turnaround: a step off the root that leads into the next bar.
+      const turn = !first && t % 16 >= 14 && (bi + (h >> 3)) % 3 !== 0 && !(fillFrom !== null && t >= fillFrom);
+      const m = root(a + move(bi) + (turn ? [1, 3, 1, 4, 2][(bi + (h >> 5)) % 5] : nearest ? METAL_RIFF[nearest.rk] : 0));
+      if (first) sections.push({ t0: grp[0].t, pick, tFirst: t, spanEnd, fillFrom });
+      const fast = fillFrom !== null && t >= fillFrom;      // fill 16ths are single, lighter notes: less mush
+      const stab = !first && !fast && bi % 2 === 1 && t % 16 === 8;      // a ringing chord stab mid-bar on every second bar
+      out.push({ t, tr: 0, k: first || stab ? 'power' : 'chug', m, d: first ? 8 : stab ? 4 : 1,
+        v: first ? 0.95 : stab ? 0.9 : fast ? 0.7 : t % 4 === 0 ? 0.95 : 0.78, n: fast ? 1 : undefined });
+      first = false;
+    }
+
+    // The bass is its own part. Each bar picks one of several shapes (roots, octave, fifth, a long note),
+    // follows the riff's root move, and the last beat of a section walks up to the next section's root.
+    // On top of that, every word the line spells out adds a walking note (pitch by word length).
+    const bassOut = [];
+    for (let b = bar0 * 16; b < spanEnd; b += 16) {
+      const bi = b / 16 - bar0, br = bassNote(root(a + move(bi)));
+      for (const [p, up, d] of BASS_BARS[(bi + (h >> 6)) % 4]) {
+        const t = b + p;
+        if (t >= spanStart && t < spanEnd) bassOut.push({ t, tr: 0, k: 'bass', m: br + up, d, v: p === 0 ? 0.92 : 0.8 });
+      }
+    }
+    if (list[gi + 1] && spanEnd - spanStart >= 8) {
+      const stepIn = bassNote(root(list[gi + 1][0].a - 1));
+      const keep = bassOut.filter(e => e.t < spanEnd - 4);
+      bassOut.length = 0;
+      bassOut.push(...keep, { t: spanEnd - 4, tr: 0, k: 'bass', m: stepIn, d: 3, v: 0.78 });
+    }
+    out.push(...bassOut);
+    grp.forEach((c, j) => {
+      if (c.w !== 1 || c.t % 4 === 0 || (list[gi + 1] && c.t >= spanEnd - 4)) return;
+      let len = 1;
+      while (grp[j + len] && grp[j + len].w === len + 1) len++;
+      const next = grp.find((x, k) => k > j && x.w === 1);
+      out.push({ t: c.t, tr: 0, k: 'bass', m: bassNote(root(a + move(Math.floor(c.t / 16) - bar0) + BASS_WORD[Math.min(len, 7)])),
+        d: Math.max(1.5, Math.min(next ? next.t - c.t : 3, 3)), v: 0.68 });
+    });
+
+    if (pick === 3) {
+      // Burst sections: the lead guitar runs up and down the scale in 8th notes, steered by the letters.
+      const A = near(a, n + 1) + LEAD_SHIFT(h);
+      let rp = 0, dir = 1;
+      for (let t = Math.ceil(grp[0].t / 2) * 2; t <= grp[grp.length - 1].t; t += 2) {
+        let c = null, nd = 2;
+        for (const x of grp) { const d = Math.abs(x.t - t); if (d < nd) { nd = d; c = x; } }
+        if (!c) continue;
+        if (c.rk % 4 === 0) dir = -dir;                      // the run turns around now and then
+        rp = fold(rp + dir * (c.rk % 3 === 0 ? 2 : 1), -4, 6);
+        runs.push({ t, tr: 0, k: 'run', m: lowLead(A + rp), d: 1.8, v: t % 8 === 0 ? 0.8 : 0.66 });
+      }
+    } else {
+      calm.set(grp[0].s, grp);
+    }
+  });
+  const fills = sections.filter(x => x.fillFrom !== null);
+  const lead = gridMelody({ ...r, lead: lowLead }, calm, base, true, { picks: LEAD_PICKS, shift: LEAD_SHIFT, fold: true, lo: -4, hi: 6 })
+    .map(e => ({ ...e, v: Math.min(1, e.v * 0.9) }))
+    .filter(e => !fills.some(x => e.t >= x.fillFrom - 0.01 && e.t < x.spanEnd))          // the lead rests while the guitar bursts
+    .map(e => { const f = fills.find(x => e.t < x.fillFrom && e.t + e.d > x.fillFrom); return f ? { ...e, d: Math.max(1, f.fillFrom - e.t) } : e; });
+  return { events: ev.concat(out, lead, runs), t: r.t, sections };
 }
 
 // Half-time groove: kick on 1 (plus a syncopated one every other bar), snare on 3, swung 8th hats.
@@ -419,13 +608,41 @@ function chillDrums(total) {
   return ev;
 }
 
+// Drums for rock/metal that follow each section's riff: a rock beat under straight chugs, kick-and-
+// gallop under galloping chugs, and a sparse half-time pattern under syncopated chugs. A crash lands
+// with each section's opening power chord, and a snare roll leads into it.
+function metalDrums(total, sections) {
+  const KICKS = [[0, 2, 8, 10], [0, 2, 3, 6, 8, 10, 11, 14], [0, 3, 6, 11], [0, 2, 4, 6, 8, 10, 12, 14]];
+  const SNARES = [[4, 12], [4, 12], [8], [4, 12]];
+  const HATS = [[0, 2, 4, 6, 8, 10, 12, 14], [0, 4, 8, 12], [0, 4, 8, 12], [0, 4, 8, 12]];
+  const secs = sections.slice().sort((a, b) => a.t0 - b.t0);
+  const pickAt = t => { let p = secs.length ? secs[0].pick : 0; for (const x of secs) { if (x.t0 <= t) p = x.pick; else break; } return p; };
+  const fills = secs.slice(1).map(x => x.tFirst).filter(t => t >= 4);
+  const inFill = t => fills.some(f => t >= f - 4 && t < f);
+  const bursts = secs.filter(x => x.fillFrom !== null);                 // sections ending in a 16th burst
+  const inBurst = t => bursts.some(x => t >= x.fillFrom && t < x.spanEnd);
+  const ev = [];
+  const hit = (t, k, v) => { if (t < total) ev.push({ t, k, v, tr: 0 }); };
+  for (let b = 0; b < total; b += 16) {
+    const pick = pickAt(b + 8);
+    for (const p of KICKS[pick]) if (!inFill(b + p) && !inBurst(b + p)) hit(b + p, 'kick', p === 0 ? 1 : pick === 3 && p % 4 ? 0.7 : 0.85);
+    for (const p of SNARES[pick]) if (!inFill(b + p)) hit(b + p, 'snare', 0.9);
+    for (const p of HATS[pick]) hit(b + p, 'hat', p % 4 === 0 ? 0.7 : 0.45);
+  }
+  for (const f of fills) for (let k = 0; k < 4; k++) hit(f - 4 + k, 'snare', 0.5 + k * 0.13);
+  for (const x of bursts) for (let t = Math.ceil(x.fillFrom); t < x.spanEnd; t++) if (!inFill(t)) hit(t, 'kick', t % 4 === 0 ? 0.95 : 0.7);
+  if (secs.length) hit(secs[0].tFirst, 'crash', 0.8);
+  for (const f of fills) hit(f, 'crash', 0.8);
+  return ev;
+}
+
 // o.mode: 'off' | 'canon' | 'split'
 //  canon: the background repeats the melody `o.delay` units late, an octave up (lead voice only)
 //  split: code lines alternate between foreground and background tracks, each on its own clock
-// o.vary: evolving harmony; o.chill: chillstep feel; o.gap: chillstep note spacing
+// o.vary: evolving harmony; o.chill: chillstep feel; o.metal: rock/metal feel; o.gap: melody pace
 function compose(text, key, scale, o) {
-  const { mode, delay, vary, chill } = o;
-  const fix = r => chill ? chillify(r, o.gap) : r;
+  const { mode, delay, vary, chill, metal } = o;
+  const fix = r => metal ? metalify(r, key, scale, o.gap / 2) : chill ? chillify(r, o.gap) : r;
   const lines = text.split('\n');
   const tracks = [[], []];
   let idx = 0, k = -1;
@@ -451,15 +668,37 @@ function compose(text, key, scale, o) {
   }
   const total = Math.max(16, Math.ceil(t / 16) * 16);
   if (chill) events = events.concat(chillDrums(total));
+  if (metal) {
+    const grid = metalDrums(total, fg.sections);
+    const taken = new Set(grid.map(e => e.k + '@' + Math.round(e.t)));
+    events = events.filter(e => !['kick', 'hat', 'snare'].includes(e.k) || !taken.has(e.k + '@' + Math.round(e.t))).concat(grid);
+  }
   return { events, total };
 }
 
 /* ---------- Audio ---------- */
 let audio = null;
-function buildAudio(chill, piano) {
+// Downloads and decodes the rock/metal guitar and bass samples once. Samplers are given the raw
+// AudioBuffers (they can't take already-wrapped Tone buffers), so every track shares one copy.
+let metalBufs = null;
+async function loadMetalBuffers() {
+  const load = (dir, files) => Object.fromEntries(Object.entries(files)
+    .map(([note, f]) => [note, new Tone.ToneAudioBuffer(INSTR_BASE + dir + '/' + f + '.mp3')]));
+  const wrapped = { guitar: load('guitar-electric', GUITAR_FILES), bass: load('bass-electric', BASS_FILES) };
+  await Tone.loaded();
+  const raw = set => Object.fromEntries(Object.entries(set).map(([note, b]) => [note, b.get()]));
+  return { guitar: raw(wrapped.guitar), bass: raw(wrapped.bass) };
+}
+
+function buildAudio(chill, piano, metal, bufs) {
   const limiter = new Tone.Limiter(-3).toDestination();   // safety net against pile-ups
+  if (metal) {
+    const reverb = new Tone.Reverb({ decay: 1.6, wet: 0.12 }).connect(limiter);
+    return { reverb, limiter, piano: false, chill: false, metal: true,
+      fg: buildMetalTrack(reverb, false, bufs), bg: buildMetalTrack(reverb, true, bufs) };
+  }
   const reverb = new Tone.Reverb({ decay: chill ? 5.5 : 3, wet: chill ? 0.4 : 0.25 }).connect(limiter);
-  return { reverb, limiter, piano, chill, fg: buildTrack(reverb, false, chill, piano), bg: buildTrack(reverb, true, chill, piano) };
+  return { reverb, limiter, piano, chill, fg: buildTrack(reverb, false, chill, piano, limiter), bg: buildTrack(reverb, true, chill, piano) };
 }
 
 function disposeAudio() {
@@ -472,10 +711,87 @@ function disposeAudio() {
   audio.limiter.dispose();
 }
 
+// The rock/metal voices. Guitars are sampled electric guitar notes run through an amp chain
+// (boost -> distortion -> mid scoop -> speaker-style rolloff). The rhythm guitar has a palm-muted
+// sampler (short release, darker) and a ringing one; the lead has vibrato, lighter distortion and
+// a dotted echo. The bass is sampled and the drums are synthesized. Samples are shared between tracks.
+function buildMetalTrack(reverb, bg, bufs) {
+  const out = new Tone.PanVol(bg ? 0.3 : 0, bg ? -6 : -3).connect(reverb);
+  const group = {};
+  for (const name of ['lead', 'bass', 'pad', 'accent', 'perc']) group[name] = new Tone.Volume(0).connect(out);
+  group.pad.volume.value = -3;       // rhythm guitar: distortion flattens the level, so set it after the amp
+  group.lead.volume.value = -6;      // lead: same reason, and its heavier amp runs hotter
+
+  const amp = new Tone.Gain(2);
+  amp.chain(
+    new Tone.Filter(90, 'highpass'),
+    new Tone.Distortion({ distortion: 0.7, oversample: '4x' }),
+    new Tone.EQ3({ low: 2, mid: -5, high: -3, lowFrequency: 250, highFrequency: 3500 }),
+    new Tone.Filter(4400, 'lowpass', -24),               // speaker-style rolloff
+    group.pad,
+  );
+  const s = {
+    chug: new Tone.Sampler({ urls: bufs.guitar, release: 0.06 }),
+    power: new Tone.Sampler({ urls: bufs.guitar, release: 0.7 }),
+    lead: new Tone.Sampler({ urls: bufs.guitar, release: 0.6 }),
+    run: new Tone.Sampler({ urls: bufs.guitar, release: 0.1 }),      // short-release lead for fast runs
+    bass: new Tone.Sampler({ urls: bufs.bass, release: 0.12 }),
+  };
+  s.chug.chain(new Tone.Filter(1800, 'lowpass'), amp);
+  s.power.connect(amp);
+  // Vibrato starts at zero; held lead notes fade it in after the attack, like a player would (see sound()).
+  const vibrato = new Tone.Vibrato({ frequency: 5.5, depth: 0 });
+  s.vibrato = vibrato;
+  s.run.connect(vibrato);
+  s.lead.chain(
+    vibrato,
+    new Tone.Gain(2),
+    new Tone.Filter(140, 'highpass'),
+    new Tone.Distortion({ distortion: 0.8, oversample: '4x' }),
+    new Tone.EQ3({ low: -2, mid: 3, high: -4, lowFrequency: 300, highFrequency: 3000 }),
+    new Tone.Filter(4400, 'lowpass', -24),                // speaker-style rolloff
+    new Tone.FeedbackDelay({ delayTime: '8n.', feedback: 0.22, wet: 0.1 }),
+    group.lead,
+  );
+  s.bass.chain(new Tone.Filter(1200, 'lowpass'), group.bass);
+  s.chug.volume.value = -11; s.power.volume.value = -11; s.lead.volume.value = -5; s.run.volume.value = -5; s.bass.volume.value = -7;
+  if (!bg) {
+    // Drums are layered so they read as a kit rather than a drum machine: a body tone plus a noise or
+    // click layer for kick and snare, noise-based hats and crash, a bus compressor, and a short room.
+    const bus = new Tone.Compressor({ threshold: -20, ratio: 4, attack: 0.006, release: 0.12 }).connect(group.perc);
+    s.room = new Tone.Reverb({ decay: 0.7, wet: 1 }).connect(group.perc);
+    const toBus = new Tone.Gain(1).connect(bus);
+    toBus.connect(new Tone.Gain(0.22).connect(s.room));
+    const hp = (f, to) => new Tone.Filter(f, 'highpass').connect(to);
+    const bp = (f, q, to) => new Tone.Filter({ frequency: f, type: 'bandpass', Q: q }).connect(to);
+
+    s.kick = new Tone.MembraneSynth({ pitchDecay: 0.025, octaves: 3.5, envelope: { attack: 0.001, decay: 0.34, sustain: 0, release: 0.08 } });
+    s.kickClick = new Tone.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.0005, decay: 0.012, sustain: 0 } });
+    s.snareBody = new Tone.MembraneSynth({ pitchDecay: 0.012, octaves: 1.5, oscillator: { type: 'triangle' }, envelope: { attack: 0.001, decay: 0.12, sustain: 0, release: 0.05 } });
+    s.snare = new Tone.NoiseSynth({ noise: { type: 'pink' }, envelope: { attack: 0.001, decay: 0.2, sustain: 0 } });
+    s.hat = new Tone.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.001, decay: 0.035, sustain: 0 } });
+    s.crash = new Tone.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.004, decay: 1.7, sustain: 0, release: 0.5 } });
+    s.crashM = new Tone.MetalSynth({ frequency: 320, envelope: { attack: 0.001, decay: 1.2, release: 0.3 },
+      harmonicity: 5.1, modulationIndex: 32, resonance: 4000, octaves: 1.5 });
+
+    s.kick.connect(new Tone.Distortion(0.12).connect(toBus));
+    s.kickClick.connect(bp(3000, 0.8, toBus));
+    s.snareBody.connect(toBus);
+    s.snare.connect(bp(3800, 0.5, hp(1100, toBus)));
+    s.hat.connect(hp(8000, toBus));
+    s.crash.connect(hp(3500, toBus));
+    s.crashM.connect(hp(5000, toBus));
+    s.kick.volume.value = -4; s.kickClick.volume.value = -20;
+    s.snareBody.volume.value = -14; s.snare.volume.value = -11;
+    s.hat.volume.value = -21; s.crash.volume.value = -22; s.crashM.volume.value = -32;
+  }
+  return { s, group, out };
+}
+
 // One full set of voices. The background track is quieter, panned a little right,
 // has a softer lead, and has no percussion. `chill` swaps in the chillstep sounds:
 // electric-piano lead with a dotted echo, sub bass, slow filtered pad, deep kick, soft snare.
-function buildTrack(reverb, bg, chill, piano) {
+function buildTrack(reverb, bg, chill, piano, dryOut) {
   const out = new Tone.PanVol(bg ? 0.3 : 0, bg ? -6 : 0).connect(reverb);
   const group = {};
   for (const name of ['lead', 'bass', 'pad', 'accent', 'perc']) {
@@ -487,7 +803,16 @@ function buildTrack(reverb, bg, chill, piano) {
     const echo = new Tone.FeedbackDelay({ delayTime: '8n.', feedback: 0.25, wet: 0.15 }).connect(group.lead);
     leadDst = new Tone.Filter(piano ? 2800 : 3500, 'lowpass').connect(echo);
   }
-  const padFilter = new Tone.Filter(chill ? 800 : 1400, 'lowpass').connect(group.pad);
+  // Pad and bass go through gains the kick briefly dips in chillstep (a simple sidechain duck), so the
+  // drums stay present against the sustained tones.
+  const duckPad = new Tone.Gain(1).connect(group.pad), duckBass = new Tone.Gain(1).connect(group.bass);
+  const padFilter = new Tone.Filter(chill ? 800 : 1400, 'lowpass').connect(duckPad);
+  if (chill && !bg && dryOut) {
+    // Drums skip most of the big chillstep reverb so they keep their punch.
+    group.perc.disconnect();
+    group.perc.connect(dryOut);
+    group.perc.connect(new Tone.Gain(0.3).connect(reverb));
+  }
 
   const s = {
     lead: piano
@@ -523,7 +848,8 @@ function buildTrack(reverb, bg, chill, piano) {
     }),
   };
   s.lead.volume.value = piano ? (bg ? -8 : -4) : chill && !bg ? -10 : -8;   s.lead.connect(leadDst);
-  s.bass.volume.value = chill ? -14 : -10;           s.bass.connect(group.bass);
+  s.bass.volume.value = chill ? -14 : -10;           s.bass.connect(duckBass);
+  s.duckPad = duckPad; s.duckBass = duckBass;
   s.pad.volume.value = chill ? -22 : -20;          s.pad.connect(padFilter);
   s.digit.volume.value = -16;                      s.digit.connect(group.accent);
   s.bell.volume.value = chill ? -22 : -18;         s.bell.connect(group.accent);
@@ -536,9 +862,9 @@ function buildTrack(reverb, bg, chill, piano) {
       : new Tone.MembraneSynth({ pitchDecay: 0.04, octaves: 5 });
     s.hat = new Tone.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.001, decay: chill ? 0.03 : 0.04, sustain: 0 } });
     s.snare = new Tone.NoiseSynth({ noise: { type: 'pink' }, envelope: { attack: 0.001, decay: chill ? 0.28 : 0.14, sustain: 0 } });
-    s.kick.volume.value = chill ? -2 : -4;   s.kick.connect(group.perc);
-    s.hat.volume.value = chill ? -28 : -22;  s.hat.connect(hatFilter);
-    s.snare.volume.value = chill ? -12 : -18; s.snare.connect(snrFilter);
+    s.kick.volume.value = chill ? -11 : -4;  s.kick.connect(group.perc);
+    s.hat.volume.value = chill ? -20 : -22;  s.hat.connect(hatFilter);      // chillstep hats/snare were ~30 dB under the kick
+    s.snare.volume.value = chill ? 0 : -18;  s.snare.connect(snrFilter);
   }
   return { s, group, out };
 }
@@ -552,22 +878,63 @@ function applyMix() {
   audio.bg.out.volume.value = +$('bgvol').value;
 }
 
+// Deterministic pseudo-random value in [0, 1), so the "human" variation is the same every time the
+// same code is played.
+const rnd = x => { const y = Math.sin(x * 12.9898) * 43758.5453; return y - Math.floor(y); };
+
 function sound(e, time) {
   const { s } = e.tr ? audio.bg : audio.fg;
   const unit = Tone.Time('16n').toSeconds();
   const dur = (e.d || 1) * unit * 0.9;
   const hz = m => Tone.Midi(m).toFrequency();
+  let v = e.v;
+  if (audio.metal) {
+    // Human feel: a few milliseconds of timing drift and a little velocity variation (drums are tighter).
+    const r1 = rnd(e.t + (e.m || 0) * 0.37 + (e.tr || 0) * 5.1), r2 = rnd(e.t * 1.7 + (e.m || 0) + 3.3);
+    const tight = e.k === 'kick' || e.k === 'snare' || e.k === 'hat' || e.k === 'crash';
+    time += (r1 - 0.5) * (tight ? 0.006 : 0.014);
+    if (v !== undefined) v = Math.min(1, v * (0.9 + 0.2 * r2));
+  }
   try {
     switch (e.k) {
-      // A held-pedal feel: piano notes ring on past their slot so they blend into the next one.
-      case 'lead':  s.lead.triggerAttackRelease(hz(e.m), audio.piano ? dur * (audio.chill ? 1.3 : 2) : dur, time, audio.piano ? e.v * (audio.chill ? 0.7 : 0.85) : e.v); break;
-      case 'bass':  s.bass.triggerAttackRelease(hz(e.m), dur, time, e.v); break;
-      case 'digit': s.digit.triggerAttackRelease(hz(e.m), dur, time, e.v); break;
-      case 'bell':  s.bell.triggerAttackRelease(hz(e.m), dur, time, e.v); break;
-      case 'pad':   s.pad.triggerAttackRelease(e.m.map(hz), dur, time, e.v); break;
-      case 'kick':  s.kick.triggerAttackRelease('C1', '16n', time, e.v ?? 0.9); break;
-      case 'hat':   s.hat.triggerAttackRelease('32n', time, e.v ?? 0.6); break;
-      case 'snare': s.snare.triggerAttackRelease('16n', time, e.v ?? 0.7); break;
+      case 'lead':
+        if (audio.metal) {                       // held notes get vibrato after a moment; short ones stay straight
+          const depth = s.vibrato.depth;
+          depth.cancelScheduledValues(time);
+          depth.setValueAtTime(0, time);
+          if (dur > 0.4) depth.linearRampToValueAtTime(0.22, time + Math.min(dur * 0.8, 0.6));
+        }
+        // A held-pedal feel for piano: notes ring on past their slot so they blend into the next one.
+        s.lead.triggerAttackRelease(hz(e.m), audio.piano ? dur * (audio.chill ? 1.3 : 2) : dur, time, audio.piano ? v * (audio.chill ? 0.7 : 0.85) : v);
+        break;
+      case 'chug':  s.chug.triggerAttackRelease((e.n === 1 ? [e.m] : [e.m, e.m + 7, e.m + 12]).map(hz), dur * 0.6, time, v); break;
+      case 'power': s.power.triggerAttackRelease([e.m, e.m + 7, e.m + 12].map(hz), dur, time, v); break;
+      case 'run':
+        if (audio.metal) s.vibrato.depth.setValueAtTime(0, time);
+        s.run.triggerAttackRelease(hz(e.m), dur * 0.7, time, v);
+        break;
+      case 'crash':
+        s.crash.triggerAttackRelease(1.4, time, v);
+        if (s.crashM) s.crashM.triggerAttackRelease('4n', time, v * 0.6);
+        break;
+      case 'bass':  s.bass.triggerAttackRelease(hz(e.m), dur, time, v); break;
+      case 'digit': s.digit.triggerAttackRelease(hz(e.m), dur, time, v); break;
+      case 'bell':  s.bell.triggerAttackRelease(hz(e.m), dur, time, v); break;
+      case 'pad':   s.pad.triggerAttackRelease(e.m.map(hz), dur, time, v); break;
+      case 'kick':
+        if (audio.chill && !e.tr) for (const g of [s.duckPad, s.duckBass]) {        // dip the sustained tones under the kick
+          g.gain.cancelScheduledValues(time);
+          g.gain.setValueAtTime(0.55, time);
+          g.gain.linearRampToValueAtTime(1, time + 0.35);
+        }
+        s.kick.triggerAttackRelease(audio.metal ? 'F1' : 'C1', '16n', time, v ?? 0.9);
+        if (s.kickClick) s.kickClick.triggerAttackRelease('64n', time, v ?? 0.9);
+        break;
+      case 'hat':   s.hat.triggerAttackRelease('32n', time, v ?? 0.6); break;
+      case 'snare':
+        s.snare.triggerAttackRelease('16n', time, v ?? 0.7);
+        if (s.snareBody) s.snareBody.triggerAttackRelease('G3', '32n', time, (v ?? 0.7) * 0.9);
+        break;
     }
   } catch (err) { /* monophonic voices can reject a duplicate start time; skip it */ }
 }
@@ -617,7 +984,8 @@ async function initEditor() {
 const getKey = () => +$('key').value;
 const getScale = () => SCALES[$('scale').value];
 const isChill = () => $('style').value === 'chill';
-const getOpts = () => ({ mode: $('bgmode').value, delay: +$('delay').value, vary: $('vary').checked, chill: isChill(), gap: +$('gap').value });
+const isMetal = () => $('style').value === 'metal';
+const getOpts = () => ({ mode: $('bgmode').value, delay: +$('delay').value, vary: $('vary').checked, chill: isChill(), metal: isMetal(), gap: +$('gap').value });
 
 // Per-character Prism token classes for the whole text (null if Prism isn't available), so the
 // playback view can colour each line even when a token, like a comment, spans several lines.
@@ -732,21 +1100,50 @@ function rebuild() {
   updateStats(text.length, total);
 }
 
-// (Re)builds the voices and waits for the piano samples. If they can't be fetched
-// (offline, blocked), falls back to the synth lead.
+// Sets the tempo and scale that go with the selected style (both can be changed afterwards).
+function applyStyleDefaults() {
+  const st = $('style').value;
+  $('tempo').value = { chill: 70, metal: 150 }[st] || 130;
+  $('tempoVal').textContent = $('tempo').value;
+  Tone.Transport.bpm.value = +$('tempo').value;
+  $('scale').value = { chill: 'Natural minor', metal: 'Phrygian' }[st] || 'Dorian';
+  $('leadsound').disabled = st === 'metal';       // the metal lead is always a guitar
+}
+
+// (Re)builds the voices and waits for the samples (piano, or guitar and bass for rock/metal). If
+// they can't be fetched (offline, blocked), falls back to something that needs no downloads.
 async function loadAudio() {
   if (audio) disposeAudio();
-  audio = buildAudio(isChill(), $('leadsound').value === 'piano');
-  applyMix();
-  if (!audio.piano) return;
+  const metal = isMetal(), piano = !metal && $('leadsound').value === 'piano';
   const label = playBtn.textContent;
+  if (metal) {
+    playBtn.textContent = 'Loading guitars…';
+    try {
+      metalBufs = metalBufs || await loadMetalBuffers();
+    } catch (err) {
+      metalBufs = null;
+      $('style').value = 'default';
+      applyStyleDefaults();
+      playBtn.textContent = label;
+      await loadAudio();
+      $('stats').textContent = 'Guitar samples could not be loaded, so the Default style is being used.';
+      return;
+    }
+    audio = buildAudio(false, false, true, metalBufs);
+    applyMix();
+    playBtn.textContent = label;
+    return;
+  }
+  audio = buildAudio(isChill(), piano, false);
+  applyMix();
+  if (!piano) return;
   playBtn.textContent = 'Loading piano…';
   try {
     await Tone.loaded();
   } catch (err) {
-    $('leadsound').value = 'synth';
     disposeAudio();
-    audio = buildAudio(isChill(), false);
+    $('leadsound').value = 'synth';
+    audio = buildAudio(isChill(), false, false);
     applyMix();
     $('stats').textContent = 'Piano samples could not be loaded, so the synth lead is being used.';
   }
@@ -787,13 +1184,8 @@ $('loop').onchange = () => { if (playing) rebuild(); };
 $('layers').onchange = applyMix;
 $('bgvol').oninput = applyMix;
 $('bgmode').onchange = $('delay').onchange = $('vary').onchange = () => { if (playing) rebuild(); };
-// Picking a style also sets its tempo and scale; both can still be changed afterwards.
 $('style').onchange = () => {
-  const chill = isChill();
-  $('tempo').value = chill ? 70 : 130;
-  $('tempoVal').textContent = $('tempo').value;
-  Tone.Transport.bpm.value = +$('tempo').value;
-  $('scale').value = chill ? 'Natural minor' : 'Dorian';
+  applyStyleDefaults();
   if (audio) loadAudio();
   if (playing) rebuild(); else updateStats(getText().length, compose(getText(), getKey(), getScale(), getOpts()).total);
 };
