@@ -1,0 +1,740 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>rad.io</title>
+<style>
+  :root {
+    --bg:#14151a; --panel:#1c1e26; --line:#2b2e3a; --text:#d9dce6; --dim:#8a8fa3;
+    --accent:#f2b24c; --accent-ink:#1a1305;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text);
+         font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif; }
+  main { max-width:960px; margin:0 auto; padding:24px 16px 48px; }
+  h1 { font-size:22px; margin:0 0 4px; }
+  header p { margin:0 0 20px; color:var(--dim); }
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px; margin-bottom:16px; }
+  .controls { display:flex; flex-wrap:wrap; gap:12px 18px; align-items:center; }
+  label { display:flex; align-items:center; gap:6px; color:var(--dim); font-size:13px; }
+  select, input[type=range] { accent-color:var(--accent); }
+  select, button { background:var(--bg); color:var(--text); border:1px solid var(--line);
+                   border-radius:6px; padding:6px 10px; font:inherit; font-size:13px; }
+  button { cursor:pointer; }
+  button:hover { border-color:var(--dim); }
+  button.primary { background:var(--accent); color:var(--accent-ink); border-color:var(--accent);
+                   font-weight:600; font-size:14px; padding:8px 20px; }
+  .layers { margin-top:12px; padding-top:12px; border-top:1px solid var(--line); }
+  .code { width:100%; height:380px; overflow:auto; margin:0; padding:12px;
+          background:var(--bg); border:1px solid var(--line); border-radius:8px; color:var(--text);
+          font:13px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace; tab-size:2; }
+  textarea.code { resize:vertical; display:block; }
+  #view { position:relative; }
+  #view div { white-space:pre; min-height:1.55em; }
+  #view mark { background:var(--accent); color:var(--accent-ink); border-radius:2px; }
+  #view mark.bg { background:#6fb7c9; }
+  .meta { margin-top:8px; font-size:12px; color:var(--dim); display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  details summary { cursor:pointer; color:var(--dim); font-size:13px; }
+  table { border-collapse:collapse; width:100%; margin-top:10px; font-size:13px; }
+  td, th { text-align:left; padding:5px 8px; border-top:1px solid var(--line); vertical-align:top; }
+  th { color:var(--dim); font-weight:500; }
+  code { font-family:ui-monospace,Menlo,monospace; color:var(--accent); }
+  [hidden] { display:none !important; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>rad.io</h1>
+    <p>Paste or drop any JavaScript. Every character becomes part of the music.</p>
+  </header>
+
+  <section class="panel">
+    <div class="controls">
+      <button id="play" class="primary">▶ Play</button>
+      <label>Style
+        <select id="style">
+          <option value="default" selected>Default</option>
+          <option value="chill">Chillstep</option>
+        </select>
+      </label>
+      <label>Lead
+        <select id="leadsound">
+          <option value="piano" selected>Piano</option>
+          <option value="synth">Synth</option>
+        </select>
+      </label>
+      <label title="Chillstep only: overall pace of the melody. Each section still varies around it.">Melody pace
+        <select id="gap">
+          <option value="4">Busy</option>
+          <option value="8" selected>Medium</option>
+          <option value="16">Relaxed</option>
+        </select>
+      </label>
+      <label>Key
+        <select id="key"></select>
+      </label>
+      <label>Scale
+        <select id="scale"></select>
+      </label>
+      <label>Tempo
+        <input id="tempo" type="range" min="60" max="220" value="130">
+        <span id="tempoVal">130</span>
+      </label>
+      <label><input id="loop" type="checkbox"> Loop</label>
+      <label><input id="vary" type="checkbox" checked> Evolving harmony</label>
+      <label>Background
+        <select id="bgmode">
+          <option value="canon" selected>Canon (echo)</option>
+          <option value="split">Alternating lines</option>
+          <option value="off">Off</option>
+        </select>
+      </label>
+      <label>Canon delay
+        <select id="delay">
+          <option value="8">2 beats</option>
+          <option value="16" selected>1 bar</option>
+          <option value="32">2 bars</option>
+        </select>
+      </label>
+      <label>BG volume
+        <input id="bgvol" type="range" min="-24" max="0" value="-8">
+      </label>
+      <label>File <input id="file" type="file" accept=".js,.mjs,.cjs,.jsx,.ts,.tsx,.json,.txt"></label>
+      <button id="sample">Sample</button>
+    </div>
+    <div class="controls layers" id="layers"></div>
+  </section>
+
+  <section class="panel">
+    <textarea id="src" class="code" spellcheck="false" aria-label="Source code"></textarea>
+    <div id="view" class="code" hidden></div>
+    <div class="meta"><span id="stats"></span><span>Drop a file onto the code area to load it</span></div>
+  </section>
+
+  <section class="panel">
+    <details>
+      <summary>How characters map to sound</summary>
+      <table>
+        <tr><th>Character</th><th>Sound</th></tr>
+        <tr><td>Letters, <code>_</code> <code>$</code></td><td>Lead melody (a sampled grand piano by default, with notes that ring on into the next one; there's a synth lead option too). Common letters move the melody by small steps, rare letters make bigger leaps. Doubled letters repeat the note, and the previous/current pair picks the note length. Capitals are accented.</td></tr>
+        <tr><td>Digits</td><td>Plucked note at that scale degree (0–9).</td></tr>
+        <tr><td><code>=</code></td><td>Kick drum</td></tr>
+        <tr><td><code>+ - * / %</code></td><td>Hi-hat</td></tr>
+        <tr><td><code>&lt; &gt; ! &amp; | ^ ~</code></td><td>Snare</td></tr>
+        <tr><td><code>( [ {</code></td><td>Pad chord that moves with nesting depth; the melody also climbs higher the deeper you are.</td></tr>
+        <tr><td><code>) ] }</code></td><td>Soft resolution chord on the tonic.</td></tr>
+        <tr><td><code>" ' `</code> <code>;</code> <code>?</code></td><td>Bell tones.</td></tr>
+        <tr><td>Space, <code>, . :</code></td><td>Rest. Tabs mid-line are a longer rest.</td></tr>
+        <tr><td>Newline</td><td>A short rest, snapped to the next 8th note. Blank lines add no extra pause.</td></tr>
+        <tr><td>Chillstep style</td><td>About 70 BPM with the melody stretched out and thinned to a few long notes on a steady rhythmic grid that lines up with the drums. Each line is a section with its own pace (mostly slow, sometimes medium, occasionally lively) that opens on its chord root and stays near it, with quiet stepwise filler notes smoothing any leaps; the Melody pace menu (Busy / Medium / Relaxed) shifts all the paces together. A darker piano lead, sub bass, a slow filtered pad, and a big reverb. A half-time drum groove plays underneath (kick on 1, snare on 3, swung hats), and the percussion characters become quiet ghost ticks.</td></tr>
+        <tr><td>Evolving harmony</td><td>Each line's text picks its own chord root and register; every fourth line returns to the tonic. The melody lands on a chord tone on each beat, the step size depends on the letter pair (not just the letter), word-ending notes are longer, word starts are accented, and each line swells in pitch and volume. Turn it off for the plain mapping.</td></tr>
+        <tr><td>Background track</td><td>Canon: the melody is echoed an octave up, a beat or a bar or two later, as a soft sine tone panned slightly right (just the melody, no bass, chords or drums). Alternating lines: odd lines play in the foreground while even lines play at the same time as a lower background voice, each on its own clock. The background cursor is blue.</td></tr>
+        <tr><td>Indentation</td><td>Sets the bass note played at the start of each line.</td></tr>
+      </table>
+    </details>
+  </section>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+<script>
+/* ---------- Mapping tables ---------- */
+const FREQ = 'etaoinshrdlcumwfgypbvkjxqz';        // letters, most to least common
+const DUR  = [1, 1, 1, 2, 1, 1, 2, 3];            // note lengths in 16ths, picked by letter pair
+const STEPS = [1, -1, 2, -2, 1, 3, -3, 0, -1, 2, -2, 4, -4];   // melodic steps picked by letter pair
+// Salamander grand piano samples (Tone.js demo assets). The lead covers roughly C3-C7.
+const PIANO_BASE = 'https://tonejs.github.io/audio/salamander/';
+const PIANO_URLS = {};
+for (let o = 3; o <= 6; o++) {
+  for (const [n, f] of [['C', 'C'], ['D#', 'Ds'], ['F#', 'Fs'], ['A', 'A']]) PIANO_URLS[n + o] = f + o + '.mp3';
+}
+const CHILL_SLOW = 1.5;                         // how much chillstep stretches the melody's timeline
+const PROG = [0, 3, 4, 2];                        // pad chord roots by nesting depth
+const BASS = [0, 4, 2, 5, 3];                     // bass degrees by indent level
+const KEYS = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const SCALES = {
+  'Minor pentatonic': [0,3,5,7,10],
+  'Major pentatonic': [0,2,4,7,9],
+  'Dorian':           [0,2,3,5,7,9,10],
+  'Natural minor':    [0,2,3,5,7,8,10],
+  'Major':            [0,2,4,5,7,9,11],
+  'Lydian':           [0,2,4,6,7,9,11],
+  'Phrygian':         [0,1,3,5,7,8,10],
+};
+const SAMPLE = `// A tiny fizzbuzz, to hear what code sounds like
+function fizzbuzz(limit = 30) {
+  const out = [];
+  for (let i = 1; i <= limit; i++) {
+    if (i % 15 === 0) {
+      out.push("FizzBuzz");
+    } else if (i % 3 === 0) {
+      out.push("Fizz");
+    } else if (i % 5 === 0) {
+      out.push("Buzz");
+    } else {
+      out.push(String(i));
+    }
+  }
+  return out;
+}
+
+console.log(fizzbuzz().join(", "));
+`;
+
+/* ---------- Composition: text -> timed events ---------- */
+function degToMidi(root, scale, d) {
+  const n = scale.length;
+  return root + Math.floor(d / n) * 12 + scale[((d % n) + n) % n];
+}
+
+// Plays one track's lines in order; times are in 16th-note units. The background track
+// sits an octave lower and drops the percussion (those characters become rests).
+function composeTrack(items, key, scale, bg, vary, chill) {
+  const n = scale.length, ev = [];
+  const sh = bg ? -12 : 0;
+  const push = o => ev.push({ tr: bg ? 1 : 0, ...o });
+  const lead = d => degToMidi(57 + key + sh + (chill ? -5 : 0), scale, d);
+  const pad  = d => degToMidi(48 + key, scale, d);
+  const bass = d => degToMidi(36 + key, scale, d);
+  const top  = d => degToMidi(72 + key + sh, scale, d);
+
+  let t = 0, pos = n, depth = 0, prev = '';
+  const lo = 0, hi = 2 * n;
+  const isWord = ch => /[a-z_$]/i.test(ch);
+  let lineNo = -1, seg = -1;
+
+  items.forEach(({ line, idx, more }) => {
+    const ws = line.match(/^[ \t]*/)[0];
+    const indent = Math.round([...ws].reduce((a, c) => a + (c === '\t' ? 2 : 1), 0) / 2);
+    const blank = ws.length === line.length;
+    if (!blank) seg++;
+    const len = Math.max(1, line.length - ws.length);
+    const swell = j => Math.sin(Math.PI * (j - ws.length) / len);   // 0 -> 1 -> 0 across the line
+
+    // With vary on, each line gets its own chord root and register, derived from its text.
+    // Every fourth code line returns to the tonic so the harmony still resolves.
+    let root = 0, reg = 0, wl = 0, h = 0;
+    if (!blank) for (const ch of line.trim()) h = (h * 31 + ch.charCodeAt(0)) % 9973;
+    if (vary && !blank) {
+      lineNo++;
+      root = lineNo % 4 === 0 ? 0 : h % n;
+      reg = [0, 1, -1, 2, 1][(h >> 3) % 5];
+    }
+    const tones = [root, root + 2, root + 4].map(d => d % n);
+
+    if (!blank) {
+      push({ t, i: idx + ws.length, k: 'bass', m: bass((root + BASS[indent % BASS.length]) % n), d: 4, v: 0.6 });
+      if (vary) push({ t, i: idx + ws.length, k: 'pad', m: [pad(root), pad(root + 2), pad(root + 4)], d: 8, v: 0.3 });
+    }
+
+    for (let j = ws.length; j < line.length; j++) {
+      const c = line[j], i = idx + j;
+      const lc = c.toLowerCase();
+      wl = /[a-z_$0-9]/i.test(c) ? wl + 1 : 0;
+
+      if (/[a-z_$]/i.test(c)) {
+        const rank = /[_$]/.test(c) ? 12 : FREQ.indexOf(lc);
+        let step = (rank % 2 ? -1 : 1) * (1 + Math.floor(rank / 6));
+        if (vary) {
+          const pr = isWord(prev) ? (/[_$]/.test(prev) ? 12 : FREQ.indexOf(prev.toLowerCase())) : 13;
+          step = STEPS[(pr * 5 + rank * 3) % STEPS.length];
+        }
+        if (prev === c) step = 0;
+        let next = pos + step;
+        if (next < lo || next > hi) next = pos - step;
+        pos = Math.max(lo, Math.min(hi, next));
+        let d = DUR[(prev.charCodeAt(0) * 3 + c.charCodeAt(0)) % DUR.length || 0] || 1;
+        const upper = c !== lc;
+        let off = Math.min(depth, 3) * 2, v = upper ? 0.95 : 0.55;
+        if (vary) {
+          off += reg + Math.round(1.5 * swell(j));
+          // On the beat, land on the nearest tone of this line's chord.
+          if (t % 4 === 0) {
+            let best = pos, bd = 99;
+            for (const tn of tones) {
+              const cand = tn + Math.round((pos + off - tn) / n) * n;
+              if (Math.abs(cand - pos - off) < bd) { bd = Math.abs(cand - pos - off); best = cand - off; }
+            }
+            pos = Math.max(lo, Math.min(hi, best));
+          }
+          // Longer note to close a word of 3+ letters; accent word starts; shape dynamics over the line.
+          if (wl >= 3 && !/[a-z_$0-9]/i.test(line[j + 1] || ' ')) d = Math.max(d, 2);
+          v = Math.min(1, (0.5 + (wl === 1 ? 0.2 : 0) + (upper ? 0.25 : 0)) * (0.85 + 0.15 * swell(j)));
+        }
+        const g = Math.min(pos + off, hi + 4);
+        push({ t, i, k: 'lead', m: lead(g), d, v, w: wl, g, a: root, s: seg, h });
+        t += d;
+      } else if (/[0-9]/.test(c)) {
+        push({ t, i, k: 'digit', m: degToMidi(60 + key + sh, scale, +c), d: 1, v: 0.7 });
+        t += 1;
+      } else if (c === '=') {
+        push({ t, i, k: bg ? 'rest' : 'kick' }); t += 1;
+      } else if ('+-*/%'.includes(c)) {
+        push({ t, i, k: bg ? 'rest' : 'hat' }); t += 1;
+      } else if ('<>!&|^~'.includes(c)) {
+        push({ t, i, k: bg ? 'rest' : 'snare' }); t += 1;
+      } else if ('([{'.includes(c)) {
+        depth++;
+        const r = root + PROG[depth % PROG.length];
+        push({ t, i, k: 'pad', m: [pad(r), pad(r + 2), pad(r + 4)], d: 4, v: 0.5 });
+        t += 1;
+      } else if (')]}'.includes(c)) {
+        depth = Math.max(0, depth - 1);
+        push({ t, i, k: 'pad', m: [pad(root), pad(root + 2), pad(root + 4)], d: 2, v: 0.4 });
+        t += 1;
+      } else if ('"\'`'.includes(c)) {
+        push({ t, i, k: 'bell', m: top(4), d: 2, v: 0.5 }); t += 1;
+      } else if (c === ';') {
+        push({ t, i, k: 'bell', m: top(n), d: 2, v: 0.6 }); t += 1;
+      } else if (c === '?') {
+        push({ t, i, k: 'bell', m: top(2), d: 2, v: 0.5 }); t += 1;
+      } else if (c === '\t') {
+        push({ t, i, k: 'rest' }); t += 2;
+      } else {
+        push({ t, i, k: 'rest' }); t += 1;     // space , . : and anything unmapped
+      }
+      prev = c;
+    }
+
+    if (more) {
+      push({ t, i: idx + line.length, k: 'rest' });
+      // Blank lines add no time, so runs of them cost nothing beyond the preceding line's break.
+      if (!blank) t = Math.ceil((t + 1) / 2) * 2;
+      prev = '\n';
+    }
+  });
+
+  return { events: ev, t, lead, n };
+}
+
+// Chillstep feel. Everything is stretched in time, then the melody is rebuilt on a rhythmic grid:
+//  - Each code line is a section with its own pace (picked from the line's text): mostly slow
+//    (a note every 2 bars... of the grid below), sometimes medium, occasionally lively.
+//  - Grid steps are multiples of `base` units (16 units = 1 bar), so the notes stay in time with
+//    the drums. Near each grid step the nearest letter supplies the pitch, preferring word starts.
+//  - A section opens on its "source note" (the line's chord root) and stays within a few steps of
+//    it, so leaps happen between sections; stepwise filler notes smooth leaps that remain.
+// Chords and bells are thinned, digits go quiet, and the character-driven percussion is reduced to
+// quiet ghost ticks. A half-time drum pattern is laid on top by chillDrums().
+function chillify(r, base) {
+  const S = CHILL_SLOW;
+  const ev = r.events.map(e => {
+    const o = { ...e, t: e.t * S };
+    if (e.d) o.d = e.d * S;
+    if (e.k === 'digit') { o.k = 'rest'; delete o.m; }
+    else if (e.k === 'kick') { o.k = 'hat'; o.v = 0.3; }
+    else if (e.k === 'hat') o.v = 0.4;
+    else if (e.k === 'snare') o.v = 0.25;
+    return o;
+  });
+  const thin = (kind, minGap) => {
+    let last = -99;
+    for (const e of ev) {
+      if (e.k !== kind) continue;
+      if (e.t - last < minGap) { e.k = 'rest'; delete e.m; } else last = e.t;
+    }
+  };
+  thin('pad', 18);
+  thin('bell', 12);
+
+  // Candidate melody letters, grouped by section. The originals stay as rests so the cursor still
+  // walks through the text.
+  const groups = new Map();
+  for (const e of ev) {
+    if (e.k !== 'lead') continue;
+    if (!groups.has(e.s)) groups.set(e.s, []);
+    groups.get(e.s).push({ ...e });
+    e.k = 'rest'; delete e.m;
+  }
+
+  const paces = [base * 2, base, base / 2];            // slow, medium, lively (units; 16 = 1 bar)
+  const kept = [];
+  let lastT = -99;
+  for (const grp of groups.values()) {
+    const pace = paces[[0, 0, 0, 1, 1, 2][grp[0].h % 6]];
+    const end = grp[grp.length - 1].t;
+    for (let s = Math.round(grp[0].t / pace) * pace; s <= end + pace / 2; s += pace) {
+      if (s <= lastT + 1) continue;
+      let best = null, bestScore = Infinity;
+      for (const c of grp) {
+        const dist = Math.abs(c.t - s);
+        if (dist >= pace / 2) continue;
+        const score = dist + (c.w === 1 ? 0 : pace);
+        if (score < bestScore) { bestScore = score; best = c; }
+      }
+      if (best) { kept.push({ ...best, t: s }); lastT = s; }
+    }
+  }
+  kept.forEach((e, j) => { delete e.i; e.d = Math.max(2, Math.min(kept[j + 1] ? kept[j + 1].t - e.t : 8, 16)); });
+
+  const { lead, n } = r;
+  const anchors = new Map();
+  const near = (a, c) => a + Math.round((c - a) / n) * n;       // degree matching a (mod n) nearest c
+  for (const e of kept) {
+    if (!anchors.has(e.s)) { anchors.set(e.s, near(e.a, n + 1)); e.g = anchors.get(e.s); }
+    else { const A = anchors.get(e.s); e.g = A + Math.max(-3, Math.min(4, e.g - A)); }
+    e.m = lead(e.g);
+  }
+  const fillers = [];
+  kept.forEach((a, j) => {
+    const b = kept[j + 1];
+    if (!b || b.t - a.t < 4) return;
+    const leap = b.g - a.g, size = Math.abs(leap), dir = Math.sign(leap);
+    if (size < 3) return;
+    const steps = size >= 6 ? 2 : 1, len = steps === 2 ? 1.5 : 2;
+    for (let k = steps; k >= 1; k--) {
+      fillers.push({ t: b.t - k * len, k: 'lead', m: lead(b.g - dir * k), d: len, v: a.v * 0.65, tr: a.tr });
+    }
+    a.d = Math.max(2, Math.min(a.d, b.t - a.t - steps * len));
+  });
+  return { events: ev.concat(kept, fillers), t: r.t * S };
+}
+
+// Half-time groove: kick on 1 (plus a syncopated one every other bar), snare on 3, swung 8th hats.
+function chillDrums(total) {
+  const ev = [];
+  for (let b = 0; b < total; b += 16) {
+    ev.push({ t: b, k: 'kick', v: 0.9, tr: 0 });
+    if ((b / 16) % 2 === 1) ev.push({ t: b + 10, k: 'kick', v: 0.6, tr: 0 });
+    ev.push({ t: b + 8, k: 'snare', v: 0.7, tr: 0 });
+    for (let h = 0; h < 8; h++) {
+      ev.push({ t: b + h * 2 + (h % 2 ? 0.5 : 0), k: 'hat', v: h % 4 === 0 ? 0.4 : h % 2 ? 0.2 : 0.3, tr: 0 });
+    }
+  }
+  return ev;
+}
+
+// o.mode: 'off' | 'canon' | 'split'
+//  canon: the background repeats the melody `o.delay` units late, an octave up (lead voice only)
+//  split: code lines alternate between foreground and background tracks, each on its own clock
+// o.vary: evolving harmony; o.chill: chillstep feel; o.gap: chillstep note spacing
+function compose(text, key, scale, o) {
+  const { mode, delay, vary, chill } = o;
+  const fix = r => chill ? chillify(r, o.gap) : r;
+  const lines = text.split('\n');
+  const tracks = [[], []];
+  let idx = 0, k = -1;
+  lines.forEach((line, li) => {
+    if (line.trim()) k++;
+    const tr = mode === 'split' && k > 0 ? k % 2 : 0;
+    tracks[tr].push({ line, idx, more: li < lines.length - 1 });
+    idx += line.length + 1;
+  });
+  const fg = fix(composeTrack(tracks[0], key, scale, false, vary, chill));
+  let events = fg.events, t = fg.t;
+  if (mode === 'split') {
+    const bg = fix(composeTrack(tracks[1], key, scale, true, vary, chill));
+    events = events.concat(bg.events);
+    t = Math.max(t, bg.t);
+  } else if (mode === 'canon') {
+    // Non-melodic events become rests so the echo only moves the highlight.
+    const echo = fg.events.map(e => e.k === 'lead'
+      ? { ...e, tr: 1, t: e.t + delay, m: e.m + 12, v: e.v * 0.8 }
+      : { t: e.t + delay, i: e.i, tr: 1, k: 'rest' });
+    events = events.concat(echo);
+    t += delay;
+  }
+  const total = Math.max(16, Math.ceil(t / 16) * 16);
+  if (chill) events = events.concat(chillDrums(total));
+  return { events, total };
+}
+
+/* ---------- Audio ---------- */
+let audio = null;
+function buildAudio(chill, piano) {
+  const limiter = new Tone.Limiter(-3).toDestination();   // safety net against pile-ups
+  const reverb = new Tone.Reverb({ decay: chill ? 5.5 : 3, wet: chill ? 0.4 : 0.25 }).connect(limiter);
+  return { reverb, limiter, piano, chill, fg: buildTrack(reverb, false, chill, piano), bg: buildTrack(reverb, true, chill, piano) };
+}
+
+function disposeAudio() {
+  for (const tr of [audio.fg, audio.bg]) {
+    Object.values(tr.s).forEach(x => x.dispose());
+    Object.values(tr.group).forEach(x => x.dispose());
+    tr.out.dispose();
+  }
+  audio.reverb.dispose();
+  audio.limiter.dispose();
+}
+
+// One full set of voices. The background track is quieter, panned a little right,
+// has a softer lead, and has no percussion. `chill` swaps in the chillstep sounds:
+// electric-piano lead with a dotted echo, sub bass, slow filtered pad, deep kick, soft snare.
+function buildTrack(reverb, bg, chill, piano) {
+  const out = new Tone.PanVol(bg ? 0.3 : 0, bg ? -6 : 0).connect(reverb);
+  const group = {};
+  for (const name of ['lead', 'bass', 'pad', 'accent', 'perc']) {
+    group[name] = new Tone.Volume(0).connect(out);
+  }
+  let leadDst = bg ? new Tone.Filter(piano ? 3500 : 1800, 'lowpass').connect(group.lead) : group.lead;
+  if (piano && !bg) leadDst = new Tone.Filter(chill ? 2800 : 5500, 'lowpass').connect(group.lead);   // take the edge off
+  if (chill && !bg) {
+    const echo = new Tone.FeedbackDelay({ delayTime: '8n.', feedback: 0.25, wet: 0.15 }).connect(group.lead);
+    leadDst = new Tone.Filter(piano ? 2800 : 3500, 'lowpass').connect(echo);
+  }
+  const padFilter = new Tone.Filter(chill ? 800 : 1400, 'lowpass').connect(group.pad);
+
+  const s = {
+    lead: piano
+      ? new Tone.Sampler({ urls: PIANO_URLS, baseUrl: PIANO_BASE, release: 1.5 })
+      : chill && !bg
+      ? new Tone.PolySynth(Tone.FMSynth, {
+          harmonicity: 2, modulationIndex: 1, oscillator: { type: 'sine' },
+          envelope: { attack: 0.01, decay: 0.8, sustain: 0.2, release: 1.5 },
+          modulationEnvelope: { attack: 0.005, decay: 0.4, sustain: 0.1, release: 0.5 },
+        })
+      : new Tone.PolySynth(Tone.Synth, {
+          oscillator: { type: bg ? 'sine' : 'triangle' },
+          envelope: { attack: 0.01, decay: 0.12, sustain: 0.35, release: 0.25 },
+        }),
+    bass: new Tone.PolySynth(Tone.Synth, {
+      oscillator: { type: 'sine' },
+      envelope: chill ? { attack: 0.08, decay: 0.4, sustain: 0.5, release: 0.8 }
+                      : { attack: 0.02, decay: 0.2, sustain: 0.6, release: 0.4 },
+    }),
+    pad: new Tone.PolySynth(Tone.Synth, chill
+      ? { oscillator: { type: 'fatsawtooth', count: 3, spread: 25 },
+          envelope: { attack: 0.9, decay: 0.6, sustain: 0.7, release: 3 } }
+      : { oscillator: { type: 'sawtooth' },
+          envelope: { attack: 0.15, decay: 0.3, sustain: 0.5, release: 1.2 } }),
+    digit: new Tone.PolySynth(Tone.Synth, {
+      oscillator: { type: chill ? 'sine' : 'square' },
+      envelope: { attack: 0.001, decay: 0.1, sustain: 0, release: 0.1 },
+    }),
+    bell: new Tone.PolySynth(Tone.FMSynth, {
+      harmonicity: 3.01, modulationIndex: 12,
+      envelope: { attack: 0.001, decay: 0.7, sustain: 0, release: 0.5 },
+      modulationEnvelope: { attack: 0.001, decay: 0.4, sustain: 0, release: 0.3 },
+    }),
+  };
+  s.lead.volume.value = piano ? (bg ? -8 : -4) : chill && !bg ? -10 : -8;   s.lead.connect(leadDst);
+  s.bass.volume.value = chill ? -14 : -10;           s.bass.connect(group.bass);
+  s.pad.volume.value = chill ? -22 : -20;          s.pad.connect(padFilter);
+  s.digit.volume.value = -16;                      s.digit.connect(group.accent);
+  s.bell.volume.value = chill ? -22 : -18;         s.bell.connect(group.accent);
+  if (!bg) {
+    const hatFilter = new Tone.Filter(chill ? 8000 : 7000, 'highpass').connect(group.perc);
+    const snrFilter = chill ? new Tone.Filter(1800, 'bandpass').connect(group.perc)
+                            : new Tone.Filter(1800, 'highpass').connect(group.perc);
+    s.kick = chill
+      ? new Tone.MembraneSynth({ pitchDecay: 0.08, octaves: 6, envelope: { attack: 0.001, decay: 0.45, sustain: 0, release: 0.3 } })
+      : new Tone.MembraneSynth({ pitchDecay: 0.04, octaves: 5 });
+    s.hat = new Tone.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.001, decay: chill ? 0.03 : 0.04, sustain: 0 } });
+    s.snare = new Tone.NoiseSynth({ noise: { type: 'pink' }, envelope: { attack: 0.001, decay: chill ? 0.28 : 0.14, sustain: 0 } });
+    s.kick.volume.value = chill ? -2 : -4;   s.kick.connect(group.perc);
+    s.hat.volume.value = chill ? -28 : -22;  s.hat.connect(hatFilter);
+    s.snare.volume.value = chill ? -12 : -18; s.snare.connect(snrFilter);
+  }
+  return { s, group, out };
+}
+
+// Pushes the layer checkboxes and background controls onto the audio graph.
+function applyMix() {
+  if (!audio) return;
+  for (const tr of [audio.fg, audio.bg]) {
+    document.querySelectorAll('[data-layer]').forEach(c => { tr.group[c.dataset.layer].mute = !c.checked; });
+  }
+  audio.bg.out.volume.value = +$('bgvol').value;
+}
+
+function sound(e, time) {
+  const { s } = e.tr ? audio.bg : audio.fg;
+  const unit = Tone.Time('16n').toSeconds();
+  const dur = (e.d || 1) * unit * 0.9;
+  const hz = m => Tone.Midi(m).toFrequency();
+  try {
+    switch (e.k) {
+      // A held-pedal feel: piano notes ring on past their slot so they blend into the next one.
+      case 'lead':  s.lead.triggerAttackRelease(hz(e.m), audio.piano ? dur * (audio.chill ? 1.3 : 2) : dur, time, audio.piano ? e.v * (audio.chill ? 0.7 : 0.85) : e.v); break;
+      case 'bass':  s.bass.triggerAttackRelease(hz(e.m), dur, time, e.v); break;
+      case 'digit': s.digit.triggerAttackRelease(hz(e.m), dur, time, e.v); break;
+      case 'bell':  s.bell.triggerAttackRelease(hz(e.m), dur, time, e.v); break;
+      case 'pad':   s.pad.triggerAttackRelease(e.m.map(hz), dur, time, e.v); break;
+      case 'kick':  s.kick.triggerAttackRelease('C1', '16n', time, e.v ?? 0.9); break;
+      case 'hat':   s.hat.triggerAttackRelease('32n', time, e.v ?? 0.6); break;
+      case 'snare': s.snare.triggerAttackRelease('16n', time, e.v ?? 0.7); break;
+    }
+  } catch (err) { /* monophonic voices can reject a duplicate start time; skip it */ }
+}
+
+/* ---------- UI ---------- */
+const $ = id => document.getElementById(id);
+const src = $('src'), view = $('view'), playBtn = $('play');
+let playing = false, lineEls = [], lineText = [], lineOf = null, cur = [null, null], lastTotal = 0;
+
+KEYS.forEach((k, i) => $('key').add(new Option(k, i)));
+Object.keys(SCALES).forEach(k => $('scale').add(new Option(k, k)));
+$('scale').value = 'Dorian';
+src.value = SAMPLE;
+
+const LAYERS = [['lead','Melody'],['bass','Bass'],['pad','Chords'],['accent','Bells & digits'],['perc','Percussion']];
+LAYERS.forEach(([id, label]) => {
+  const l = document.createElement('label');
+  l.innerHTML = `<input type="checkbox" data-layer="${id}" checked> ${label}`;
+  $('layers').appendChild(l);
+});
+
+const getText = () => src.value.replace(/\r\n?/g, '\n');
+const getKey = () => +$('key').value;
+const getScale = () => SCALES[$('scale').value];
+const isChill = () => $('style').value === 'chill';
+const getOpts = () => ({ mode: $('bgmode').value, delay: +$('delay').value, vary: $('vary').checked, chill: isChill(), gap: +$('gap').value });
+
+function renderView(text) {
+  view.textContent = '';
+  lineEls = []; lineText = text.split('\n');
+  lineOf = new Uint32Array(text.length + 1);
+  let start = 0;
+  lineText.forEach((ln, li) => {
+    const div = document.createElement('div');
+    div.textContent = ln;
+    view.appendChild(div);
+    lineEls.push(div);
+    for (let j = 0; j <= ln.length; j++) lineOf[start + j] = li;
+    start += ln.length + 1;
+  });
+  view.dataset.starts = '';
+  view._starts = [];
+  let s = 0; lineText.forEach(ln => { view._starts.push(s); s += ln.length + 1; });
+  cur = [null, null];
+}
+
+function paintLine(li) {
+  const el = lineEls[li], ln = lineText[li];
+  const marks = [0, 1].filter(tr => cur[tr] && cur[tr].li === li)
+    .map(tr => ({ tr, col: cur[tr].col })).sort((x, y) => x.col - y.col);
+  el.textContent = '';
+  let from = 0;
+  for (const m of marks) {
+    if (m.col < from) continue;               // both tracks on the same character: foreground wins
+    const mark = document.createElement('mark');
+    if (m.tr) mark.className = 'bg';
+    mark.textContent = ln[m.col] === undefined ? ' ' : ln[m.col];
+    el.append(ln.slice(from, m.col), mark);
+    from = m.col + 1;
+  }
+  el.append(ln.slice(from));
+}
+
+function highlight(i, tr) {
+  const li = lineOf[i], old = cur[tr];
+  cur[tr] = { li, col: i - view._starts[li] };
+  paintLine(li);
+  if (old && old.li !== li) paintLine(old.li);
+  if (!tr && (!old || old.li !== li)) view.scrollTop = lineEls[li].offsetTop - view.clientHeight / 2;
+}
+
+function schedule(events, total) {
+  const T = Tone.Transport, U = T.PPQ / 4;
+  T.cancel(0);
+  T.loop = $('loop').checked;
+  T.loopStart = 0;
+  T.loopEnd = Math.round(total * U) + 'i';
+  for (const e of events) {
+    T.schedule(time => {
+      sound(e, time);
+      if (e.i !== undefined) Tone.Draw.schedule(() => highlight(e.i, e.tr), time);
+    }, Math.round(e.t * U) + 'i');
+  }
+  if (!T.loop) {
+    T.schedule(time => Tone.Draw.schedule(stop, time), Math.round(total * U) + 'i');
+  }
+}
+
+function updateStats(chars, total) {
+  const secs = total * 60 / Tone.Transport.bpm.value / 4;
+  $('stats').textContent = `${chars} characters · ${total / 16} bars · ${secs.toFixed(1)}s`;
+}
+
+function rebuild() {
+  const text = getText();
+  const { events, total } = compose(text, getKey(), getScale(), getOpts());
+  lastTotal = total;
+  schedule(events, total);
+  updateStats(text.length, total);
+}
+
+// (Re)builds the voices and waits for the piano samples. If they can't be fetched
+// (offline, blocked), falls back to the synth lead.
+async function loadAudio() {
+  if (audio) disposeAudio();
+  audio = buildAudio(isChill(), $('leadsound').value === 'piano');
+  applyMix();
+  if (!audio.piano) return;
+  const label = playBtn.textContent;
+  playBtn.textContent = 'Loading piano…';
+  try {
+    await Tone.loaded();
+  } catch (err) {
+    $('leadsound').value = 'synth';
+    disposeAudio();
+    audio = buildAudio(isChill(), false);
+    applyMix();
+    $('stats').textContent = 'Piano samples could not be loaded, so the synth lead is being used.';
+  }
+  playBtn.textContent = label;
+}
+
+async function start() {
+  await Tone.start();
+  if (!audio) await loadAudio();
+  applyMix();
+  const text = getText();
+  renderView(text);
+  Tone.Transport.bpm.value = +$('tempo').value;
+  rebuild();
+  src.hidden = true; view.hidden = false;
+  playBtn.textContent = '■ Stop';
+  playing = true;
+  Tone.Transport.start('+0.1');
+}
+
+function stop() {
+  Tone.Transport.stop();
+  Tone.Transport.cancel(0);
+  if (audio) for (const tr of [audio.fg, audio.bg]) Object.values(tr.s).forEach(x => x.releaseAll && x.releaseAll());
+  view.hidden = true; src.hidden = false;
+  playBtn.textContent = '▶ Play';
+  playing = false;
+}
+
+playBtn.onclick = () => playing ? stop() : start();
+$('tempo').oninput = e => {
+  $('tempoVal').textContent = e.target.value;
+  Tone.Transport.bpm.value = +e.target.value;
+  if (lastTotal) updateStats(getText().length, lastTotal);
+};
+$('key').onchange = $('scale').onchange = () => { if (playing) rebuild(); };
+$('loop').onchange = () => { if (playing) rebuild(); };
+$('layers').onchange = applyMix;
+$('bgvol').oninput = applyMix;
+$('bgmode').onchange = $('delay').onchange = $('vary').onchange = () => { if (playing) rebuild(); };
+// Picking a style also sets its tempo and scale; both can still be changed afterwards.
+$('style').onchange = () => {
+  const chill = isChill();
+  $('tempo').value = chill ? 70 : 130;
+  $('tempoVal').textContent = $('tempo').value;
+  Tone.Transport.bpm.value = +$('tempo').value;
+  $('scale').value = chill ? 'Natural minor' : 'Dorian';
+  if (audio) loadAudio();
+  if (playing) rebuild(); else updateStats(getText().length, compose(getText(), getKey(), getScale(), getOpts()).total);
+};
+$('gap').onchange = () => { if (playing) rebuild(); else if (isChill()) updateStats(getText().length, compose(getText(), getKey(), getScale(), getOpts()).total); };
+$('leadsound').onchange = () => { if (audio) loadAudio(); };
+$('sample').onclick = () => { if (playing) stop(); src.value = SAMPLE; };
+
+async function loadFile(f) {
+  if (!f) return;
+  if (playing) stop();
+  src.value = await f.text();
+}
+$('file').onchange = e => loadFile(e.target.files[0]);
+for (const el of [src, view]) {
+  el.addEventListener('dragover', e => e.preventDefault());
+  el.addEventListener('drop', e => { e.preventDefault(); loadFile(e.dataTransfer.files[0]); });
+}
+updateStats(SAMPLE.length, compose(SAMPLE, 0, SCALES['Dorian'], { mode: 'canon', delay: 16, vary: true, chill: false, gap: 8 }).total);
+</script>
+</body>
+</html>
