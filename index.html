@@ -34,6 +34,18 @@
   #view div { white-space:pre; min-height:1.55em; }
   #view mark { background:var(--accent); color:var(--accent-ink); border-radius:2px; }
   #view mark.bg { background:#6fb7c9; }
+  #editor { white-space:pre-wrap; }
+  #editor:focus { border-color:var(--dim); }
+  .token.comment, .token.prolog, .token.doctype, .token.cdata { color:#6b7288; font-style:italic; }
+  .token.punctuation { color:#98a0b8; }
+  .token.keyword, .token.boolean, .token.null, .token.nil { color:#c792ea; }
+  .token.string, .token.template-string, .token.char, .token.attr-value { color:#a8d98a; }
+  .token.number, .token.constant, .token.symbol { color:#f7a072; }
+  .token.function, .token.function-variable { color:#82aaff; }
+  .token.class-name, .token.builtin, .token.maybe-class-name { color:#ffcb6b; }
+  .token.operator, .token.arrow, .token.entity, .token.url { color:#89ddff; }
+  .token.regex, .token.important { color:#f07178; }
+  .token.interpolation-punctuation { color:#c792ea; }
   .meta { margin-top:8px; font-size:12px; color:var(--dim); display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; }
   details summary { cursor:pointer; color:var(--dim); font-size:13px; }
   table { border-collapse:collapse; width:100%; margin-top:10px; font-size:13px; }
@@ -108,6 +120,7 @@
   </section>
 
   <section class="panel">
+    <div id="editor" class="code" role="textbox" aria-multiline="true" aria-label="Source code" hidden></div>
     <textarea id="src" class="code" spellcheck="false" aria-label="Source code"></textarea>
     <div id="view" class="code" hidden></div>
     <div class="meta"><span id="stats"></span><span>Drop a file onto the code area to load it</span></div>
@@ -138,6 +151,7 @@
 </main>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
 <script>
 /* ---------- Mapping tables ---------- */
 const FREQ = 'etaoinshrdlcumwfgypbvkjxqz';        // letters, most to least common
@@ -561,7 +575,8 @@ function sound(e, time) {
 /* ---------- UI ---------- */
 const $ = id => document.getElementById(id);
 const src = $('src'), view = $('view'), playBtn = $('play');
-let playing = false, lineEls = [], lineText = [], lineOf = null, cur = [null, null], lastTotal = 0;
+let jar = null, editorEl = null;   // syntax-highlighting editor (CodeJar); null means the plain textarea is in use
+let playing = false, charCls = null, lineEls = [], lineText = [], lineOf = null, cur = [null, null], lastTotal = 0;
 
 KEYS.forEach((k, i) => $('key').add(new Option(k, i)));
 Object.keys(SCALES).forEach(k => $('scale').add(new Option(k, k)));
@@ -575,20 +590,63 @@ LAYERS.forEach(([id, label]) => {
   $('layers').appendChild(l);
 });
 
-const getText = () => src.value.replace(/\r\n?/g, '\n');
+const getText = () => (jar ? jar.toString() : src.value).replace(/\r\n?/g, '\n');
+function setCode(text) { src.value = text; if (jar) jar.updateCode(text); }
+const setEditorHidden = h => { (editorEl || src).hidden = h; };
+
+// Syntax highlighting is a visual extra: if CodeJar or Prism can't be loaded, the plain
+// textarea keeps working.
+async function initEditor() {
+  if (!window.Prism) return;
+  try {
+    const { CodeJar } = await import('https://cdn.jsdelivr.net/npm/codejar@4.2.0/dist/codejar.js');
+    editorEl = $('editor');
+    jar = CodeJar(editorEl, el => {
+      el.innerHTML = Prism.highlight(el.textContent, Prism.languages.javascript, 'javascript');
+    }, { tab: '  ', addClosing: false });
+    jar.onUpdate(code => { src.value = code; });
+    jar.updateCode(src.value);
+    src.hidden = true; editorEl.hidden = false;
+    for (const ev of ['dragover', 'drop']) {
+      editorEl.addEventListener(ev, e => { e.preventDefault(); if (ev === 'drop') loadFile(e.dataTransfer.files[0]); });
+    }
+  } catch (err) {
+    jar = null; editorEl = null; src.hidden = false;
+  }
+}
 const getKey = () => +$('key').value;
 const getScale = () => SCALES[$('scale').value];
 const isChill = () => $('style').value === 'chill';
 const getOpts = () => ({ mode: $('bgmode').value, delay: +$('delay').value, vary: $('vary').checked, chill: isChill(), gap: +$('gap').value });
 
+// Per-character Prism token classes for the whole text (null if Prism isn't available), so the
+// playback view can colour each line even when a token, like a comment, spans several lines.
+function classifyChars(text) {
+  if (!window.Prism) return null;
+  const out = new Array(text.length);
+  let pos = 0;
+  const walk = (tokens, cls) => {
+    for (const t of tokens) {
+      if (typeof t === 'string') {
+        for (let k = 0; k < t.length; k++) out[pos++] = cls;
+      } else {
+        const own = 'token ' + t.type + (t.alias ? ' ' + [].concat(t.alias).join(' ') : '');
+        walk(Array.isArray(t.content) ? t.content : [t.content], own);
+      }
+    }
+  };
+  walk(Prism.tokenize(text, Prism.languages.javascript), '');
+  return pos === text.length ? out : null;
+}
+
 function renderView(text) {
   view.textContent = '';
+  charCls = classifyChars(text);
   lineEls = []; lineText = text.split('\n');
   lineOf = new Uint32Array(text.length + 1);
   let start = 0;
   lineText.forEach((ln, li) => {
     const div = document.createElement('div');
-    div.textContent = ln;
     view.appendChild(div);
     lineEls.push(div);
     for (let j = 0; j <= ln.length; j++) lineOf[start + j] = li;
@@ -598,23 +656,42 @@ function renderView(text) {
   view._starts = [];
   let s = 0; lineText.forEach(ln => { view._starts.push(s); s += ln.length + 1; });
   cur = [null, null];
+  lineText.forEach((_, li) => paintLine(li));
 }
 
+// Rebuilds one line from runs of same-coloured characters, with a cursor mark on the character
+// each track is playing (foreground wins if both are on the same one).
 function paintLine(li) {
-  const el = lineEls[li], ln = lineText[li];
-  const marks = [0, 1].filter(tr => cur[tr] && cur[tr].li === li)
-    .map(tr => ({ tr, col: cur[tr].col })).sort((x, y) => x.col - y.col);
+  const el = lineEls[li], ln = lineText[li], start = view._starts[li];
+  const at = [0, 1].map(tr => cur[tr] && cur[tr].li === li ? cur[tr].col : -1);
   el.textContent = '';
-  let from = 0;
-  for (const m of marks) {
-    if (m.col < from) continue;               // both tracks on the same character: foreground wins
-    const mark = document.createElement('mark');
-    if (m.tr) mark.className = 'bg';
-    mark.textContent = ln[m.col] === undefined ? ' ' : ln[m.col];
-    el.append(ln.slice(from, m.col), mark);
-    from = m.col + 1;
+  let run = null;
+  const flush = () => {
+    if (!run) return;
+    if (run.mtr >= 0) {
+      const mark = document.createElement('mark');
+      if (run.mtr) mark.className = 'bg';
+      mark.textContent = run.text;
+      el.append(mark);
+    } else if (run.cls) {
+      const span = document.createElement('span');
+      span.className = run.cls;
+      span.textContent = run.text;
+      el.append(span);
+    } else {
+      el.append(run.text);
+    }
+    run = null;
+  };
+  for (let col = 0; col <= ln.length; col++) {
+    const mtr = at[0] === col ? 0 : at[1] === col ? 1 : -1;
+    if (col === ln.length && mtr < 0) break;                     // the newline only shows when it's the cursor
+    const ch = col < ln.length ? ln[col] : '\u00a0';
+    const cls = mtr >= 0 ? '' : (charCls && charCls[start + col]) || '';
+    if (run && mtr < 0 && run.mtr < 0 && run.cls === cls) run.text += ch;
+    else { flush(); run = { cls, text: ch, mtr }; }
   }
-  el.append(ln.slice(from));
+  flush();
 }
 
 function highlight(i, tr) {
@@ -684,7 +761,7 @@ async function start() {
   renderView(text);
   Tone.Transport.bpm.value = +$('tempo').value;
   rebuild();
-  src.hidden = true; view.hidden = false;
+  setEditorHidden(true); view.hidden = false;
   playBtn.textContent = '■ Stop';
   playing = true;
   Tone.Transport.start('+0.1');
@@ -694,7 +771,7 @@ function stop() {
   Tone.Transport.stop();
   Tone.Transport.cancel(0);
   if (audio) for (const tr of [audio.fg, audio.bg]) Object.values(tr.s).forEach(x => x.releaseAll && x.releaseAll());
-  view.hidden = true; src.hidden = false;
+  view.hidden = true; setEditorHidden(false);
   playBtn.textContent = '▶ Play';
   playing = false;
 }
@@ -722,14 +799,15 @@ $('style').onchange = () => {
 };
 $('gap').onchange = () => { if (playing) rebuild(); else if (isChill()) updateStats(getText().length, compose(getText(), getKey(), getScale(), getOpts()).total); };
 $('leadsound').onchange = () => { if (audio) loadAudio(); };
-$('sample').onclick = () => { if (playing) stop(); src.value = SAMPLE; };
+$('sample').onclick = () => { if (playing) stop(); setCode(SAMPLE); };
 
 async function loadFile(f) {
   if (!f) return;
   if (playing) stop();
-  src.value = await f.text();
+  setCode(await f.text());
 }
 $('file').onchange = e => loadFile(e.target.files[0]);
+initEditor();
 for (const el of [src, view]) {
   el.addEventListener('dragover', e => e.preventDefault());
   el.addEventListener('drop', e => { e.preventDefault(); loadFile(e.dataTransfer.files[0]); });

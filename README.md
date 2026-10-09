@@ -2,11 +2,11 @@
 
 Turn any JavaScript file into music. Paste or drop in code, press play, and every character becomes part of the piece: letters drive the melody, operators become percussion, brackets become chords, and whitespace becomes rests. It isn't tied to JavaScript syntax. Any text works, and the same file always gives the same music.
 
-It's a single static page built on [Tone.js](https://tonejs.github.io/), with no build step and no dependencies to install.
+It's a single static page built on [Tone.js](https://tonejs.github.io/), with [CodeJar](https://medv.io/codejar/) and [Prism](https://prismjs.com/) for the syntax-highlighted code box. There's no build step and nothing to install.
 
 ## Getting started
 
-You need a modern browser, an internet connection (Tone.js and the piano samples load from CDNs), and Python 3 or any other static file server.
+You need a modern browser, an internet connection (Tone.js, Prism, CodeJar, and the piano samples load from CDNs), and Python 3 or any other static file server.
 
 1. Clone the repo and start a local server from its folder:
 
@@ -23,7 +23,7 @@ Any static server works if you'd rather not use Python, for example `npx serve`.
 
 ## Using it
 
-- **Load code:** paste into the text area, use **File**, drop a file onto the code area, or press **Sample** for a small fizzbuzz example.
+- **Load code:** type or paste into the code box (JavaScript is syntax-highlighted, and the colors carry over to the playback view), use **File**, drop a file onto the code area, or press **Sample** for a small fizzbuzz example.
 - **Play / Stop:** while playing, the code is shown with a moving cursor on the character being played.
 - **Style:** *Default* is an upbeat arrangement. *Chillstep* sets about 70 BPM and a minor scale, with a half-time drum groove, a few long grid-aligned piano notes, and a soft pad and bass. It's meant as calm background music.
 - **Lead:** a sampled grand piano (default), or a plain synth if you're offline.
@@ -62,7 +62,7 @@ Inside `index.html`, the script has three parts:
 
 - **Composition** (`composeTrack`, `compose`, `chillify`, `chillDrums`) turns text into a list of timed events and has no audio code.
 - **Audio** (`buildAudio`, `buildTrack`, `sound`) holds the Tone.js instruments and plays events.
-- **UI** has the controls, the cursor highlighting, and scheduling onto the Tone.js Transport.
+- **UI** has the controls, the code editor setup, the cursor highlighting, and scheduling onto the Tone.js Transport.
 
 The musical tuning is easy to change. The lookup tables near the top of the script (`FREQ`, `DUR`, `STEPS`, `PROG`, `BASS`, `SCALES`) control the melody and harmony, and `buildTrack` holds the instrument settings.
 
@@ -70,3 +70,4 @@ The musical tuning is easy to change. The lookup tables near the top of the scri
 
 - Everything runs in the browser, and the code you load is never uploaded anywhere.
 - If the piano samples can't be loaded, rad.io falls back to the synth lead and says so under the code box.
+- If the highlighting libraries can't be loaded, the code box falls back to a plain text area, and the music is unaffected, since the sound never depends on syntax.
