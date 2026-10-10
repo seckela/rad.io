@@ -1,3 +1,4 @@
+import { unlockAudio, releaseAudio } from '../audio/unlock.js';
 import { $, view, playBtn } from './dom.js';
 import { getText, setEditorHidden } from './editor.js';
 import { renderView, highlight } from './view.js';
@@ -114,6 +115,7 @@ export async function loadAudio() {
 }
 
 export async function start() {
+  unlockAudio();             // must run inside the tap, before any await (iOS silent-switch workaround)
   await Tone.start();
   if (!audio) await loadAudio();
   applyMix();
@@ -129,6 +131,7 @@ export async function start() {
 
 export function stop() {
   endToken++;
+  releaseAudio();
   Tone.Transport.stop();
   Tone.Transport.cancel(0);
   if (audio) for (const tr of [audio.fg, audio.bg]) Object.values(tr.s).forEach(x => x.releaseAll && x.releaseAll());
