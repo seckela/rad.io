@@ -6,7 +6,9 @@
 body { margin:0; background:var(--bg); color:var(--text);
        font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif; }
 main { max-width:960px; margin:0 auto; padding:24px 16px 48px; }
-h1 { font-size:22px; margin:0 0 4px; }
+.brand { display:flex; align-items:center; gap:12px; margin:0 0 6px; }
+.brand img { width:40px; height:40px; border-radius:9px; display:block; }
+h1 { font-size:22px; margin:0; }
 header p { margin:0 0 20px; color:var(--dim); }
 .panel { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px; margin-bottom:16px; }
 .controls { display:flex; flex-wrap:wrap; gap:12px 18px; align-items:center; }
