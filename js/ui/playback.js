@@ -1,5 +1,5 @@
 import { unlockAudio, releaseAudio } from '../audio/unlock.js';
-import { vizAttach, vizStart, vizStop } from './viz.js';
+import { vizAttach, vizStart, vizStop, vizPause } from './viz.js';
 import { $, view, playBtn } from './dom.js';
 import { getText, setEditorHidden } from './editor.js';
 import { renderView, highlight } from './view.js';
@@ -9,8 +9,23 @@ import { audio, setAudio, buildAudio, disposeAudio } from '../audio/engine.js';
 import { sound } from '../audio/play.js';
 import { loadMetalBuffers, loadBassBuffers } from '../audio/samples.js';
 
-export let playing = false, lastTotal = 0;
-let endToken = 0;
+export let playing = false, paused = false, lastTotal = 0;   // playing is true while paused too (a session is open)
+let endToken = 0, lastEvents = [], endReached = false;
+const stopBtn = $('stop');
+
+// The Play button doubles as Pause / Resume; Stop only shows while a session is open.
+function setUi() {
+  playBtn.textContent = !playing ? '▶ Play' : paused ? '▶ Resume' : '❚❚ Pause';
+  stopBtn.hidden = !playing;
+}
+
+// After the last note: let it ring out, then reset the UI. A plain timer (not Tone.Draw) so it
+// still fires when animation frames are paused. The token makes a stale timer harmless after a
+// stop, restart or seek.
+function armEnd(wait) {
+  const my = ++endToken;
+  setTimeout(() => { if (playing && !paused && my === endToken) stop(); }, wait);
+}
 let metalBufs = null, chillBass = null;   // downloaded sample sets, kept for the rest of the session
 
 // Pushes the layer checkboxes and background controls onto the audio graph.
@@ -34,14 +49,12 @@ function schedule(events, total) {
       if (e.i !== undefined) Tone.Draw.schedule(() => highlight(e.i, e.tr), time);
     }, Math.round(e.t * U) + 'i');
   }
+  lastEvents = events;
+  endReached = false;
   if (!T.loop) {
-    // End of the piece: let the last notes ring out, then reset the UI. A plain timer is used
-    // (not Tone.Draw) so it still fires when animation frames are paused. The token makes a
-    // stale timer harmless if the user already stopped or restarted.
-    const token = ++endToken;
     T.schedule(time => {
-      const wait = Math.max(0, (time - Tone.now()) * 1000) + 1200;
-      setTimeout(() => { if (playing && token === endToken) stop(); }, wait);
+      endReached = true;
+      armEnd(Math.max(0, (time - Tone.now()) * 1000) + 1200);
     }, Math.round(total * U) + 'i');
   }
 }
@@ -115,7 +128,23 @@ export async function loadAudio() {
   playBtn.textContent = label;
 }
 
-export async function start() {
+// The transport tick and event for a character index: the first note at or after it.
+function tickFor(idx) {
+  const U = Tone.Transport.PPQ / 4;
+  let best = null;
+  for (const e of lastEvents) {
+    if (e.i === undefined || e.i < idx) continue;
+    if (!best || e.i < best.i || (e.i === best.i && (e.tr || 0) < (best.tr || 0))) best = e;
+  }
+  return best ? { tick: Math.round(best.t * U), ev: best } : null;
+}
+
+function releaseVoices() {
+  if (audio) for (const tr of [audio.fg, audio.bg]) Object.values(tr.s).forEach(x => x.releaseAll && x.releaseAll());
+}
+
+// Starts from the beginning, or from the note at character `fromIdx` if one is given.
+export async function start(fromIdx = null) {
   unlockAudio();             // must run inside the tap, before any await (iOS silent-switch workaround)
   await Tone.start();
   vizAttach();
@@ -125,21 +154,61 @@ export async function start() {
   renderView(text);
   Tone.Transport.bpm.value = +$('tempo').value;
   rebuild();
+  const hit = fromIdx != null ? tickFor(fromIdx) : null;
   setEditorHidden(true); view.hidden = false;
-  playBtn.textContent = '■ Stop';
-  playing = true;
-  Tone.Transport.start('+0.1');
+  playing = true; paused = false;
+  setUi();
+  if (hit) {
+    highlight(hit.ev.i, hit.ev.tr || 0);
+    $('stats').textContent += ` · starting at character ${hit.ev.i}`;
+  }
+  Tone.Transport.start('+0.1', hit ? hit.tick + 'i' : undefined);
   vizStart();
+}
+
+// Pausing freezes the audio clock, so notes and reverb tails hold exactly where they are and
+// resume without gaps or repeats. It costs nothing while paused.
+export function pause() {
+  if (!playing || paused) return;
+  paused = true;
+  setUi();
+  vizPause();
+  try { Tone.getContext().rawContext.suspend().catch(() => {}); } catch (e) {}
+}
+
+export function resume() {
+  if (!playing || !paused) return;
+  unlockAudio();             // inside the tap: iOS needs a gesture to resume audio
+  paused = false;
+  setUi();
+  try { Tone.getContext().rawContext.resume().catch(() => {}); } catch (e) {}
+  vizAttach();
+  vizStart();
+  if (endReached) armEnd(1200);   // paused during the tail after the last note
+}
+
+// Jumps to a character while playing or paused. Notes already sounding are released; chords that
+// started before the target aren't re-struck, so the harmony catches up at the next chord.
+export function seekTo(idx) {
+  if (!playing) return;
+  const hit = tickFor(idx);
+  if (!hit) return;
+  endToken++;                // cancel any pending end-of-piece timer
+  endReached = false;
+  Tone.Transport.ticks = hit.tick;
+  releaseVoices();
+  highlight(hit.ev.i, hit.ev.tr || 0);
 }
 
 export function stop() {
   endToken++;
   releaseAudio();
   vizStop();
+  if (paused) { try { Tone.getContext().rawContext.resume().catch(() => {}); } catch (e) {} }
   Tone.Transport.stop();
   Tone.Transport.cancel(0);
-  if (audio) for (const tr of [audio.fg, audio.bg]) Object.values(tr.s).forEach(x => x.releaseAll && x.releaseAll());
+  releaseVoices();
   view.hidden = true; setEditorHidden(false);
-  playBtn.textContent = '▶ Play';
-  playing = false;
+  playing = false; paused = false;
+  setUi();
 }

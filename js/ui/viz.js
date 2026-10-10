@@ -144,6 +144,11 @@ export function vizStart() {
   if (reduced) { jump(); return; }
   loop();
 }
+// Paused: the audio is frozen, so the bars settle to rest but the strip stays expanded.
+export function vizPause() {
+  playing = false;
+  if (toggle.checked && !reduced) loop();
+}
 export function vizStop() {
   playing = false;
   target = 0;

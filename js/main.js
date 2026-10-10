@@ -3,12 +3,13 @@ import { KEYS, SCALES } from './scales.js';
 import { SAMPLE } from './sample.js';
 import { compose } from './compose/index.js';
 import { audio } from './audio/engine.js';
-import { setCode, getText, initEditor } from './ui/editor.js';
+import { setCode, getText, initEditor, getStartIndex } from './ui/editor.js';
+import { indexFromPoint } from './ui/view.js';
 import { getKey, getScale, isChill, isLofi, getOpts } from './ui/settings.js';
 import { initTips } from './ui/tips.js';
 import { initDebug } from './audio/unlock.js';
 import { initViz } from './ui/viz.js';
-import { playing, lastTotal, applyMix, updateStats, rebuild, applyStyleDefaults, loadAudio, start, stop } from './ui/playback.js';
+import { playing, paused, lastTotal, applyMix, updateStats, rebuild, applyStyleDefaults, loadAudio, start, stop, pause, resume, seekTo } from './ui/playback.js';
 
 KEYS.forEach((k, i) => $('key').add(new Option(k, i)));
 Object.keys(SCALES).forEach(k => $('scale').add(new Option(k, k)));
@@ -27,7 +28,14 @@ initTips();
 initDebug();
 initViz();
 
-playBtn.onclick = () => playing ? stop() : start();
+playBtn.onclick = () => !playing ? start(getStartIndex()) : paused ? resume() : pause();
+$('stop').onclick = stop;
+// Click a character in the playback view to jump there (playing or paused).
+view.addEventListener('click', e => {
+  if (String(getSelection()).length) return;               // the user was selecting text, not seeking
+  const idx = indexFromPoint(e.clientX, e.clientY);
+  if (idx != null) seekTo(idx);
+});
 $('tempo').oninput = e => {
   $('tempoVal').textContent = e.target.value;
   Tone.Transport.bpm.value = +e.target.value;

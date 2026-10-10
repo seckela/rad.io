@@ -26,7 +26,7 @@ button.primary { background:var(--accent); color:var(--accent-ink); border-color
         background:var(--bg); border:1px solid var(--line); border-radius:8px; color:var(--text);
         font:13px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace; tab-size:2; }
 textarea.code { resize:vertical; display:block; }
-#view { position:relative; }
+#view { position:relative; cursor:pointer; }
 #view div { white-space:pre; min-height:1.55em; }
 #view mark { background:var(--accent); color:var(--accent-ink); border-radius:2px; }
 #view mark.bg { background:#6fb7c9; }
