@@ -14,6 +14,10 @@ label { display:flex; align-items:center; gap:6px; color:var(--dim); font-size:1
 select, input[type=range] { accent-color:var(--accent); }
 select, button { background:var(--bg); color:var(--text); border:1px solid var(--line);
                  border-radius:6px; padding:6px 10px; font:inherit; font-size:13px; }
+select { appearance:none; -webkit-appearance:none; cursor:pointer; padding-right:28px;
+         background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%238a8fa3' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+         background-repeat:no-repeat; background-position:right 10px center; background-size:10px 6px; }
+select:hover { border-color:var(--dim); }
 button { cursor:pointer; }
 button:hover { border-color:var(--dim); }
 button.primary { background:var(--accent); color:var(--accent-ink); border-color:var(--accent);
