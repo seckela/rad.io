@@ -95,7 +95,6 @@
         <input id="bgvol" type="range" min="-24" max="0" value="-8">
       </label>
       <label>File <input id="file" type="file" accept=".js,.mjs,.cjs,.jsx,.ts,.tsx,.json,.txt"></label>
-      <button id="sample">Sample</button>
     </div>
     <div class="controls layers" id="layers"></div>
   </section>
@@ -105,6 +104,7 @@
     <div id="editor" class="code" role="textbox" aria-multiline="true" aria-label="Source code" hidden></div>
     <textarea id="src" class="code" spellcheck="false" aria-label="Source code"></textarea>
     <div id="view" class="code" hidden></div>
+    <div class="code-actions"><button id="sample">Load example code</button></div>
     <div class="meta"><span id="stats"></span><span>Drop a file onto the code area to load it</span></div>
   </section>
 
