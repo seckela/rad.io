@@ -42,7 +42,7 @@ function size() {
   nMax = Math.max(7, Math.floor((wCss - 2 * (braceW + PAD) + GAP) / (BAR + GAP)));
   levels = new Float32Array(nMax);
   const cs = getComputedStyle(document.documentElement);
-  color = cs.getPropertyValue('--accent').trim() || color;
+  color = cs.getPropertyValue('--bars').trim() || cs.getPropertyValue('--accent').trim() || color;
   braceColor = cs.getPropertyValue('--text').trim() || braceColor;
 }
 
@@ -128,6 +128,14 @@ function frame(t) {
 
 function loop() { if (!raf) { last = performance.now() - frameMs; raf = requestAnimationFrame(frame); } }
 function jump() { p = target; draw(); }
+
+// The bar colour follows the selected style (the --bars variable); redraw so it shows right away.
+export function vizRetint() {
+  if (!wCss) return;                    // not laid out yet; initViz will read it
+  const cs = getComputedStyle(document.documentElement);
+  color = cs.getPropertyValue('--bars').trim() || cs.getPropertyValue('--accent').trim() || color;
+  if (!raf) draw();
+}
 
 // Call after the audio output is wired (on every start): re-attaches the analyser, since the iOS
 // routing in audio/unlock.js disconnects the output each time Play is pressed.
