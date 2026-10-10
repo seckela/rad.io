@@ -3,7 +3,6 @@
 import { $ } from './dom.js';
 
 const TIPS = {
-  style: 'The overall sound. Pick one to see what it offers. Each style sets a fitting tempo and scale, which you can still change below.',
   leadsound: 'What plays the melody: sampled piano, or a plain synth that needs no downloads. Rock / Metal always uses guitar.',
   gap: 'How busy the melody is. Busy plays a note every few beats, Relaxed leaves more space. Applies to Chillstep, Lo-fi and Rock / Metal.',
   key: 'The home note the music is built around. Changing it moves everything up or down together.',
