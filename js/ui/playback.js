@@ -1,7 +1,7 @@
 import { $, view, playBtn } from './dom.js';
 import { getText, setEditorHidden } from './editor.js';
 import { renderView, highlight } from './view.js';
-import { getKey, getScale, isChill, isMetal, getOpts } from './settings.js';
+import { getKey, getScale, getStyle, isChill, isLofi, isMetal, getOpts } from './settings.js';
 import { compose } from '../compose/index.js';
 import { audio, setAudio, buildAudio, disposeAudio } from '../audio/engine.js';
 import { sound } from '../audio/play.js';
@@ -60,10 +60,10 @@ export function rebuild() {
 // Sets the tempo and scale that go with the selected style (both can be changed afterwards).
 export function applyStyleDefaults() {
   const st = $('style').value;
-  $('tempo').value = { chill: 70, metal: 150 }[st] || 130;
+  $('tempo').value = { chill: 70, lofi: 80, metal: 150 }[st] || 130;
   $('tempoVal').textContent = $('tempo').value;
   Tone.Transport.bpm.value = +$('tempo').value;
-  $('scale').value = { chill: 'Natural minor', metal: 'Phrygian' }[st] || 'Dorian';
+  $('scale').value = { chill: 'Natural minor', lofi: 'Natural minor', metal: 'Phrygian' }[st] || 'Dorian';
   $('leadsound').disabled = st === 'metal';       // the metal lead is always a guitar
 }
 
@@ -86,17 +86,18 @@ export async function loadAudio() {
       $('stats').textContent = 'Guitar samples could not be loaded, so the Default style is being used.';
       return;
     }
-    setAudio(buildAudio(false, false, true, metalBufs));
+    setAudio(buildAudio('metal', false, metalBufs));
     applyMix();
     playBtn.textContent = label;
     return;
   }
-  if (isChill() && !chillBass) {
+  const warm = isChill() || isLofi();       // Chillstep and Lo-fi both use the recorded bass
+  if (warm && !chillBass) {
     playBtn.textContent = 'Loading bass…';
     try { chillBass = await loadBassBuffers(); } catch (err) { chillBass = null; }   // falls back to the synth bass
   }
-  const bufs = isChill() && chillBass ? { bass: chillBass } : undefined;
-  setAudio(buildAudio(isChill(), piano, false, bufs));
+  const bufs = warm && chillBass ? { bass: chillBass } : undefined;
+  setAudio(buildAudio(getStyle(), piano, bufs));
   applyMix();
   if (!piano) { playBtn.textContent = label; return; }
   playBtn.textContent = 'Loading piano…';
@@ -105,7 +106,7 @@ export async function loadAudio() {
   } catch (err) {
     disposeAudio();
     $('leadsound').value = 'synth';
-    setAudio(buildAudio(isChill(), false, false, bufs));
+    setAudio(buildAudio(getStyle(), false, bufs));
     applyMix();
     $('stats').textContent = 'Piano samples could not be loaded, so the synth lead is being used.';
   }

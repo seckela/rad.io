@@ -7,6 +7,10 @@ export const getScale = () => SCALES[$('scale').value];
 
 export const isChill = () => $('style').value === 'chill';
 
+export const isLofi = () => $('style').value === 'lofi';
+
 export const isMetal = () => $('style').value === 'metal';
 
-export const getOpts = () => ({ mode: $('bgmode').value, delay: +$('delay').value, vary: $('vary').checked, chill: isChill(), metal: isMetal(), gap: +$('gap').value });
+export const getStyle = () => $('style').value;
+
+export const getOpts = () => ({ mode: $('bgmode').value, delay: +$('delay').value, vary: $('vary').checked, chill: isChill(), lofi: isLofi(), metal: isMetal(), gap: +$('gap').value });

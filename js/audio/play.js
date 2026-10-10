@@ -17,6 +17,14 @@ export function sound(e, time) {
     time += (r1 - 0.5) * (tight ? 0.006 : 0.014);
     if (v !== undefined) v = Math.min(1, v * (0.9 + 0.2 * r2));
   }
+  if (audio.lofi) {
+    // Loose, lazy feel: a few tens of milliseconds of drift (the drums less), a snare that sits a touch behind the
+    // beat, and some velocity variation.
+    const r1 = rnd(e.t + (e.m || 0) * 0.37 + (e.tr || 0) * 5.1), r2 = rnd(e.t * 1.7 + (e.m || 0) + 3.3);
+    const drum = e.k === 'kick' || e.k === 'snare' || e.k === 'hat';
+    time += (r1 - 0.5) * (drum ? 0.012 : 0.03) + (e.k === 'snare' ? 0.012 : 0);
+    if (v !== undefined) v = Math.min(1, v * (0.85 + 0.3 * r2));
+  }
   try {
     switch (e.k) {
       case 'lead':
@@ -42,12 +50,13 @@ export function sound(e, time) {
       case 'bass':  s.bass.triggerAttackRelease(hz(e.m), dur, time, v); break;
       case 'digit': s.digit.triggerAttackRelease(hz(e.m), dur, time, v); break;
       case 'bell':  s.bell.triggerAttackRelease(hz(e.m), dur, time, v); break;
+      case 'crackle': s.crackle.triggerAttackRelease('64n', time, v); break;
       case 'pad':
         if (audio.chill && audio.piano) e.m.forEach((m, i) => s.pad.triggerAttackRelease(hz(m), dur, time + i * 0.035, v));   // a gently rolled chord
         else s.pad.triggerAttackRelease(e.m.map(hz), dur, time, v);
         break;
       case 'kick':
-        if (audio.chill && !e.tr) for (const [g, dip] of [[s.duckPad, 0.55], [s.duckBass, 0.85]]) {   // dip the sustained tones under the kick
+        if (audio.chill && !audio.lofi && !e.tr) for (const [g, dip] of [[s.duckPad, 0.55], [s.duckBass, 0.85]]) {   // dip the sustained tones under the kick
           g.gain.cancelScheduledValues(time);
           g.gain.setValueAtTime(dip, time);
           g.gain.linearRampToValueAtTime(1, time + 0.35);
