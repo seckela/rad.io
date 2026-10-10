@@ -8,6 +8,7 @@ import { sound } from '../audio/play.js';
 import { loadMetalBuffers, loadBassBuffers } from '../audio/samples.js';
 
 export let playing = false, lastTotal = 0;
+let endToken = 0;
 let metalBufs = null, chillBass = null;   // downloaded sample sets, kept for the rest of the session
 
 // Pushes the layer checkboxes and background controls onto the audio graph.
@@ -32,7 +33,14 @@ function schedule(events, total) {
     }, Math.round(e.t * U) + 'i');
   }
   if (!T.loop) {
-    T.schedule(time => Tone.Draw.schedule(stop, time), Math.round(total * U) + 'i');
+    // End of the piece: let the last notes ring out, then reset the UI. A plain timer is used
+    // (not Tone.Draw) so it still fires when animation frames are paused. The token makes a
+    // stale timer harmless if the user already stopped or restarted.
+    const token = ++endToken;
+    T.schedule(time => {
+      const wait = Math.max(0, (time - Tone.now()) * 1000) + 1200;
+      setTimeout(() => { if (playing && token === endToken) stop(); }, wait);
+    }, Math.round(total * U) + 'i');
   }
 }
 
@@ -119,6 +127,7 @@ export async function start() {
 }
 
 export function stop() {
+  endToken++;
   Tone.Transport.stop();
   Tone.Transport.cancel(0);
   if (audio) for (const tr of [audio.fg, audio.bg]) Object.values(tr.s).forEach(x => x.releaseAll && x.releaseAll());
