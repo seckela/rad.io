@@ -5,6 +5,11 @@
 import { $ } from './dom.js';
 
 const BAR = 6, GAP = 6, MAX_H = 48, REST_MIN = 4, REST_PEAK = 14;
+const WIDTH_FRAC = 0.7, MIN_W = 220;     // the whole thing (braces and bars) takes about 70% of the width
+const BRACE_PAD = 10;                    // space between a brace and the bars (css px)
+// The icon's curly brace (viewBox 512; spans x 66..134, y 118..394), reused so the two match.
+const BRACE = new Path2D('M 134 118 C 104 118 100 138 100 168 L 100 218 C 100 240 90 256 66 256 C 90 256 100 272 100 294 L 100 344 C 100 374 104 394 134 394');
+const BRACE_W = 68, BRACE_H = 276, BRACE_STROKE = 26;
 const FFT = 256;                       // 128 bins
 const canvas = $('viz');
 const toggle = $('viz-on');
@@ -13,16 +18,28 @@ const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const frameMs = matchMedia('(pointer: coarse)').matches ? 1000 / 30 : 1000 / 60;
 
 let analyser = null, raf = 0, running = false, fading = false, last = 0;
-let n = 0, levels = new Float32Array(0), color = '#f2b24c', dpr = 1, wCss = 0, hCss = 0;
+let n = 0, levels = new Float32Array(0), color = '#f2b24c', braceColor = '#d9dce6', dpr = 1, wCss = 0, hCss = 0;
+let barsX = 0, braceScale = 1, braceLeftX = 0, braceRightX = 0;
 
 function size() {
   dpr = Math.min(window.devicePixelRatio || 1, 2);
   wCss = canvas.clientWidth; hCss = canvas.clientHeight;
   canvas.width = Math.round(wCss * dpr); canvas.height = Math.round(hCss * dpr);
-  n = Math.max(7, Math.floor((wCss + GAP) / (BAR + GAP)));
+  braceScale = (hCss - 4) / BRACE_H;                       // braces span the strip's height
+  const braceW = BRACE_W * braceScale + BRACE_STROKE * braceScale;   // outline included
+  const total = Math.min(wCss, Math.max(MIN_W, wCss * WIDTH_FRAC));
+  const left = (wCss - total) / 2;
+  const barsW = Math.max(BAR, total - 2 * (braceW + BRACE_PAD));
+  n = Math.max(5, Math.floor((barsW + GAP) / (BAR + GAP)));
   if (n % 2 === 0) n--;                // odd, so there is a centre bar
   levels = new Float32Array(n);
-  color = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || color;
+  const used = n * (BAR + GAP) - GAP;
+  barsX = (wCss - used) / 2;
+  braceLeftX = left;                                        // left edge of the left brace
+  braceRightX = left + total;                               // right edge of the right brace
+  const cs = getComputedStyle(document.documentElement);
+  color = cs.getPropertyValue('--accent').trim() || color;
+  braceColor = cs.getPropertyValue('--text').trim() || braceColor;
 }
 
 // Low frequencies sit in the centre and the highs spread outward, so it reads like the icon.
@@ -33,7 +50,7 @@ function draw(live) {
   c.clearRect(0, 0, W, H);
   c.fillStyle = color;
   const bw = BAR * dpr, step = (BAR + GAP) * dpr, centre = (n - 1) / 2;
-  const x0 = (W - (n * step - GAP * dpr)) / 2;
+  const x0 = barsX * dpr;
   let vals = null, bins = 0;
   if (live && analyser) { vals = analyser.getValue(); bins = vals.length; }
   let energy = 0;
@@ -55,7 +72,21 @@ function draw(live) {
     c.roundRect ? c.roundRect(x, y, bw, h, r) : c.rect(x, y, bw, h);
     c.fill();
   }
+  drawBraces(c);
   return energy;
+}
+
+function drawBraces(c) {
+  const k = braceScale * dpr, h = canvas.height;
+  c.strokeStyle = braceColor; c.lineWidth = BRACE_STROKE * k; c.lineCap = 'round'; c.lineJoin = 'round';
+  const top = (h - BRACE_H * k) / 2 - 118 * k;              // centre the path vertically
+  // Left brace: its leftmost point (path x = 66) sits at braceLeftX.
+  c.setTransform(k, 0, 0, k, braceLeftX * dpr - 66 * k + BRACE_STROKE * k / 2, top);
+  c.stroke(BRACE);
+  // Right brace: mirrored, its rightmost point at braceRightX.
+  c.setTransform(-k, 0, 0, k, braceRightX * dpr + 66 * k - BRACE_STROKE * k / 2, top);
+  c.stroke(BRACE);
+  c.setTransform(1, 0, 0, 1, 0, 0);
 }
 
 function frame(t) {
