@@ -18,7 +18,7 @@ const TIPS = {
   file: 'Load a file from your computer instead of pasting. You can also drop a file onto the code area.',
 };
 
-function addIcon(label, text) {
+function addIcon(label, text, before = null) {
   if (!label || label.querySelector('.tip')) return;
   const tip = document.createElement('span');
   tip.className = 'tip';
@@ -27,14 +27,16 @@ function addIcon(label, text) {
   tip.setAttribute('aria-label', text);
   tip.dataset.tip = text;
   tip.textContent = '?';
-  label.appendChild(tip);
+  if (before) label.insertBefore(tip, before); else label.appendChild(tip);
   label.removeAttribute('title');      // the icon replaces any native tooltip on the label
 }
 
 export function initTips() {
   for (const [id, text] of Object.entries(TIPS)) {
     const el = $(id);
-    if (el) addIcon(el.closest('label'), text);
+    // The native file input is wide (it includes its "No file chosen" text), so its icon goes
+    // before it, next to the "File" label, instead of way out at the end of the row.
+    if (el) addIcon(el.closest('label'), text, el.type === 'file' ? el : null);
   }
 
   const box = document.createElement('div');
