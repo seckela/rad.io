@@ -1,4 +1,8 @@
-# rad.io
+<p align="center">
+  <img src="icons/icon-192.png" alt="rad.io icon" width="128" height="128">
+</p>
+
+<h1 align="center">rad.io</h1>
 
 Turn any JavaScript file into music. Paste or drop in code, press play, and every character becomes part of the piece: letters drive the melody, operators become percussion, brackets become chords, and whitespace becomes rests. It isn't tied to JavaScript syntax. Any text works, and the same file always gives the same music.
 
