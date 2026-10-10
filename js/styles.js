@@ -31,4 +31,12 @@ export const STYLES = [
     download: 'About 3 MB of guitar and bass samples.',
     note: 'The lead is always a guitar, so the Lead control is disabled.',
   },
+  {
+    id: 'chiptune', name: 'Chiptune', tint: '#6fd08c',
+    tagline: 'Bright 8-bit game music',
+    blurb: 'The default melody played on pulse waves, like a classic console soundtrack. Chords become fast arpeggios, the triangle-wave bass bounces between octaves, and a tight beat of noise drums keeps time.',
+    chips: ['140 BPM', 'Major', 'Pulse-wave lead', 'Arpeggios', 'Triangle bass', 'Noise drums'],
+    download: 'Nothing: every sound is synthesized.',
+    note: 'The lead is always a pulse wave, so the Lead control is disabled.',
+  },
 ];
