@@ -6,7 +6,7 @@ import { $ } from './dom.js';
 
 const BAR = 6, GAP = 6, MAX_H = 48, REST_MIN = 4, REST_PEAK = 14;
 const WIDTH_FRAC = 0.7, MIN_W = 220;     // the whole thing (braces and bars) takes about 70% of the width
-const BRACE_PAD = 10;                    // space between a brace and the bars (css px)
+const BRACE_PAD = 4;                     // space between a brace and the outermost bar (css px)
 // The icon's curly brace (viewBox 512; spans x 66..134, y 118..394), reused so the two match.
 const BRACE = new Path2D('M 134 118 C 104 118 100 138 100 168 L 100 218 C 100 240 90 256 66 256 C 90 256 100 272 100 294 L 100 344 C 100 374 104 394 134 394');
 const BRACE_W = 68, BRACE_H = 276, BRACE_STROKE = 26;
@@ -28,15 +28,14 @@ function size() {
   braceScale = (hCss - 4) / BRACE_H;                       // braces span the strip's height
   const braceW = BRACE_W * braceScale + BRACE_STROKE * braceScale;   // outline included
   const total = Math.min(wCss, Math.max(MIN_W, wCss * WIDTH_FRAC));
-  const left = (wCss - total) / 2;
   const barsW = Math.max(BAR, total - 2 * (braceW + BRACE_PAD));
   n = Math.max(5, Math.floor((barsW + GAP) / (BAR + GAP)));
   if (n % 2 === 0) n--;                // odd, so there is a centre bar
   levels = new Float32Array(n);
   const used = n * (BAR + GAP) - GAP;
   barsX = (wCss - used) / 2;
-  braceLeftX = left;                                        // left edge of the left brace
-  braceRightX = left + total;                               // right edge of the right brace
+  braceLeftX = barsX - BRACE_PAD - braceW;                  // braces hug the bars, so the gap is
+  braceRightX = barsX + used + BRACE_PAD + braceW;          // BRACE_PAD, not leftover width
   const cs = getComputedStyle(document.documentElement);
   color = cs.getPropertyValue('--accent').trim() || color;
   braceColor = cs.getPropertyValue('--text').trim() || braceColor;
