@@ -40,17 +40,17 @@
   </header>
 
   <section class="panel">
-    <div class="controls">
+    <div class="transport">
       <button id="play" class="primary"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.8v10.4L12.6 8z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>Play</button>
       <button id="stop" hidden><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="3" width="10" height="10" rx="2.2"/></svg>Stop</button>
-      <label>Style
-        <select id="style">
-          <option value="default" selected>Default</option>
-          <option value="chill">Chillstep</option>
-          <option value="lofi">Lo-fi</option>
-          <option value="metal">Rock / Metal</option>
-        </select>
+    </div>
+    <div class="picker">
+      <label class="picker-head">Style
+        <select id="style"></select>
       </label>
+      <div id="style-detail" class="detail" aria-live="polite"></div>
+    </div>
+    <div class="controls">
       <label>Lead
         <select id="leadsound">
           <option value="piano" selected>Piano</option>

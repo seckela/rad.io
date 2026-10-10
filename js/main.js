@@ -6,6 +6,7 @@ import { audio } from './audio/engine.js';
 import { setCode, getText, initEditor, getStartIndex } from './ui/editor.js';
 import { indexFromPoint } from './ui/view.js';
 import { getKey, getScale, isChill, isLofi, getOpts } from './ui/settings.js';
+import { initPicker } from './ui/picker.js';
 import { initTips } from './ui/tips.js';
 import { initDebug } from './audio/unlock.js';
 import { initViz } from './ui/viz.js';
@@ -24,6 +25,7 @@ LAYERS.forEach(([id, label]) => {
   $('layers').appendChild(l);
 });
 
+initPicker();
 initTips();
 initDebug();
 initViz();

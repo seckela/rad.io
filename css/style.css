@@ -75,3 +75,16 @@ h1 { position:absolute; top:50%; transform:translateY(-50%); margin:0; font-size
      white-space:nowrap; transition:none; }
 
 .hint { margin:0 0 8px; color:var(--dim); font-size:12.5px; }
+
+/* Play / Stop row and the style picker */
+.transport { display:flex; gap:12px; align-items:center; margin-bottom:14px; }
+.picker { margin-bottom:14px; padding-bottom:14px; border-bottom:1px solid var(--line); }
+.picker-head { margin-bottom:8px; }
+.detail { margin-top:10px; padding:10px 12px; font-size:13px; border:1px solid var(--line);
+          border-left:3px solid var(--tint,var(--accent)); border-radius:8px; }
+.detail h3 { margin:0 0 4px; font-size:14px; }
+.detail p { margin:0 0 8px; color:var(--dim); }
+.detail .blurb { color:var(--text); }
+.chips { list-style:none; display:flex; flex-wrap:wrap; gap:6px; padding:0; margin:0 0 8px; }
+.chips li { padding:2px 9px; border:1px solid var(--line); border-radius:999px; font-size:12px; color:var(--dim); }
+.detail .dl { font-size:12px; margin-bottom:4px; }

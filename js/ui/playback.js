@@ -1,5 +1,6 @@
 import { unlockAudio, releaseAudio } from '../audio/unlock.js';
 import { vizAttach, vizStart, vizStop, vizPause } from './viz.js';
+import { syncPicker } from './picker.js';
 import { $, view, playBtn } from './dom.js';
 import { getText, setEditorHidden } from './editor.js';
 import { renderView, highlight } from './view.js';
@@ -84,6 +85,7 @@ export function applyStyleDefaults() {
   Tone.Transport.bpm.value = +$('tempo').value;
   $('scale').value = { chill: 'Natural minor', lofi: 'Natural minor', metal: 'Phrygian' }[st] || 'Dorian';
   $('leadsound').disabled = st === 'metal';       // the metal lead is always a guitar
+  syncPicker();
 }
 
 // (Re)builds the voices and waits for the samples (piano, or guitar and bass for rock/metal). If
