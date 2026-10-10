@@ -2,7 +2,7 @@
 
 Turn any JavaScript file into music. Paste or drop in code, press play, and every character becomes part of the piece: letters drive the melody, operators become percussion, brackets become chords, and whitespace becomes rests. It isn't tied to JavaScript syntax. Any text works, and the same file always gives the same music.
 
-It's a single static page built on [Tone.js](https://tonejs.github.io/), with [CodeJar](https://medv.io/codejar/) and [Prism](https://prismjs.com/) for the syntax-highlighted code box. There's no build step and nothing to install.
+It's a static page (plain ES modules, no bundler) built on [Tone.js](https://tonejs.github.io/), with [CodeJar](https://medv.io/codejar/) and [Prism](https://prismjs.com/) for the syntax-highlighted code box. There's no build step and nothing to install.
 
 Three styles are included: an upbeat **Default**, a calm **Chillstep** for background listening, and a **Rock / Metal** style with sampled electric guitar and bass.
 
@@ -57,17 +57,34 @@ The same table is on the page under "How characters map to sound".
 ## Project layout
 
 ```
-index.html           The whole app: markup, styles and script
-.claude/launch.json  Preview server config for Claude Code
+index.html             Markup, plus the Tone.js and Prism script tags
+css/style.css          Styles
+js/
+  main.js              Entry point: fills the menus, wires up the controls
+  sample.js            The text behind the Sample button
+  scales.js            Keys and scales
+  compose/             Text to timed events (no audio code)
+    track.js           Per-line composition and the melody/harmony lookup tables
+    melody.js          Melody helpers shared by Chillstep and Rock / Metal
+    chill.js           Chillstep transform and drums
+    metal.js           Rock / Metal transform, riff tables and drums
+    index.js           compose(): splits lines across tracks and applies a style
+  audio/               Tone.js instruments and playback
+    engine.js          The current set of voices, plus build and dispose
+    track.js           Default and Chillstep voices
+    metal-track.js     Rock / Metal voices
+    samples.js         Sample URLs and loaders
+    play.js            Plays one event
+  ui/                  Page behaviour
+    dom.js             Shared element lookups
+    settings.js        Reads the style, key, scale and other controls
+    editor.js          The code box (CodeJar and Prism, or a plain textarea)
+    view.js            The playback view and cursor highlighting
+    playback.js        Play, stop, scheduling onto the Tone.js Transport
+.claude/launch.json    Preview server config for Claude Code
 ```
 
-Inside `index.html`, the script has three parts:
-
-- **Composition** (`composeTrack`, `compose`, `chillify`, `chillDrums`) turns text into a list of timed events and has no audio code.
-- **Audio** (`buildAudio`, `buildTrack`, `sound`) holds the Tone.js instruments and plays events.
-- **UI** has the controls, the code editor setup, the cursor highlighting, and scheduling onto the Tone.js Transport.
-
-The musical tuning is easy to change. The lookup tables near the top of the script (`FREQ`, `DUR`, `STEPS`, `PROG`, `BASS`, `SCALES`) control the melody and harmony, and `buildTrack` holds the instrument settings.
+The musical tuning is easy to change. The lookup tables at the top of `js/compose/track.js` (`FREQ`, `DUR`, `STEPS`, `PROG`, `BASS`) and `js/scales.js` (`SCALES`) control the melody and harmony, the riff tables are in `js/compose/metal.js`, and the instrument settings are in `js/audio/track.js` and `js/audio/metal-track.js`.
 
 ## Notes
 
