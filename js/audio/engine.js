@@ -1,17 +1,26 @@
 import { buildTrack } from './track.js';
 import { buildMetalTrack } from './metal-track.js';
+import { buildLofiTrack } from './lofi-track.js';
 
 // The current set of voices (null until the first Play). Importers see the live value.
 export let audio = null;
 export function setAudio(a) { audio = a; }
 
-export function buildAudio(chill, piano, metal, bufs) {
+// style: 'default' | 'chill' | 'lofi' | 'metal'. bufs: the decoded samples for that style (guitar and bass for
+// metal, bass for chill and lofi), or undefined to use the synth fallbacks.
+export function buildAudio(style, piano, bufs) {
   const limiter = new Tone.Limiter(-3).toDestination();   // safety net against pile-ups
-  if (metal) {
+  if (style === 'metal') {
     const reverb = new Tone.Reverb({ decay: 1.6, wet: 0.12 }).connect(limiter);
     return { reverb, limiter, piano: false, chill: false, metal: true,
       fg: buildMetalTrack(reverb, false, bufs), bg: buildMetalTrack(reverb, true, bufs) };
   }
+  if (style === 'lofi') {                // a small room: much drier than Chillstep
+    const reverb = new Tone.Reverb({ decay: 2.2, wet: 0.2 }).connect(limiter);
+    return { reverb, limiter, piano, chill: true, lofi: true,
+      fg: buildLofiTrack(reverb, false, piano, bufs && bufs.bass), bg: buildLofiTrack(reverb, true, piano, bufs && bufs.bass) };
+  }
+  const chill = style === 'chill';
   const reverb = new Tone.Reverb({ decay: chill ? 5.5 : 3, wet: chill ? 0.4 : 0.25 }).connect(limiter);
   return { reverb, limiter, piano, chill, fg: buildTrack(reverb, false, chill, piano, limiter, bufs && bufs.bass), bg: buildTrack(reverb, true, chill, piano, undefined, bufs && bufs.bass) };
 }

@@ -20,6 +20,7 @@
         <select id="style">
           <option value="default" selected>Default</option>
           <option value="chill">Chillstep</option>
+          <option value="lofi">Lo-fi</option>
           <option value="metal">Rock / Metal</option>
         </select>
       </label>
@@ -29,7 +30,7 @@
           <option value="synth">Synth</option>
         </select>
       </label>
-      <label title="Chillstep and Rock/Metal: overall pace of the lead melody. Each section still varies around it.">Melody pace
+      <label title="Chillstep, Lo-fi and Rock/Metal: overall pace of the lead melody. Each section still varies around it.">Melody pace
         <select id="gap">
           <option value="4">Busy</option>
           <option value="8" selected>Medium</option>
@@ -94,6 +95,7 @@
         <tr><td>Space, <code>, . :</code></td><td>Rest. Tabs mid-line are a longer rest.</td></tr>
         <tr><td>Newline</td><td>A short rest, snapped to the next 8th note. Blank lines add no extra pause.</td></tr>
         <tr><td>Chillstep style</td><td>About 70 BPM with the melody stretched out and thinned to a few long notes on a steady rhythmic grid that lines up with the drums. Each line is a section with its own pace (mostly slow, sometimes medium, occasionally lively) that opens on its chord root and stays near it, with quiet stepwise filler notes smoothing any leaps; the Melody pace menu (Busy / Medium / Relaxed) shifts all the paces together. A darker piano lead, soft piano chords, a recorded electric bass, and a big reverb (the chords and bass are real instruments because held low synth tones sound like a horn). The harmony follows a steady i–VI–III–VII loop with one change per new line, the bass and chord always change together, and the melody glides to the nearest note of each new chord. The chords are voiced low and compact under the melody and move as little as possible between lines, and the bass restates the root every bar (the chord every second bar) so the harmony never drops out. A steady half-time drum groove plays underneath (kick on 1, snare on 3, swung hats) and the kick gently ducks the pad and bass so the drums stay present.</td></tr>
+        <tr><td>Lo-fi style</td><td>About 80 BPM, composed on the same layout as Chillstep (sparse melody on a grid, the i–VI–III–VII chord loop) and then played like a lo-fi beat. The chords get a 9th on top and are played as short stabs that follow a boom-bap kick (kick on 1 with a ghost kick and pickup, snare on 2 and 4 a touch late, swung hats). The bass plays short, round notes on the kick pattern. Timing and volumes are slightly loose. The piano and chords go through a gentle tape wobble, some saturation and a dark lowpass in a small room, with quiet vinyl crackle over the top.</td></tr>
         <tr><td>Rock / Metal style</td><td>About 150 BPM in Phrygian. Each line is a riff section: palm-muted guitar chugs on straight 8ths, a gallop, a syncopated half-time rhythm, or a driving run. The riff keeps going across line breaks. Only one part speeds up at a time: some sections have the lead run up and down the scale in 8ths over a steady rhythm, and others end in a half-bar burst of 16th chugs and double kick while the lead rests. Common letters chug on the section's root note and rarer ones move up the scale, brackets add power chords, the bass is its own part (several bar shapes that rotate, walking notes that follow the words in the line, and a walk up into the next section's root), and the drums follow the riff with a crash and snare roll into each new section, plus accents from the code (`=` adds kicks, math operators add hats, comparisons add ghost snares). A lead guitar with vibrato plays over the other sections, mostly a note per beat or per 8th with stepwise pickup notes; each section centers on a different scale step so it keeps moving. Guitar and bass are real recorded samples through a distortion and speaker-style filter chain.</td></tr>
         <tr><td>Evolving harmony</td><td>Each line's text picks its own chord root and register; every fourth line returns to the tonic. The melody lands on a chord tone on each beat, the step size depends on the letter pair (not just the letter), word-ending notes are longer, word starts are accented, and each line swells in pitch and volume. Turn it off for the plain mapping.</td></tr>
         <tr><td>Background track</td><td>Canon: the melody is echoed an octave up, a beat or a bar or two later, as a soft sine tone panned slightly right (just the melody, no bass, chords or drums). Alternating lines: odd lines play in the foreground while even lines play at the same time as a lower background voice, each on its own clock. The background cursor is blue.</td></tr>
