@@ -11,6 +11,8 @@ export const isLofi = () => $('style').value === 'lofi';
 
 export const isMetal = () => $('style').value === 'metal';
 
+export const isChip = () => $('style').value === 'chiptune';
+
 export const getStyle = () => $('style').value;
 
-export const getOpts = () => ({ mode: $('bgmode').value, delay: +$('delay').value, vary: $('vary').checked, chill: isChill(), lofi: isLofi(), metal: isMetal(), gap: +$('gap').value });
+export const getOpts = () => ({ mode: $('bgmode').value, delay: +$('delay').value, vary: $('vary').checked, chill: isChill(), lofi: isLofi(), metal: isMetal(), chip: isChip(), gap: +$('gap').value });
