@@ -259,7 +259,10 @@ function composeTrack(items, key, scale, bg, vary, chill) {
   const push = o => ev.push({ tr: bg ? 1 : 0, ...o });
   const lead = d => degToMidi((chill ? 48 : 60) + key + sh, scale, d);   // same tonic as pad/bass (C + key)
   const pad  = d => degToMidi(48 + key, scale, d);
-  const bass = d => degToMidi(36 + key, scale, d);
+  // Chillstep keeps the bass in one low octave (G1 to F#2) whatever the chord: roots on higher scale degrees
+  // used to sit up near 105-117 Hz, which sounded brighter and louder than the others, so a line change onto
+  // one of them came in sharp and high.
+  const bass = d => { const m = degToMidi(36 + key, scale, d); return chill ? 31 + (((m - 31) % 12) + 12) % 12 : m; };
   const top  = d => degToMidi(72 + key + sh, scale, d);
 
   let t = 0, pos = n, depth = 0, prev = '';
@@ -287,8 +290,8 @@ function composeTrack(items, key, scale, bg, vary, chill) {
     const tones = [root, root + 2, root + 4].map(d => d % n);
 
     if (!blank) {
-      push({ t, i: idx + ws.length, k: 'bass', m: bass(chill ? root : (root + BASS[indent % BASS.length]) % n), d: 4, v: 0.6, s: seg, a: root });
-      if (vary) push({ t, i: idx + ws.length, k: 'pad', m: [pad(root), pad(root + 2), pad(root + 4)], rd: root, d: 8, v: 0.3, s: seg });
+      push({ t, i: idx + ws.length, k: 'bass', m: bass(chill ? root : (root + BASS[indent % BASS.length]) % n), d: chill ? 16 : 4, v: chill ? 0.34 : 0.6, s: seg, a: root });
+      if (vary) push({ t, i: idx + ws.length, k: 'pad', m: [pad(root), pad(root + 2), pad(root + 4)], rd: root, d: 8, v: chill ? 0.22 : 0.3, s: seg });
     }
 
     for (let j = ws.length; j < line.length; j++) {
@@ -409,6 +412,12 @@ function chillify(r, base) {
     if (e.k === 'pad' && dropped.has(e.s)) { e.k = 'rest'; delete e.m; }
     if (e.k === 'lead' && heldRoot.has(e.s)) e.a = heldRoot.get(e.s);
   }
+  // Put each chord change (bass and chord together) on the nearest beat. A new line's first character falls at
+  // an arbitrary step, so the new bass and chord used to start a little off the beat, right after the snare and
+  // the melody's own note, which made the change sound like a stumble instead of a continuation.
+  for (const e of ev) {
+    if ((e.k === 'bass' || e.k === 'pad') && e.s !== undefined && e.m !== undefined) e.t = Math.round(e.t / 4) * 4;
+  }
   // Voice the chords: compact (within an octave), in a low range under the melody, and each one arranged to move
   // as little as possible from the last. (Placing every chord by scale degree sent a chord whose root was a high
   // degree up an octave, so it jumped above the melody the moment a new line began.)
@@ -438,8 +447,12 @@ function chillify(r, base) {
   changes.forEach((c, j) => {
     const stop = changes[j + 1] ? changes[j + 1].t : endT;
     const chord = chordOf.get(c.s);
-    for (let bt = Math.ceil((c.t + 4) / 16) * 16, k = 0; bt < stop - 4; bt += 16, k++) {
-      ev.push({ t: bt, tr: 0, k: 'bass', m: c.m, d: 12, v: 0.5 });
+    // The line-start note runs on into the first restatement, and each restatement overlaps the next (the
+    // sampler fades in and out slowly), so the bass is one continuous tone instead of separate plucks.
+    const first = Math.ceil((c.t + 4) / 16) * 16;
+    c.d = Math.max(4, Math.min(first, stop) - c.t + 4);
+    for (let bt = first, k = 0; bt < stop - 4; bt += 16, k++) {
+      ev.push({ t: bt, tr: 0, k: 'bass', m: c.m, d: Math.min(20, stop - bt + 4), v: 0.34 });
       if (chord && k % 2 === 1) ev.push({ t: bt, tr: 0, k: 'pad', m: chord.m, d: 10, v: 0.22 });
     }
   });
@@ -920,14 +933,14 @@ function buildTrack(reverb, bg, chill, piano, dryOut, bassSamples) {
           envelope: { attack: 0.01, decay: 0.12, sustain: 0.35, release: 0.25 },
         }),
     bass: chill && bassSamples
-      ? new Tone.Sampler({ urls: bassSamples, release: 0.4 })
+      ? new Tone.Sampler({ urls: bassSamples, attack: 0.4, release: 1.6 })   // slow fade in and out: no pluck, no hard cut
       : new Tone.PolySynth(Tone.Synth, {
           oscillator: { type: 'sine' },
           envelope: chill ? { attack: 0.08, decay: 0.4, sustain: 0.5, release: 0.8 }
                           : { attack: 0.02, decay: 0.2, sustain: 0.6, release: 0.4 },
         }),
     pad: chill && piano
-      ? new Tone.Sampler({ urls: PIANO_URLS, baseUrl: PIANO_BASE, release: 2 })
+      ? new Tone.Sampler({ urls: PIANO_URLS, baseUrl: PIANO_BASE, attack: 0.12, release: 2 })
       : new Tone.PolySynth(Tone.Synth, chill
       ? { oscillator: { type: 'fattriangle', count: 3, spread: 18 },
           envelope: { attack: 0.9, decay: 0.6, sustain: 0.7, release: 3 } }
@@ -944,8 +957,8 @@ function buildTrack(reverb, bg, chill, piano, dryOut, bassSamples) {
     }),
   };
   s.lead.volume.value = piano ? (bg ? -8 : -4) : chill && !bg ? -10 : -8;   s.lead.connect(leadDst);
-  s.bass.volume.value = chill ? (bassSamples ? -14 : -14) : -10;
-  if (chill && bassSamples) s.bass.connect(new Tone.Filter(700, 'lowpass').connect(duckBass));   // warm and round
+  s.bass.volume.value = chill ? (bassSamples ? -17 : -14) : -10;
+  if (chill && bassSamples) s.bass.connect(new Tone.Filter(380, 'lowpass').connect(duckBass));   // warm and round, no horn-like upper harmonics
   else s.bass.connect(duckBass);
   s.duckPad = duckPad; s.duckBass = duckBass;
   s.pad.volume.value = chill ? (piano ? -9 : -19) : -20;  s.pad.connect(padFilter);
@@ -1023,9 +1036,9 @@ function sound(e, time) {
         else s.pad.triggerAttackRelease(e.m.map(hz), dur, time, v);
         break;
       case 'kick':
-        if (audio.chill && !e.tr) for (const g of [s.duckPad, s.duckBass]) {        // dip the sustained tones under the kick
+        if (audio.chill && !e.tr) for (const [g, dip] of [[s.duckPad, 0.55], [s.duckBass, 0.85]]) {   // dip the sustained tones under the kick
           g.gain.cancelScheduledValues(time);
-          g.gain.setValueAtTime(0.55, time);
+          g.gain.setValueAtTime(dip, time);
           g.gain.linearRampToValueAtTime(1, time + 0.35);
         }
         s.kick.triggerAttackRelease(audio.metal ? 'F1' : 'C1', '16n', time, v ?? 0.9);
