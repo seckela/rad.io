@@ -65,5 +65,5 @@ footer a { color:var(--dim); }
 /* Masthead: "{rad.io}" that expands into the visualizer while playing */
 .masthead { position:relative; height:52px; margin:0 0 6px; }
 .viz { position:absolute; inset:0; width:100%; height:100%; display:block; pointer-events:none; }
-h1 { position:absolute; top:50%; transform:translateY(-50%); margin:0; font-size:26px; line-height:1.1;
+h1 { position:absolute; top:50%; transform:translateY(-50%); margin:0; font-size:26px; line-height:1.1; color:var(--accent);
      white-space:nowrap; transition:none; }
