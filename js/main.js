@@ -6,6 +6,7 @@ import { audio } from './audio/engine.js';
 import { setCode, getText, initEditor } from './ui/editor.js';
 import { getKey, getScale, isChill, isLofi, getOpts } from './ui/settings.js';
 import { initTips } from './ui/tips.js';
+import { initDebug } from './audio/unlock.js';
 import { playing, lastTotal, applyMix, updateStats, rebuild, applyStyleDefaults, loadAudio, start, stop } from './ui/playback.js';
 
 KEYS.forEach((k, i) => $('key').add(new Option(k, i)));
@@ -22,6 +23,7 @@ LAYERS.forEach(([id, label]) => {
 });
 
 initTips();
+initDebug();
 
 playBtn.onclick = () => playing ? stop() : start();
 $('tempo').oninput = e => {

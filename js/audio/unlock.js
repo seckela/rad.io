@@ -23,8 +23,9 @@ function log(msg) {
     d.style.cssText = 'position:fixed;left:8px;bottom:8px;right:8px;z-index:20;padding:6px 8px;background:#000c;color:#9f9;font:11px/1.4 ui-monospace,monospace;white-space:pre-wrap;border-radius:6px';
     document.body.appendChild(d);
   }
-  const ctx = Tone.getContext().rawContext;
-  d.textContent = `ios=${isIOS} ctx=${ctx.state} routed=${routed} el.paused=${el ? el.paused : 'n/a'} session=${navigator.audioSession ? navigator.audioSession.type : 'n/a'}\n${note}`;
+  let state = 'n/a';
+  try { state = Tone.getContext().rawContext.state; } catch (e) {}
+  d.textContent = `[unlock v3] ua=${navigator.userAgent.slice(0, 60)}\nios=${isIOS} ctx=${state} routed=${routed} el.paused=${el ? el.paused : 'n/a'} session=${navigator.audioSession ? navigator.audioSession.type : 'n/a'}\n${note}`;
 }
 
 function toDirectOutput() {
@@ -55,9 +56,13 @@ function routeThroughElement() {
   return true;
 }
 
+// Shows the status line right away when the URL has ?debug (before Play is pressed), so you can
+// tell the page loaded this code.
+export function initDebug() { log('loaded; press Play'); }
+
 export function unlockAudio() {
   try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
-  if (!isIOS) return;
+  if (!isIOS) { log('not iOS, nothing to do (add ?forceios to try the iOS path)'); return; }
   try {
     if (!routeThroughElement()) log('MediaStream destination not available');
     else log('routed through <audio>');
