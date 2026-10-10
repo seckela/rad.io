@@ -16,13 +16,6 @@ const TIPS = {
   bgvol: 'Volume of the background voice. Further left is quieter.',
   file: 'Load a file from your computer instead of pasting. You can also drop a file onto the code area.',
 };
-const LAYER_TIPS = {
-  lead: 'Mute or unmute the melody (letters).',
-  bass: 'Mute or unmute the bass line.',
-  pad: 'Mute or unmute the chords (brackets).',
-  accent: 'Mute or unmute the bells and plucked notes (quotes and digits).',
-  perc: 'Mute or unmute the drums (operators and symbols).',
-};
 
 function addIcon(label, text) {
   if (!label || label.querySelector('.tip')) return;
@@ -42,7 +35,6 @@ export function initTips() {
     const el = $(id);
     if (el) addIcon(el.closest('label'), text);
   }
-  document.querySelectorAll('[data-layer]').forEach(c => addIcon(c.closest('label'), LAYER_TIPS[c.dataset.layer]));
 
   const box = document.createElement('div');
   box.className = 'tip-box';
