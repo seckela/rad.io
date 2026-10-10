@@ -32,9 +32,9 @@
 <body>
 <main>
   <header>
-    <div class="brand">
-      <img src="icons/icon-192.png" alt="" width="40" height="40">
-      <h1>rad.io</h1>
+    <div class="masthead">
+      <canvas id="viz" class="viz" aria-hidden="true"></canvas>
+      <h1 id="title">rad.io</h1>
     </div>
     <p>Paste or drop any JavaScript. Every character becomes part of the music.</p>
   </header>
@@ -75,6 +75,7 @@
       </label>
       <label><input id="loop" type="checkbox"> Loop</label>
       <label><input id="vary" type="checkbox" checked> Evolving harmony</label>
+      <label><input id="viz-on" type="checkbox" checked> Visualizer</label>
       <label>Background
         <select id="bgmode">
           <option value="canon" selected>Canon (echo)</option>
