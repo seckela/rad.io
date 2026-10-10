@@ -41,7 +41,8 @@
 
   <section class="panel">
     <div class="controls">
-      <button id="play" class="primary">▶ Play</button>
+      <button id="play" class="primary"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.8v10.4L12.6 8z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>Play</button>
+      <button id="stop" hidden><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="3" width="10" height="10" rx="2.2"/></svg>Stop</button>
       <label>Style
         <select id="style">
           <option value="default" selected>Default</option>
@@ -94,15 +95,16 @@
         <input id="bgvol" type="range" min="-24" max="0" value="-8">
       </label>
       <label>File <input id="file" type="file" accept=".js,.mjs,.cjs,.jsx,.ts,.tsx,.json,.txt"></label>
-      <button id="sample">Sample</button>
     </div>
     <div class="controls layers" id="layers"></div>
   </section>
 
   <section class="panel">
+    <p class="hint">Click anywhere in the code to choose where playback starts, or to jump there while it plays.</p>
     <div id="editor" class="code" role="textbox" aria-multiline="true" aria-label="Source code" hidden></div>
     <textarea id="src" class="code" spellcheck="false" aria-label="Source code"></textarea>
     <div id="view" class="code" hidden></div>
+    <div class="code-actions"><button id="sample">Load example code</button></div>
     <div class="meta"><span id="stats"></span><span>Drop a file onto the code area to load it</span></div>
   </section>
 

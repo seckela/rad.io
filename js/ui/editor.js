@@ -2,6 +2,25 @@ import { $, src } from './dom.js';
 
 let jar = null, editorEl = null;   // syntax-highlighting editor (CodeJar); null means the plain textarea is in use
 
+// Where the user deliberately put the caret (a click or arrow keys), or null. Typing or pasting
+// clears it, so a caret left at the end of freshly pasted code doesn't make Play start at the end.
+let caret = null;
+const remember = () => { try { caret = jar ? jar.save().start : src.selectionStart; } catch (e) { caret = null; } };
+const CARET_KEYS = /^(Arrow|Home$|End$|Page)/;
+function trackCaret(el) {
+  el.addEventListener('pointerup', remember);
+  el.addEventListener('keyup', e => { if (CARET_KEYS.test(e.key)) remember(); });
+  el.addEventListener('input', () => { caret = null; });
+}
+trackCaret(src);
+
+// The character index Play should start from, or null to start at the beginning (no deliberate
+// caret, or the caret is at the very start or end).
+export function getStartIndex() {
+  const len = getText().length;
+  return caret != null && caret > 0 && caret < len ? caret : null;
+}
+
 export const getText = () => (jar ? jar.toString() : src.value).replace(/\r\n?/g, '\n');
 
 export function setCode(text) { src.value = text; if (jar) jar.updateCode(text); }
@@ -20,6 +39,7 @@ export async function initEditor(onFile) {
     }, { tab: '  ', addClosing: false });
     jar.onUpdate(code => { src.value = code; });
     jar.updateCode(src.value);
+    trackCaret(editorEl);
     src.hidden = true; editorEl.hidden = false;
     for (const ev of ['dragover', 'drop']) {
       editorEl.addEventListener(ev, e => { e.preventDefault(); if (ev === 'drop') onFile(e.dataTransfer.files[0]); });

@@ -84,3 +84,27 @@ export function highlight(i, tr) {
   if (old && old.li !== li) paintLine(old.li);
   if (!tr && (!old || old.li !== li)) view.scrollTop = lineEls[li].offsetTop - view.clientHeight / 2;
 }
+
+// The index of the character under a screen point (for click-to-seek), or null. Uses a DOM range
+// from the start of the line, so it doesn't matter how the line is split into spans and marks.
+export function indexFromPoint(x, y) {
+  let node, off;
+  if (document.caretPositionFromPoint) {
+    const pos = document.caretPositionFromPoint(x, y);
+    if (!pos) return null;
+    node = pos.offsetNode; off = pos.offset;
+  } else if (document.caretRangeFromPoint) {
+    const r = document.caretRangeFromPoint(x, y);
+    if (!r) return null;
+    node = r.startContainer; off = r.startOffset;
+  } else return null;
+  const el = node.nodeType === 1 ? node : node.parentElement;
+  const div = el && el.closest('#view > div');
+  if (!div) return null;
+  const li = lineEls.indexOf(div);
+  if (li < 0) return null;
+  const range = document.createRange();
+  range.setStart(div, 0);
+  range.setEnd(node, off);
+  return view._starts[li] + Math.min(range.toString().length, lineText[li].length);
+}
