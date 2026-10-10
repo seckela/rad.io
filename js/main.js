@@ -4,7 +4,7 @@ import { SAMPLE } from './sample.js';
 import { compose } from './compose/index.js';
 import { audio } from './audio/engine.js';
 import { setCode, getText, initEditor } from './ui/editor.js';
-import { getKey, getScale, isChill, getOpts } from './ui/settings.js';
+import { getKey, getScale, isChill, isLofi, getOpts } from './ui/settings.js';
 import { playing, lastTotal, applyMix, updateStats, rebuild, applyStyleDefaults, loadAudio, start, stop } from './ui/playback.js';
 
 KEYS.forEach((k, i) => $('key').add(new Option(k, i)));
@@ -36,7 +36,7 @@ $('style').onchange = () => {
   if (audio) loadAudio();
   if (playing) rebuild(); else updateStats(getText().length, compose(getText(), getKey(), getScale(), getOpts()).total);
 };
-$('gap').onchange = () => { if (playing) rebuild(); else if (isChill()) updateStats(getText().length, compose(getText(), getKey(), getScale(), getOpts()).total); };
+$('gap').onchange = () => { if (playing) rebuild(); else if (isChill() || isLofi()) updateStats(getText().length, compose(getText(), getKey(), getScale(), getOpts()).total); };
 $('leadsound').onchange = () => { if (audio) loadAudio(); };
 $('sample').onclick = () => { if (playing) stop(); setCode(SAMPLE); };
 
