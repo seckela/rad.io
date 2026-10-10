@@ -39,6 +39,8 @@
     <p>Paste or drop any JavaScript. Every character becomes part of the music.</p>
   </header>
 
+  <canvas id="viz" class="viz" aria-hidden="true"></canvas>
+
   <section class="panel">
     <div class="controls">
       <button id="play" class="primary">▶ Play</button>
@@ -75,6 +77,7 @@
       </label>
       <label><input id="loop" type="checkbox"> Loop</label>
       <label><input id="vary" type="checkbox" checked> Evolving harmony</label>
+      <label><input id="viz-on" type="checkbox" checked> Visualizer</label>
       <label>Background
         <select id="bgmode">
           <option value="canon" selected>Canon (echo)</option>

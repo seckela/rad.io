@@ -13,6 +13,7 @@ const TIPS = {
   vary: 'Gives each line its own chord and register, so the music changes more across a file. Turn it off for a plainer, more repetitive sound.',
   bgmode: 'A second, quieter voice. Canon echoes the melody a little later. Alternating lines plays odd and even lines at the same time as two voices. Off plays a single voice.',
   delay: 'How far behind the echo comes. Only used by Canon.',
+  'viz-on': 'Show the moving bars under the title while music plays. Turn it off on a slow phone to save battery.',
   bgvol: 'Volume of the background voice. Further left is quieter.',
   file: 'Load a file from your computer instead of pasting. You can also drop a file onto the code area.',
 };
