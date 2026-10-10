@@ -14,8 +14,12 @@ let endToken = 0, lastEvents = [], endReached = false;
 const stopBtn = $('stop');
 
 // The Play button doubles as Pause / Resume; Stop only shows while a session is open.
+const ICON = {
+  play: '<svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.8v10.4L12.6 8z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>',
+  pause: '<svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="2.5" width="3.4" height="11" rx="1.2"/><rect x="9.6" y="2.5" width="3.4" height="11" rx="1.2"/></svg>',
+};
 function setUi() {
-  playBtn.textContent = !playing ? '▶ Play' : paused ? '▶ Resume' : '❚❚ Pause';
+  playBtn.innerHTML = !playing ? ICON.play + 'Play' : paused ? ICON.play + 'Resume' : ICON.pause + 'Pause';
   stopBtn.hidden = !playing;
 }
 
@@ -87,7 +91,7 @@ export function applyStyleDefaults() {
 export async function loadAudio() {
   if (audio) disposeAudio();
   const metal = isMetal(), piano = !metal && $('leadsound').value === 'piano';
-  const label = playBtn.textContent;
+  const label = playBtn.innerHTML;
   if (metal) {
     playBtn.textContent = 'Loading guitars…';
     try {
@@ -96,14 +100,14 @@ export async function loadAudio() {
       metalBufs = null;
       $('style').value = 'default';
       applyStyleDefaults();
-      playBtn.textContent = label;
+      playBtn.innerHTML = label;
       await loadAudio();
       $('stats').textContent = 'Guitar samples could not be loaded, so the Default style is being used.';
       return;
     }
     setAudio(buildAudio('metal', false, metalBufs));
     applyMix();
-    playBtn.textContent = label;
+    playBtn.innerHTML = label;
     return;
   }
   const warm = isChill() || isLofi();       // Chillstep and Lo-fi both use the recorded bass
@@ -114,7 +118,7 @@ export async function loadAudio() {
   const bufs = warm && chillBass ? { bass: chillBass } : undefined;
   setAudio(buildAudio(getStyle(), piano, bufs));
   applyMix();
-  if (!piano) { playBtn.textContent = label; return; }
+  if (!piano) { playBtn.innerHTML = label; return; }
   playBtn.textContent = 'Loading piano…';
   try {
     await Tone.loaded();
@@ -125,7 +129,7 @@ export async function loadAudio() {
     applyMix();
     $('stats').textContent = 'Piano samples could not be loaded, so the synth lead is being used.';
   }
-  playBtn.textContent = label;
+  playBtn.innerHTML = label;
 }
 
 // The transport tick and event for a character index: the first note at or after it.

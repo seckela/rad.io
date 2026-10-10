@@ -18,6 +18,11 @@ select { appearance:none; -webkit-appearance:none; cursor:pointer; padding-right
          background-repeat:no-repeat; background-position:right 10px center; background-size:10px 6px; }
 select:hover { border-color:var(--dim); }
 button { cursor:pointer; }
+button .ico { width:1em; height:1em; fill:currentColor; flex:none; }
+#play, #stop { display:inline-flex; align-items:center; gap:8px; font-size:14px; font-weight:600; }
+#stop { background:transparent; color:var(--accent); border-color:var(--accent); padding:8px 16px; }
+#stop[hidden] { display:none; }
+#stop:hover { background:rgba(242,178,76,.12); border-color:var(--accent); }
 button:hover { border-color:var(--dim); }
 button.primary { background:var(--accent); color:var(--accent-ink); border-color:var(--accent);
                  font-weight:600; font-size:14px; padding:8px 20px; }
