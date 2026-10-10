@@ -47,6 +47,7 @@ export function sound(e, time) {
         s.crash.triggerAttackRelease(1.4, time, v);
         if (s.crashM) s.crashM.triggerAttackRelease('4n', time, v * 0.6);
         break;
+      case 'arp':   s.pad.triggerAttackRelease(hz(e.m), dur * 0.8, time, v); break;
       case 'bass':  s.bass.triggerAttackRelease(hz(e.m), dur, time, v); break;
       case 'digit': s.digit.triggerAttackRelease(hz(e.m), dur, time, v); break;
       case 'bell':  s.bell.triggerAttackRelease(hz(e.m), dur, time, v); break;

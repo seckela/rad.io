@@ -1,12 +1,13 @@
 import { buildTrack } from './track.js';
 import { buildMetalTrack } from './metal-track.js';
 import { buildLofiTrack } from './lofi-track.js';
+import { buildChipTrack } from './chip-track.js';
 
 // The current set of voices (null until the first Play). Importers see the live value.
 export let audio = null;
 export function setAudio(a) { audio = a; }
 
-// style: 'default' | 'chill' | 'lofi' | 'metal'. bufs: the decoded samples for that style (guitar and bass for
+// style: 'default' | 'chill' | 'lofi' | 'metal' | 'chiptune'. bufs: the decoded samples for that style (guitar and bass for
 // metal, bass for chill and lofi), or undefined to use the synth fallbacks.
 export function buildAudio(style, piano, bufs) {
   const limiter = new Tone.Limiter(-3).toDestination();   // safety net against pile-ups
@@ -14,6 +15,11 @@ export function buildAudio(style, piano, bufs) {
     const reverb = new Tone.Reverb({ decay: 1.6, wet: 0.12 }).connect(limiter);
     return { reverb, limiter, piano: false, chill: false, metal: true,
       fg: buildMetalTrack(reverb, false, bufs), bg: buildMetalTrack(reverb, true, bufs) };
+  }
+  if (style === 'chiptune') {            // dry and tight: just a hint of room
+    const reverb = new Tone.Reverb({ decay: 0.8, wet: 0.05 }).connect(limiter);
+    return { reverb, limiter, piano: false, chill: false, chip: true,
+      fg: buildChipTrack(reverb, false), bg: buildChipTrack(reverb, true) };
   }
   if (style === 'lofi') {                // a small room: much drier than Chillstep
     const reverb = new Tone.Reverb({ decay: 2.2, wet: 0.2 }).connect(limiter);

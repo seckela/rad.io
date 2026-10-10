@@ -4,7 +4,7 @@ import { syncPicker } from './picker.js';
 import { $, view, playBtn } from './dom.js';
 import { getText, setEditorHidden } from './editor.js';
 import { renderView, highlight } from './view.js';
-import { getKey, getScale, getStyle, isChill, isLofi, isMetal, getOpts } from './settings.js';
+import { getKey, getScale, getStyle, isChill, isLofi, isMetal, isChip, getOpts } from './settings.js';
 import { compose } from '../compose/index.js';
 import { audio, setAudio, buildAudio, disposeAudio } from '../audio/engine.js';
 import { sound } from '../audio/play.js';
@@ -80,11 +80,11 @@ export function rebuild() {
 // Sets the tempo and scale that go with the selected style (both can be changed afterwards).
 export function applyStyleDefaults() {
   const st = $('style').value;
-  $('tempo').value = { chill: 70, lofi: 80, metal: 150 }[st] || 130;
+  $('tempo').value = { chill: 70, lofi: 80, metal: 150, chiptune: 140 }[st] || 130;
   $('tempoVal').textContent = $('tempo').value;
   Tone.Transport.bpm.value = +$('tempo').value;
-  $('scale').value = { chill: 'Natural minor', lofi: 'Natural minor', metal: 'Phrygian' }[st] || 'Dorian';
-  $('leadsound').disabled = st === 'metal';       // the metal lead is always a guitar
+  $('scale').value = { chill: 'Natural minor', lofi: 'Natural minor', metal: 'Phrygian', chiptune: 'Major' }[st] || 'Dorian';
+  $('leadsound').disabled = st === 'metal' || st === 'chiptune';   // the metal lead is always a guitar, the chiptune lead a pulse wave
   syncPicker();
 }
 
@@ -92,7 +92,7 @@ export function applyStyleDefaults() {
 // they can't be fetched (offline, blocked), falls back to something that needs no downloads.
 export async function loadAudio() {
   if (audio) disposeAudio();
-  const metal = isMetal(), piano = !metal && $('leadsound').value === 'piano';
+  const metal = isMetal(), piano = !metal && !isChip() && $('leadsound').value === 'piano';
   const label = playBtn.innerHTML;
   if (metal) {
     playBtn.textContent = 'Loading guitars…';
