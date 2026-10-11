@@ -5,7 +5,7 @@ import { chillify } from './chill.js';
 //  - Each chord change becomes one long, soft drone: the chord and a low root with its fifth sustain until the next
 //    change instead of being restated every bar.
 //  - Melody notes are thinned to one every few beats and lengthened so they blend into the held chords.
-//  - Every few bars a soft gust of wind chimes drifts through: two to five high notes tumbling down a minor-pentatonic-like
+//  - Every few bars a soft gust of wind chimes drifts through: two to four high notes tumbling close together down a minor-pentatonic-like
 //    subset of the scale, each ringing for seconds. They are placed by a fixed hash, so the same code gets the same chimes.
 //  - There are no drums at all.
 // The slow fades, the filtering and the big reverb come from the voices (see audio/ambient-track.js).
@@ -37,7 +37,7 @@ export function ambientify(r, key, scale, base) {
 // Deterministic pseudo-random value in [0, 1).
 const hash = x => { const y = Math.sin(x * 12.9898) * 43758.5453; return y - Math.floor(y); };
 
-// Wind chimes: a gust every 1.5 to 4 bars, each a few quick, soft, high notes (mostly falling) from the scale. They carry no
+// Wind chimes: a gust every 1.5 to 4 bars, each two to four quick, high notes (mostly falling) from the scale. They carry no
 // text index, so the highlight is unaffected, and they stay clear of the melody's range.
 function windChimes(total, key, scale) {
   const n = scale.length;
@@ -45,7 +45,7 @@ function windChimes(total, key, scale) {
   const out = [];
   let t = 12 + Math.floor(hash(1) * 16), g = 0;
   while (t < total - 8) {
-    const count = 2 + Math.floor(hash(g * 7.1 + 2) * 4);
+    const count = 2 + Math.floor(hash(g * 7.1 + 2) * 3);               // 2 to 4 notes
     const notes = [];
     for (let j = 0; j < count; j++) {
       const deg = picks[Math.floor(hash(g * 13.7 + j * 3.3 + 5) * picks.length)];
@@ -56,8 +56,8 @@ function windChimes(total, key, scale) {
     if (hash(g * 3.3 + 4) < 0.7) notes.sort((a, b) => b - a);       // usually a falling cascade
     let at = t;
     notes.forEach((m, j) => {
-      out.push({ t: at, tr: 0, k: 'chime', m, d: 8, v: Math.max(0.1, 0.34 - j * 0.05 - hash(g * 2.7 + j) * 0.06) });
-      at += 1 + Math.floor(hash(g * 9.1 + j * 2.1 + 1) * 3);
+      out.push({ t: at, tr: 0, k: 'chime', m, d: 8, v: Math.max(0.3, 0.55 - j * 0.04 - hash(g * 2.7 + j) * 0.06) });
+      at += 1 + Math.floor(hash(g * 9.1 + j * 2.1 + 1) * 2);       // 1 or 2 sixteenths apart, so they ring together as one chime
     });
     t += 24 + Math.floor(hash(g * 4.4 + 6) * 40);
     g++;

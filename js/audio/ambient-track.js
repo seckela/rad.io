@@ -34,7 +34,7 @@ export function buildAmbientTrack(reverb, bg) {
     }),
     chime: new Tone.PolySynth(Tone.FMSynth, {          // glassy, slightly inharmonic: like thin metal tubes
       harmonicity: 3.5, modulationIndex: 2.5,
-      envelope: { attack: 0.002, decay: 3.5, sustain: 0, release: 3 },
+      envelope: { attack: 0.002, decay: 4, sustain: 0, release: 3 },
       modulationEnvelope: { attack: 0.002, decay: 1.2, sustain: 0, release: 1 },
     }),
   };
@@ -42,7 +42,7 @@ export function buildAmbientTrack(reverb, bg) {
   s.lead.volume.value = bg ? -17 : -12;       s.lead.connect(fx.leadLp);
   s.bass.volume.value = -14;                  s.bass.connect(group.bass);
   s.bell.volume.value = -22;                  s.bell.connect(group.accent);
-  s.chime.volume.value = -26;                 s.chime.connect(group.accent);
+  s.chime.volume.value = -18;                 s.chime.connect(group.accent);
   Object.assign(s, fx);   // so disposeAudio cleans the effect nodes up with the voices
   return { s, group, out };
 }
