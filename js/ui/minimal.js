@@ -12,6 +12,7 @@ let on = false, timer = 0;
 function mirror() {
   miniPlay.innerHTML = playBtn.innerHTML;
   miniPlay.disabled = playBtn.disabled;
+  miniStop.innerHTML = stopBtn.innerHTML;
   miniStop.hidden = stopBtn.hidden;
 }
 

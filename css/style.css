@@ -105,10 +105,11 @@ body.mini header { width:100%; }
 body.mini header p, body.mini main > section, body.mini footer { display:none; }
 body.mini .masthead { --mh:min(clamp(110px, 32vh, 240px), calc((100vw - 48px) / 2.7)); margin:0; }   /* narrow screens: keep {rad.io} inside the width */
 body.idle { cursor:none; }
-.mini-bar { position:fixed; left:50%; bottom:28px; transform:translateX(-50%); z-index:20; display:none; gap:12px;
-            padding:10px; background:var(--panel); border:1px solid var(--line); border-radius:12px;
+.mini-bar { position:fixed; left:50%; bottom:28px; transform:translateX(-50%); z-index:20; display:none; gap:8px;
+            padding:8px; background:var(--panel); border:1px solid var(--line); border-radius:12px;
             box-shadow:0 8px 24px rgba(0,0,0,.45); opacity:0; pointer-events:none; transition:opacity .25s; }
 body.mini .mini-bar { display:flex; }
-.mini-bar button { white-space:nowrap; }
+.mini-bar button { white-space:nowrap; font-size:13px; padding:6px 12px; gap:6px; }
+.mini-bar #mini-stop { padding:6px 12px; }
 body.mini .mini-bar.show { opacity:1; pointer-events:auto; }
 @media (prefers-reduced-motion: reduce) { .mini-bar { transition:none; } }
