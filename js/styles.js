@@ -39,4 +39,12 @@ export const STYLES = [
     download: 'Nothing: every sound is synthesized.',
     note: 'The lead is always a pulse wave, so the Lead control is disabled.',
   },
+  {
+    id: 'ambient', name: 'Ambient', tint: '#a592f0',
+    tagline: 'Slow, drifting drones',
+    blurb: "Chillstep's slow harmony with nothing struck: each chord change becomes one long, soft drone with a low root and fifth underneath, a few long melody notes that blend into it, and bell chimes, all in a huge reverb. There are no drums.",
+    chips: ['60 BPM', 'Natural minor', 'Soft sine lead', 'Detuned pad drone', 'No drums'],
+    download: 'Nothing: every sound is synthesized.',
+    note: 'The lead is always a soft sine, so the Lead control is disabled.',
+  },
 ];
