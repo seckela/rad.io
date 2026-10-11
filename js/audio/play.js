@@ -82,15 +82,19 @@ export function sound(e, time) {
         break;
       }
       case 'climb': {       // the build-up's riser in miniature: swept noise and a rising tone that pull up and stop dead as the melody lands
-        const L = 4 * unit - 0.02;
+        const L = 6 * unit - 0.02;
         s.riserBp.frequency.cancelScheduledValues(time);
-        s.riserBp.frequency.setValueAtTime(900, time);
-        s.riserBp.frequency.exponentialRampToValueAtTime(8000, time + L);
-        s.riserNoise.triggerAttackRelease(L, time, 0.7);
+        s.riserBp.frequency.setValueAtTime(700, time);
+        s.riserBp.frequency.exponentialRampToValueAtTime(10000, time + L);
+        s.riserNoise.volume.setValueAtTime(-13, time);
+        s.riserNoise.volume.setValueAtTime(-20, time + L + 0.15);   // louder than the build's own riser, then back
+        s.riserNoise.triggerAttackRelease(L, time, 1);
         s.riserTone.frequency.cancelScheduledValues(time);
-        s.riserTone.frequency.setValueAtTime(440, time);
-        s.riserTone.frequency.exponentialRampToValueAtTime(2200, time + L);
-        s.riserTone.triggerAttackRelease(L, time, 0.6);
+        s.riserTone.frequency.setValueAtTime(330, time);
+        s.riserTone.frequency.exponentialRampToValueAtTime(3000, time + L);
+        s.riserTone.volume.setValueAtTime(-18, time);
+        s.riserTone.volume.setValueAtTime(-26, time + L + 0.15);
+        s.riserTone.triggerAttackRelease(L, time, 1);
         break;
       }
       case 'wob': {         // the growl: a quick pitch dive into the note, and two LFOs locked to the tempo sweeping the formant filters

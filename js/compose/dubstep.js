@@ -128,7 +128,7 @@ export function dubstepify(r, v = variant(), len = r.t) {
       const rest8 = pat.filter(x => x[0] >= 8), first = b === c.drop ? [[0, rest8.length ? 8 : 16, 0, pat[0][3]], ...rest8] : pat;   // if nothing follows the opening note in the bar it holds the whole bar
       for (const [off, len, move, rate] of first) {
         if (afterDive) {          // a mini build-up like the first one: a short riser and the climbing lead, pulling up and stopping dead as the melody lands
-          out.push({ t: b + off - 4, tr, k: 'climb', v: 0.8 });
+          out.push({ t: b + off - 6, tr, k: 'climb', v: 1 });   // the riser starts two 16ths before the lead's climb
           for (let k = 0; k < 4; k++) out.push({ t: b + off - 4 + k, tr, k: 'lead', m: place(a + [0, 2, 4, 7][k] + 2, -1), d: 1, v: 0.45 + 0.15 * k });
         }
         // The first drop keeps the bass on the chord root (the rhythm and the sound carry it); later drops start moving it.
