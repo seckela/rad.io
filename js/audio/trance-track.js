@@ -49,10 +49,10 @@ export function buildTranceTrack(reverb, bg, dryOut) {
       modulationEnvelope: { attack: 0.001, decay: 0.5, sustain: 0, release: 0.3 },
     }),
   };
-  s.pad.volume.value = -17;     s.pad.connect(fx.padLp);
-  s.pluck.volume.value = -19;   s.pluck.connect(fx.pluckLp);
+  s.pad.volume.value = -19;     s.pad.connect(fx.padLp);
+  s.pluck.volume.value = -22;   s.pluck.connect(fx.pluckLp);
   s.bass.volume.value = -9;     s.bass.connect(duckBass);
-  s.lead.volume.value = bg ? -18 : -12;   s.lead.connect(fx.leadLp);
+  s.lead.volume.value = bg ? -17 : -8;   s.lead.connect(fx.leadLp);
   s.digit.volume.value = -19;   s.digit.connect(group.accent);
   s.bell.volume.value = -22;    s.bell.connect(group.accent);
   s.duckPad = duckPad; s.duckBass = duckBass;
