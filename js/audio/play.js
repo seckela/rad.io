@@ -81,16 +81,16 @@ export function sound(e, time) {
         s.zap.triggerAttackRelease(hz(e.m), long ? (e.d || 1) * unit : unit * 0.8, time, v);
         break;
       }
-      case 'climb': {       // the tail of the dive, like a record scratch: from the low note (the BOOO) the pitch curves up, slow at first, then fast (the wee-eee), and cuts off at the top (the P)
-        const L = 4 * unit;
-        s.climb.detune.cancelScheduledValues(time);
-        s.climb.detune.setValueAtTime(0, time);
-        s.climb.detune.linearRampToValueAtTime(500, time + L * 0.55);
-        s.climb.detune.linearRampToValueAtTime(2100, time + L);
-        s.climbLp.frequency.cancelScheduledValues(time);
-        s.climbLp.frequency.setValueAtTime(500, time);
-        s.climbLp.frequency.exponentialRampToValueAtTime(2600, time + L);   // brighter as it rises, but never harsh
-        s.climb.triggerAttackRelease(hz(e.m + 12), L, time, v);
+      case 'climb': {       // the build-up's riser in miniature: swept noise and a rising tone that pull up and stop dead as the melody lands
+        const L = 4 * unit - 0.02;
+        s.riserBp.frequency.cancelScheduledValues(time);
+        s.riserBp.frequency.setValueAtTime(900, time);
+        s.riserBp.frequency.exponentialRampToValueAtTime(8000, time + L);
+        s.riserNoise.triggerAttackRelease(L, time, 0.7);
+        s.riserTone.frequency.cancelScheduledValues(time);
+        s.riserTone.frequency.setValueAtTime(440, time);
+        s.riserTone.frequency.exponentialRampToValueAtTime(2200, time + L);
+        s.riserTone.triggerAttackRelease(L, time, 0.6);
         break;
       }
       case 'wob': {         // the growl: a quick pitch dive into the note, and two LFOs locked to the tempo sweeping the formant filters

@@ -79,7 +79,6 @@ export function buildDubstepTrack(reverb, bg, dryOut) {
         harmonicity: 3.01, modulationIndex: 30, oscillator: { type: 'sawtooth' }, modulation: { type: 'square' },
         envelope: { attack: 0.003, decay: 0.1, sustain: 1, release: 0.08 }, modulationEnvelope: { attack: 0.003, decay: 0.1, sustain: 1, release: 0.08 },
       }),
-      climb: new Tone.Synth({ oscillator: { type: 'triangle' }, envelope: { attack: 0.07, decay: 0.05, sustain: 1, release: 0.025 } }),
       riserNoise: new Tone.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.05, decay: 0.1, sustain: 1, release: 0.1 } }),
       riserTone: new Tone.Synth({ oscillator: { type: 'sawtooth' }, envelope: { attack: 0.1, decay: 0.1, sustain: 1, release: 0.1 } }),
       impact: new Tone.MembraneSynth({ pitchDecay: 0.25, octaves: 5, envelope: { attack: 0.001, decay: 1.2, sustain: 0, release: 0.4 } }),
@@ -100,8 +99,6 @@ export function buildDubstepTrack(reverb, bg, dryOut) {
     fx.diveDist = new Tone.Distortion({ distortion: 0.35, wet: 0.5 });
     fx.diveHp.connect(fx.diveDist); fx.diveDist.connect(duckBass);
     s.dive.volume.value = -9;        s.dive.connect(fx.diveHp);
-    fx.climbLp = new Tone.Filter(500, 'lowpass').connect(duckBass);   // rounds it off (the filter opens as the pitch rises)
-    s.climb.volume.value = -9;       s.climb.connect(fx.climbLp);
     s.sub.volume.value = -7;         s.sub.connect(duckBass);
     s.wob.volume.value = -15;           s.wob.connect(fx.wobHp);
     s.riserNoise.volume.value = -20; s.riserNoise.connect(fx.riserBp);
