@@ -1,4 +1,5 @@
 import { groupLeads, gridMelody } from './melody.js';
+import { variant } from './seed.js';
 
 const CHILL_SLOW = 1.5;                         // how much chillstep stretches the melody's timeline
 
@@ -98,11 +99,13 @@ export function chillify(r, base) {
 }
 
 // Half-time groove: kick on 1 (plus a syncopated one every other bar), snare on 3, swung 8th hats.
-export function chillDrums(total) {
+export function chillDrums(total, v = variant()) {
+  // Seeded: the syncopated kick (on the "and" of 3, a 16th later, or on the "a" of 2) and whether it comes every other bar or every bar.
+  const sync = v.of('sync', [10, 11, 7]), every = v.chance('every-bar', 0.3);
   const ev = [];
   for (let b = 0; b < total; b += 16) {
     ev.push({ t: b, k: 'kick', v: 0.9, tr: 0 });
-    if ((b / 16) % 2 === 1) ev.push({ t: b + 10, k: 'kick', v: 0.6, tr: 0 });
+    if (every || (b / 16) % 2 === 1) ev.push({ t: b + sync, k: 'kick', v: 0.6, tr: 0 });
     ev.push({ t: b + 8, k: 'snare', v: 0.7, tr: 0 });
     for (let h = 0; h < 8; h++) {
       ev.push({ t: b + h * 2 + (h % 2 ? 0.5 : 0), k: 'hat', v: h % 4 === 0 ? 0.4 : h % 2 ? 0.2 : 0.3, tr: 0 });

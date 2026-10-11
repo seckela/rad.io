@@ -1,13 +1,24 @@
 import { chillify } from './chill.js';
-
-// Deterministic pseudo-random value in [0, 1): the loose feel is the same every time the same code is played.
-const hash = x => { const y = Math.sin(x * 12.9898) * 43758.5453; return y - Math.floor(y); };
+import { variant } from './seed.js';
 
 // Bar patterns, as [offset in 16ths, velocity, length]. Even and odd bars alternate so a loop doesn't feel mechanical.
 // The bass and the chord stabs follow the kick, the way a lo-fi producer would play them.
-const CHORD_HITS = [[[0, 0.26, 7], [6, 0.17, 4], [10, 0.14, 4]], [[0, 0.26, 9], [7, 0.18, 5]]];
-const BASS_HITS = [[[0, 0.42, 6], [7, 0.26, 3], [10, 0.32, 4]], [[0, 0.42, 6], [10, 0.3, 4]]];
-const KICKS = [[[0, 0.9], [7, 0.5], [10, 0.7]], [[0, 0.9], [10, 0.7], [14, 0.35]]];
+// The seed picks one set of each (see seed.js).
+const CHORD_SETS = [
+  [[[0, 0.26, 7], [6, 0.17, 4], [10, 0.14, 4]], [[0, 0.26, 9], [7, 0.18, 5]]],
+  [[[0, 0.26, 6], [4, 0.16, 3], [10, 0.16, 5]], [[0, 0.26, 8], [6, 0.18, 4], [12, 0.14, 3]]],
+  [[[0, 0.26, 9], [8, 0.16, 4]], [[0, 0.26, 5], [6, 0.18, 4], [10, 0.15, 4]]],
+];
+const BASS_SETS = [
+  [[[0, 0.42, 6], [7, 0.26, 3], [10, 0.32, 4]], [[0, 0.42, 6], [10, 0.3, 4]]],
+  [[[0, 0.42, 5], [6, 0.28, 3], [11, 0.3, 4]], [[0, 0.42, 7], [9, 0.28, 3], [12, 0.26, 3]]],
+  [[[0, 0.42, 7], [10, 0.32, 5]], [[0, 0.42, 5], [7, 0.26, 3], [10, 0.3, 4]]],
+];
+const KICK_SETS = [
+  [[[0, 0.9], [7, 0.5], [10, 0.7]], [[0, 0.9], [10, 0.7], [14, 0.35]]],
+  [[[0, 0.9], [6, 0.45], [10, 0.7]], [[0, 0.9], [7, 0.5], [11, 0.6]]],
+  [[[0, 0.9], [10, 0.7]], [[0, 0.9], [7, 0.5], [10, 0.7], [14, 0.3]]],
+];
 
 // Lo-fi feel, built on the Chillstep composition (same sparse melody on a grid, same i - VI - III - VII chord loop,
 // bass restating the chord) and then reworked:
@@ -17,7 +28,8 @@ const KICKS = [[[0, 0.9], [7, 0.5], [10, 0.7]], [[0, 0.9], [10, 0.7], [14, 0.35]
 //  - Melody notes are capped at half a bar so the piano plays phrases with space between them.
 //  - A scattering of vinyl crackle pops (quiet 'crackle' events) is laid over the whole piece.
 // The swing, the lazy snare and the loose timing are applied when the notes are played (see audio/play.js).
-export function lofiify(r, key, scale, base) {
+export function lofiify(r, key, scale, base, v = variant()) {
+  const CHORD_HITS = v.of('chords', CHORD_SETS), BASS_HITS = v.of('bass', BASS_SETS);
   const res = chillify(r, base);
   const n = scale.length, pcs = scale.map(x => (key + x) % 12);
   // Drop Chillstep's soft restatements (the bass and chord events without a line segment); the changes themselves stay.
@@ -59,12 +71,13 @@ export function lofiify(r, key, scale, base) {
   });
 
   for (const e of ev) if (e.k === 'lead' && e.d > 8) e.d = 8;
-  const events = ev.concat(gridCrackle(res.t));
+  const events = ev.concat(gridCrackle(res.t, v));
   return { events, t: res.t };
 }
 
 // Vinyl crackle: quiet, irregular pops, about four a bar.
-function gridCrackle(total) {
+function gridCrackle(total, v) {
+  const hash = v.noise('crackle');       // the same pops for the same text and seed
   const out = [];
   for (let u = 0; u < total - 1; u++) {
     if (hash(u * 3.1 + 7) > 0.74) out.push({ t: u + hash(u * 5.3) * 0.9, k: 'crackle', v: 0.08 + 0.25 * hash(u * 1.7), tr: 0 });
@@ -74,7 +87,8 @@ function gridCrackle(total) {
 
 // Boom-bap groove: kick on 1 with a ghost kick and a pickup that change every other bar, snare on 2 and 4 with an
 // occasional ghost note, and swung 8th hats. (The lazy snare and loose timing come from audio/play.js.)
-export function lofiDrums(total) {
+export function lofiDrums(total, v = variant()) {
+  const KICKS = v.of('kicks', KICK_SETS), hash = v.noise('ghost-snare');
   const ev = [];
   for (let b = 0; b < total; b += 16) {
     const bar = b / 16 % 2;

@@ -11,7 +11,7 @@
 //  - When a chord lasts two bars or more, the last half bar before the next chord is a snare roll that builds in volume.
 //  - The character-driven drum hits go quiet and a four-on-the-floor beat takes over (see tranceDrums).
 // The kick dips the pad, the arpeggio and the bass on every beat (see audio/play.js), which gives the pumping feel.
-import { pick } from './seed.js';
+import { variant } from './seed.js';
 
 const PATS = [[0, 1, 2, 3, 2, 1, 0, 1], [0, 2, 1, 3, 2, 1, 3, 2], [2, 3, 2, 1, 2, 3, 2, 1]];   // arpeggio shapes per half bar; index 3 is the root an octave up
 const LO = 55, HI = 79, MID = 67;                // the lead's range (MIDI) and the middle it leans toward
@@ -19,9 +19,9 @@ const LO = 55, HI = 79, MID = 67;                // the lead's range (MIDI) and 
 const LOOPS = [[0, 4, 5, 6, 2], [0, 5, 2, 6], [0, 6, 5, 4], [0, 2, 5, 6, 4], [0, 5, 6, 4, 2]];
 const RISE = [[8, 0.3], [6, 0.4], [4, 0.5], [3, 0.6], [2, 0.75], [1, 0.95]];   // [sixteenths before the next chord, snare velocity]
 
-export function tranceify(r, seed = 0) {
-  const loop = LOOPS[pick(seed, 'trance-loop', LOOPS.length)], arp = pick(seed, 'trance-arp', PATS.length);
-  shift = pick(seed, 'trance-chorus', 3);
+export function tranceify(r, v = variant()) {
+  const loop = LOOPS[v.pick('loop', LOOPS.length)], arp = v.pick('arp', PATS.length);
+  shift = v.pick('chorus', 3);
   const out = [];
   for (const e of r.events) {
     if (['kick', 'hat', 'snare'].includes(e.k)) { out.push({ ...e, k: 'rest' }); continue; }
@@ -40,7 +40,7 @@ export function tranceify(r, seed = 0) {
     const a = loop[j % loop.length], m = r.lead(a);
     return { ...c, a, m: m - 24 - (m >= 72 ? 12 : 0) + (m < 60 ? 12 : 0) };
   });
-  shapeLead(out, r, roots, seed);
+  shapeLead(out, r, roots, v);
   roots.forEach((c, j) => {
     const stop = roots[j + 1] ? roots[j + 1].t : r.t, span = stop - c.t;
     const tri = [r.pad(c.a), r.pad(c.a + 2), r.pad(c.a + 4)].sort((x, y) => x - y);
@@ -60,12 +60,16 @@ export function tranceify(r, seed = 0) {
   return { events: out, t: r.t };
 }
 
-export function tranceDrums(total) {
+export function tranceDrums(total, v = variant()) {
+  // Seeded: open hats on the offbeats or the "a" of every beat, a pickup kick before every fourth bar, and a ghost clap in some texts.
+  const hats = v.of('hats', [[2, 6, 10, 14], [2, 6, 10, 14], [3, 7, 11, 15]]), pickup = v.chance('pickup', 0.5), ghost = v.chance('ghost', 0.4);
   const ev = [];
   for (let b = 0; b < total; b += 16) {
     for (const off of [0, 4, 8, 12]) ev.push({ t: b + off, k: 'kick', v: 0.9, tr: 0 });
     ev.push({ t: b + 4, k: 'snare', v: 0.7, tr: 0 }, { t: b + 12, k: 'snare', v: 0.75, tr: 0 });
-    for (const off of [2, 6, 10, 14]) ev.push({ t: b + off, k: 'ohat', v: 0.55, tr: 0 });
+    for (const off of hats) ev.push({ t: b + off, k: 'ohat', v: 0.55, tr: 0 });
+    if (pickup && (b / 16) % 4 === 3) ev.push({ t: b + 14, k: 'kick', v: 0.55, tr: 0 });
+    if (ghost && (b / 16) % 2 === 1) ev.push({ t: b + 15, k: 'snare', v: 0.22, tr: 0 });
   }
   return ev;
 }
@@ -82,8 +86,8 @@ const ORDERS = [[0, 1, 0, 2], [1, 0, 2, 0], [0, 0, 1, 2], [1, 2, 0, 2]];   // wh
 let shift = 0;                                  // where the chorus pattern starts (0-2 phrases in), set per piece
 const onAt = t => (Math.floor(t / 32) + shift) % 5 >= 2;      // the chorus: the lead plays on 3 of every 5 two-bar phrases and sits out the other 2
 
-function shapeLead(out, r, roots, seed) {
-  const ORDER = ORDERS[pick(seed, 'trance-order', ORDERS.length)];
+function shapeLead(out, r, roots, v) {
+  const ORDER = ORDERS[v.pick('order', ORDERS.length)];
   for (const e of out) if (e.k === 'lead') { e.k = 'rest'; delete e.m; delete e.v; delete e.d; }
   const place = (d, prev) => {
     let m = r.lead(d);
@@ -102,7 +106,7 @@ function shapeLead(out, r, roots, seed) {
     for (let b = c.t, p = 0; b < stop; b += 32, p++) {
       const pi = ORDER[p % ORDER.length];
       if (!onAt(b)) { first = true; continue; }   // sitting out; the next entry starts on a chord tone again
-      const tail = pick(seed, 'tail' + pg, 3) - 1, mid = pick(seed, 'mid' + pg, 3) - 1;   // small changes to the phrase's middle and ending, different every time round
+      const tail = v.pick('tail' + pg, 3) - 1, mid = v.pick('mid' + pg, 3) - 1;   // small changes to the phrase's middle and ending, different every time round
       pg++;
       PHRASES[pi].forEach(([off, len, step0], n, all) => {
         const step = step0 + (n >= all.length - 2 ? tail : 0) + (n === 3 ? mid : 0);

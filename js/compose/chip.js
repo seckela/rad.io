@@ -5,9 +5,15 @@
 //  - The bass bounces between its root and the octave above on every 8th note, until the next line's root.
 //  - The character-driven drum hits (= + - < > and so on) go quiet and a steady, tight beat takes over (see chipDrums).
 // Digits and quotes keep their blips and plinks, and the melody is untouched.
-const ARP = [0, 1, 2, 1];
+import { variant } from './seed.js';
 
-export function chipify(r) {
+// Seeded choices (see seed.js): the arpeggio shape (indexes into the chord), how the bass bounces (semitones above the root, one
+// per 8th), and the drum groove (see chipDrums).
+const ARPS = [[0, 1, 2, 1], [0, 2, 1, 2], [2, 1, 0, 1], [0, 1, 2, 2, 1, 0]];
+const BOUNCES = [[0, 12], [0, 12, 7, 12], [0, 0, 12, 0], [0, 7, 12, 7]];
+
+export function chipify(r, v = variant()) {
+  const ARP = v.of('arp', ARPS), BOUNCE = v.of('bounce', BOUNCES);
   const out = [];
   for (const e of r.events) {
     if (['kick', 'hat', 'snare'].includes(e.k)) { out.push({ ...e, k: 'rest' }); continue; }
@@ -27,7 +33,7 @@ export function chipify(r) {
   roots.forEach((c, j) => {
     const stop = roots[j + 1] ? roots[j + 1].t : r.t;
     for (let t = c.t, k = 0; t < stop; t += 2, k++) {
-      const o = { t, tr: c.tr, k: 'bass', m: c.m + 12 + (k % 2 ? 12 : 0), d: 1.6, v: k % 4 === 0 ? 0.7 : 0.5 };
+      const o = { t, tr: c.tr, k: 'bass', m: c.m + 12 + BOUNCE[k % BOUNCE.length], d: 1.6, v: k % 4 === 0 ? 0.7 : 0.5 };
       if (k === 0) o.i = c.i;
       out.push(o);
     }
@@ -37,13 +43,16 @@ export function chipify(r) {
 
 // A tight four-on-the-floor-ish beat: kick on 1 and 3 (plus a pickup every other bar), snare on 2 and 4,
 // and straight 8th hats with the beats accented.
-export function chipDrums(total) {
+export function chipDrums(total, v = variant()) {
+  // Seeded: where the kicks fall (1 and 3 with a pickup, 1 and the "and" of 2 and 3, or 1, 3 and a late kick), and 8th or 16th hats.
+  const kicks = v.of('kicks', [[0, 8], [0, 6, 8], [0, 8, 11]]), sixteenths = v.chance('hats16', 0.35);
   const ev = [];
   for (let b = 0; b < total; b += 16) {
-    ev.push({ t: b, k: 'kick', v: 0.9, tr: 0 }, { t: b + 8, k: 'kick', v: 0.8, tr: 0 });
+    for (const off of kicks) ev.push({ t: b + off, k: 'kick', v: off ? 0.8 : 0.9, tr: 0 });
     if ((b / 16) % 2 === 1) ev.push({ t: b + 14, k: 'kick', v: 0.6, tr: 0 });
     ev.push({ t: b + 4, k: 'snare', v: 0.8, tr: 0 }, { t: b + 12, k: 'snare', v: 0.8, tr: 0 });
-    for (let h = 0; h < 8; h++) ev.push({ t: b + h * 2, k: 'hat', v: h % 2 ? 0.3 : 0.5, tr: 0 });
+    if (sixteenths) for (let h = 0; h < 16; h++) ev.push({ t: b + h, k: 'hat', v: h % 4 === 0 ? 0.5 : h % 2 === 0 ? 0.3 : 0.16, tr: 0 });
+    else for (let h = 0; h < 8; h++) ev.push({ t: b + h * 2, k: 'hat', v: h % 2 ? 0.3 : 0.5, tr: 0 });
   }
   return ev;
 }
