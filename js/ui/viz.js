@@ -16,6 +16,7 @@ const BRACE_W = 68, BRACE_H = 276, BRACE_STROKE = 26;
 const TAU = 0.11;                        // seconds; how quickly the expansion settles
 
 const canvas = $('viz'), toggle = $('viz-on'), title = $('title');
+const enabled = () => toggle.checked || forced;
 const ctx2d = canvas.getContext('2d');
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const frameMs = matchMedia('(pointer: coarse)').matches ? 1000 / 30 : 1000 / 60;
@@ -24,6 +25,8 @@ let analyser = null, raf = 0, playing = false, last = 0;
 let p = 0, target = 0;                   // expansion 0 (title) .. 1 (full-width bars)
 let levels = new Float32Array(0), nMax = 0;
 let color = '#f2b24c', braceColor = '#d9dce6';
+let Kw = 1, Kh = 1;                      // size factors: 1 for the 52px masthead, larger in the minimal view
+let forced = false;                      // minimal view: show the bars even if the Visualizer box is off
 let dpr = 1, wCss = 0, hCss = 0, braceScale = 1, braceW = 0, idleRight = 0;
 
 const clamp01 = x => Math.min(1, Math.max(0, x));
@@ -33,13 +36,14 @@ function size() {
   dpr = Math.min(window.devicePixelRatio || 1, 2);
   wCss = canvas.clientWidth; hCss = canvas.clientHeight;
   canvas.width = Math.round(wCss * dpr); canvas.height = Math.round(hCss * dpr);
-  braceScale = (hCss - 4) / BRACE_H;                                   // braces span the strip's height
+  Kh = hCss / 52; Kw = 1 + (Kh - 1) * 0.5;
+  braceScale = (hCss - 4) / (BRACE_H + BRACE_STROKE);                  // braces (round ends included) fit the strip's height
   braceW = (BRACE_W + BRACE_STROKE) * braceScale;                      // outline included
   if (title) {
-    title.style.left = (braceW + PAD) + 'px';
-    idleRight = braceW + PAD + title.getBoundingClientRect().width + PAD + braceW;
-  } else idleRight = 2 * braceW + 2 * PAD + 60;
-  nMax = Math.max(7, Math.floor((wCss - 2 * (braceW + PAD) + GAP) / (BAR + GAP)));
+    title.style.left = (braceW + (PAD * Kw)) + 'px';
+    idleRight = braceW + (PAD * Kw) + title.getBoundingClientRect().width + (PAD * Kw) + braceW;
+  } else idleRight = 2 * braceW + 2 * (PAD * Kw) + 60;
+  nMax = Math.max(7, Math.floor((wCss - 2 * (braceW + (PAD * Kw)) + (GAP * Kw)) / ((BAR * Kw) + (GAP * Kw))));
   levels = new Float32Array(nMax);
   const cs = getComputedStyle(document.documentElement);
   color = cs.getPropertyValue('--bars').trim() || cs.getPropertyValue('--accent').trim() || color;
@@ -74,20 +78,20 @@ function draw() {
   const alpha = clamp01((p - 0.3) / 0.5);
   let energy = 0;
   if (alpha > 0 || playing) {
-    const innerL = braceW + PAD, innerR = rightX - braceW - PAD;
+    const innerL = braceW + (PAD * Kw), innerR = rightX - braceW - (PAD * Kw);
     const avail = innerR - innerL;
-    let n = Math.floor((avail + GAP) / (BAR + GAP));
+    let n = Math.floor((avail + (GAP * Kw)) / ((BAR * Kw) + (GAP * Kw)));
     if (n % 2 === 0) n--;
     n = Math.min(n, nMax);
     if (n >= 1) {
-      const used = n * (BAR + GAP) - GAP, x0 = (innerL + (avail - used) / 2) * dpr;
-      const bw = BAR * dpr, step = (BAR + GAP) * dpr, centre = (n - 1) / 2, fullHalf = (nMax - 1) / 2;
+      const used = n * ((BAR * Kw) + (GAP * Kw)) - (GAP * Kw), x0 = (innerL + (avail - used) / 2) * dpr;
+      const bw = (BAR * Kw) * dpr, step = ((BAR * Kw) + (GAP * Kw)) * dpr, centre = (n - 1) / 2, fullHalf = (nMax - 1) / 2;
       let vals = null, bins = 0;
       if (playing && analyser) { vals = analyser.getValue(); bins = vals.length; }
       c.globalAlpha = alpha; c.fillStyle = color;
       for (let i = 0; i < n; i++) {
         const d = Math.abs(i - centre);
-        const rest = REST_MIN + (REST_PEAK - REST_MIN) * (1 - d / Math.max(1, centre));
+        const rest = (REST_MIN * Kh) + ((REST_PEAK * Kh) - (REST_MIN * Kh)) * (1 - d / Math.max(1, centre));
         let t = 0;
         if (vals) {
           const lo = binFor(d, fullHalf, bins), hi = Math.max(lo + 1, binFor(d + 1, fullHalf, bins));
@@ -98,7 +102,7 @@ function draw() {
         const idx = Math.min(nMax - 1, Math.round(d));
         levels[idx] = t > levels[idx] ? t : levels[idx] * 0.85;         // fast attack, slow decay
         energy += levels[idx];
-        const h = Math.max(rest, levels[idx] * MAX_H) * dpr * (0.4 + 0.6 * alpha);
+        const h = Math.max(rest, levels[idx] * (MAX_H * Kh)) * dpr * (0.4 + 0.6 * alpha);
         const x = x0 + i * step, y = mid - h / 2;
         c.beginPath();
         c.roundRect ? c.roundRect(x, y, bw, h, bw / 2) : c.rect(x, y, bw, h);
@@ -147,7 +151,7 @@ export function vizAttach() {
 }
 export function vizStart() {
   playing = true;
-  if (!toggle.checked) return;
+  if (!enabled()) return;
   target = 1;
   if (reduced) { jump(); return; }
   loop();
@@ -155,19 +159,29 @@ export function vizStart() {
 // Paused: the audio is frozen, so the bars settle to rest but the strip stays expanded.
 export function vizPause() {
   playing = false;
-  if (toggle.checked && !reduced) loop();
+  if (enabled() && !reduced) loop();
 }
 export function vizStop() {
   playing = false;
   target = 0;
-  if (reduced || !toggle.checked) { jump(); return; }
+  if (reduced || !enabled()) { jump(); return; }
   loop();
+}
+
+// Minimal view: the strip grows to fill the page and the bars run even if the Visualizer box is off.
+// Call after the layout has changed (the strip's size is read from the page).
+export function vizMinimal(on) {
+  forced = on;
+  size();
+  if (on && playing) { target = 1; reduced ? jump() : loop(); }
+  else if (!enabled()) { target = 0; jump(); }
+  else draw();
 }
 
 export function initViz() {
   const relayout = () => { size(); draw(); };
   toggle.onchange = () => {
-    if (!toggle.checked) { target = 0; jump(); }
+    if (!enabled()) { target = 0; jump(); }
     else if (playing) { target = 1; reduced ? jump() : loop(); }
   };
   window.addEventListener('resize', relayout);
