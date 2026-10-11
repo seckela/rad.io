@@ -7,7 +7,7 @@
 //    in rhythm patterns that change from half to half and fill at the end of every four bars), a kick and a heavy snare on beat 3, hats,
 //    and chord stabs. No lead: the bass is the tune.
 // The chords follow a four-bar loop picked by the seed; the text decides the seed and the highlight. The lengths of the three parts are
-// a quarter, a quarter and a half of a cycle (4, 4 and 8 bars for a cycle of 16), and a long text repeats the cycle (without the intro: after a drop the next build-up follows straight on).
+// a quarter, a quarter and a half of a cycle (4, 4 and 8 bars for a cycle of 16), and a long text repeats the cycle (after the first drop the intro becomes a breakdown: the tune comes forward over a half-time beat, with no wobble).
 // The kick ducks the pad, stabs and sub (see audio/play.js). Everything is synthesized.
 import { variant } from './seed.js';
 
@@ -36,8 +36,7 @@ export function layout(T) {
   let t0 = 0;
   for (let i = 0; i < n; i++) {
     const len = (base + (i < extra ? 1 : 0)) * 16, q = Math.max(2, Math.round(len / 16 / 4)) * 16;
-    // Only the first cycle has a soft intro: after a drop the next build-up follows straight on, so the wobble never gives way to quiet tones.
-    out.push(i === 0 ? { t0, build: t0 + q, drop: t0 + 2 * q, end: t0 + len } : { t0, build: t0, drop: t0 + q, end: t0 + len });
+    out.push({ t0, build: t0 + q, drop: t0 + 2 * q, end: t0 + len });
     t0 += len;
   }
   return { cycles: out, T: t0 };
@@ -46,7 +45,7 @@ export function layout(T) {
 export function dubstepify(r, v = variant(), len = r.t) {
   const T = layout(len).T, { cycles } = layout(T), tr = (r.events.find(e => e.tr !== undefined) || {}).tr || 0;
   const loop = v.of('loop', LOOPS), fam1 = v.of('wob1', Object.keys(WOBS)), fam2 = v.of('wob2', Object.keys(WOBS));
-  const bright = v.of('bright', [900, 1200, 1500]), stab = v.of('stab', STABS), motif = v.of('motif', MOTIFS);
+  const bright = v.of('bright', [900, 1200, 1500]), stab = v.of('stab', STABS), motif = v.of('motif', MOTIFS), motif2 = MOTIFS[(MOTIFS.indexOf(motif) + 1) % MOTIFS.length];
   const out = [];
   for (const e of r.events) {                       // the text's own events become rests, which keeps the highlight moving
     if (e.i !== undefined) out.push({ t: e.t, i: e.i, tr: e.tr, k: 'rest' });
@@ -73,15 +72,16 @@ export function dubstepify(r, v = variant(), len = r.t) {
       out.push({ t: b, tr, k: 'pad', m: [r.pad(a), r.pad(a + 2), r.pad(a + 4)], d: stop - b, v: c.t0 > 0 && b < c.build ? 0.6 : 0.4 });   // after the first drop the intro keeps more of its weight
       out.push({ t: b, tr, k: 'sub', m: fold(r.lead(a)), d: stop - b, v: b < c.build ? (c.t0 > 0 ? 0.5 : 0.3) : 0.45 });
     }
-    for (let b = c.t0; b + 16 <= c.build; b += 32) {
+    const bd = c.t0 > 0;                            // after the first drop the intro is a breakdown: the tune comes forward and the beat carries on
+    for (let b = c.t0, n = 0; b + 16 <= c.build; b += 32, n++) {
       const a = chordAt(c, b);
-      for (const [off, len, step] of motif) {
+      for (const [off, len, step] of (bd && n % 2 ? motif2 : motif)) {
         const t = b + off;
         if (t + 2 > c.build) continue;
         let m = place(a + step, prev);
         if (m === prev) m = place(a + step + 1, prev);
         prev = m;
-        out.push({ t, tr, k: 'lead', m, d: Math.min(len, c.build - t), v: off === 0 ? 0.7 : 0.55 });
+        out.push({ t, tr, k: 'lead', m, d: Math.min(len, c.build - t), v: bd ? (off === 0 ? 0.95 : 0.8) : off === 0 ? 0.7 : 0.55 });
       }
     }
     // Build: the lead arpeggio climbs the scale in 16ths and gets louder.
@@ -119,8 +119,13 @@ export function dubstepDrums(total, v = variant(), T = total) {
   cycles.forEach(c => {
     // Intro: a kick on the bar line every other bar and quiet offbeat hats.
     for (let b = c.t0; b < c.build; b += 16) {
-      if ((introKick || c.t0 > 0) && (c.t0 > 0 || ((b - c.t0) / 16) % 2 === 0)) hit(b, 'kick', c.t0 > 0 ? 0.75 : 0.55);   // after the first drop the beat carries straight on
-      for (const o of [2, 6, 10, 14]) hit(b + o, 'hat', c.t0 > 0 ? 0.32 : 0.2);
+      if (c.t0 > 0) {                               // the breakdown keeps a half-time beat going under the tune
+        hit(b, 'kick', 0.8); hit(b + 10, 'kick', 0.6); hit(b + 8, 'snare', 0.6);
+        for (const o of [2, 6, 10, 14]) hit(b + o, 'hat', 0.35);
+        continue;
+      }
+      if (introKick && ((b - c.t0) / 16) % 2 === 0) hit(b, 'kick', 0.55);
+      for (const o of [2, 6, 10, 14]) hit(b + o, 'hat', 0.2);
     }
     // Build: a snare roll that speeds up and gets louder, a riser, then silence.
     const last = c.drop - GAP, len = last - c.build;
