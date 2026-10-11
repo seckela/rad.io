@@ -35,6 +35,19 @@ let pulse = null;                        // { kind: 'dive' | 'rise', t0, ms }
 // The pulse leaves the bars it has passed coloured: the dive paints a cool gradient (magenta at the edges to cyan in the middle) as it falls
 // and holds it; the rise then repaints them warm (orange to magenta) as it climbs out; when the rise is over everything fades back to the
 // style's colour.
+let spiky = false;                       // the drop: sharp-edged bars with hot-pink tips
+// A spike: a tall hexagon with points at the top and bottom, and the outer 60% of each point coloured in as a tip.
+function spikePath(c, x, y, w, h, mid, tip) {
+  const cx = x + w / 2, s = h * 0.12, hw = w / 2;
+  c.beginPath();
+  if (tip) {
+    const sh = (mid - s) - y, yc = y + sh * 0.6, hh = hw * 0.6;
+    c.moveTo(cx, y); c.lineTo(cx + hh, yc); c.lineTo(cx - hh, yc); c.closePath();
+    c.moveTo(cx, y + h); c.lineTo(cx + hh, y + h - sh * 0.6); c.lineTo(cx - hh, y + h - sh * 0.6); c.closePath();
+  } else {
+    c.moveTo(cx, y); c.lineTo(x + w, mid - s); c.lineTo(x + w, mid + s); c.lineTo(cx, y + h); c.lineTo(x, mid + s); c.lineTo(x, mid - s); c.closePath();
+  }
+}
 let hold = false, holdT = 0, fade = 0;   // hold: the dive's colours are still on the bars; fade: when the colours began fading out
 const diveHue = u => Math.round(180 + 120 * u), riseHue = u => Math.round((390 - 90 * u) % 360);
 let rgb = null;                          // the bar colour as [r, g, b] if it is a #rrggbb value
@@ -148,9 +161,14 @@ function draw() {
           c.fillStyle = `hsl(${trail} 100% 60%)`;
         } else c.fillStyle = color;
         const x = x0 + i * step, y = mid - h / 2;
-        c.beginPath();
-        c.roundRect ? c.roundRect(x, y, bw, h, bw / 2) : c.rect(x, y, bw, h);
-        c.fill();
+        if (spiky && !reduced) {
+          spikePath(c, x - bw * 0.15, y, bw * 1.3, h, mid, false); c.fill();
+          if (h > 10 * dpr) { c.fillStyle = '#ff3df2'; spikePath(c, x - bw * 0.15, y, bw * 1.3, h, mid, true); c.fill(); }
+        } else {
+          c.beginPath();
+          c.roundRect ? c.roundRect(x, y, bw, h, bw / 2) : c.rect(x, y, bw, h);
+          c.fill();
+        }
         c.globalAlpha = alpha;
       }
       c.globalAlpha = 1;
@@ -198,13 +216,14 @@ export function vizAttach() {
 // Cues from the music (dubstep only): 'dive' is the drop's pitch dive (it lasts `secs`), 'rise' the rise after it.
 export function vizCue(kind, secs = 0.5) {
   if (reduced) return;
+  if (kind === 'spiky' || kind === 'calm') { spiky = kind === 'spiky'; if (playing && enabled()) loop(); return; }
   pulse = { kind, t0: performance.now(), ms: Math.max(100, secs * 1000) };
   if (kind === 'dive') { hold = false; fade = 0; }
   if (playing && enabled()) loop();
 }
 
 export function vizStart() {
-  pulse = null; hold = false; fade = 0;
+  pulse = null; hold = false; fade = 0; spiky = false;
   playing = true;
   if (!enabled()) return;
   target = 1;
@@ -213,12 +232,12 @@ export function vizStart() {
 }
 // Paused: the audio is frozen, so the bars settle to rest but the strip stays expanded.
 export function vizPause() {
-  pulse = null; hold = false; fade = 0;
+  pulse = null; hold = false; fade = 0; spiky = false;
   playing = false;
   if (enabled() && !reduced) loop();
 }
 export function vizStop() {
-  pulse = null; hold = false; fade = 0;
+  pulse = null; hold = false; fade = 0; spiky = false;
   playing = false;
   target = 0;
   if (reduced || !enabled()) { jump(); return; }
