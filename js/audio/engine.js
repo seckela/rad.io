@@ -46,7 +46,7 @@ export function buildAudio(style, piano, bufs) {
   if (style === 'neoclassical') {        // a warm concert hall around the piano and strings
     const reverb = new Tone.Reverb({ decay: 4.5, wet: 0.3 }).connect(limiter);
     return { reverb, limiter, piano, chill: false, neo: true,
-      fg: buildNeoTrack(reverb, false, piano), bg: buildNeoTrack(reverb, true, piano) };
+      fg: buildNeoTrack(reverb, false, piano, bufs && bufs.cello), bg: buildNeoTrack(reverb, true, piano, bufs && bufs.cello) };
   }
   if (style === 'ambient') {             // a huge, soft space
     const reverb = new Tone.Reverb({ decay: 9, wet: 0.55 }).connect(limiter);

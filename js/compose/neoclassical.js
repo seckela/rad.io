@@ -34,6 +34,8 @@ export function neoclassicalify(r, key, scale, base, v = variant()) {
   const fig = triplets ? v.of('figure-t', TRIPLETS) : v.of('figure', EIGHTHS);
   const bassFam = v.of('bass', ['held', 'held', 'fifth', 'rock']);
   const stringsAbove = v.of('strings', [12, 12, 7]);
+  // Which chord pieces the cello takes the melody in (the piano keeps the figure): every other one, every third, or the second half.
+  const celloIn = v.of('cello', ['odd', 'odd', 'third', 'late']);
   const res = chillify(r, base, v);
   const tail = 16;
   const total = res.t + tail;
@@ -109,12 +111,16 @@ export function neoclassicalify(r, key, scale, base, v = variant()) {
     if (stop === total) extra.push({ t: Math.max(start, total - 16), tr: c.tr, k: 'arp', m: tones[2] + 12, d: 24, v: 0.5 });
   });
 
-  // The melody: the Chillstep notes, an octave or two higher so they sing above the figure, each ringing on into the next.
+  // The melody: the Chillstep notes, an octave or two higher so they sing above the figure, each ringing on into the next. In the pieces
+  // where the cello takes over, the same notes are played an octave lower in its range (the voice is chosen in audio/play.js).
+  const cellos = i => celloIn === 'odd' ? i % 2 === 1 : celloIn === 'third' ? i % 3 === 2 : i >= Math.ceil(pieces.length / 2);
   for (const e of ev) {
     if (e.k !== 'lead') continue;
     let m = e.m;
     while (m < 69) m += 12;
     while (m > 88) m -= 12;
+    const pi = pieces.findIndex(c => e.t >= c.start && e.t < c.stop);
+    if (pi >= 0 && cellos(pi)) { m -= 12; while (m > 69) m -= 12; e.cello = true; }
     e.m = m;
     e.d = Math.max(e.d || 2, 4);
     e.v = Math.min(1, (e.v || 0.5) * (0.7 + 0.5 * arc(e.t / total)));

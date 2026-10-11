@@ -4,13 +4,13 @@ import { syncPicker } from './picker.js';
 import { $, view, playBtn } from './dom.js';
 import { getText, setEditorHidden } from './editor.js';
 import { renderView, highlight } from './view.js';
-import { getKey, getScale, getStyle, isChill, isLofi, isMetal, isChip, isAmbient, isSynthwave, isHouse, isTrance, isDubstep, getOpts } from './settings.js';
+import { getKey, getScale, getStyle, isChill, isLofi, isMetal, isChip, isAmbient, isSynthwave, isHouse, isTrance, isDubstep, isNeo, getOpts } from './settings.js';
 import { compose } from '../compose/index.js';
 import { feelOf } from '../compose/feel.js';
 import { seedOf, parseSeed, variant } from '../compose/seed.js';
 import { audio, setAudio, buildAudio, disposeAudio } from '../audio/engine.js';
 import { sound } from '../audio/play.js';
-import { loadMetalBuffers, loadBassBuffers } from '../audio/samples.js';
+import { loadMetalBuffers, loadBassBuffers, loadCelloBuffers } from '../audio/samples.js';
 import { STYLES } from '../styles.js';
 
 export let playing = false, paused = false, lastTotal = 0;   // playing is true while paused too (a session is open)
@@ -34,7 +34,7 @@ function armEnd(wait) {
   const my = ++endToken;
   setTimeout(() => { if (playing && !paused && my === endToken) stop(); }, wait);
 }
-let metalBufs = null, chillBass = null;   // downloaded sample sets, kept for the rest of the session
+let metalBufs = null, chillBass = null, celloBufs = null;   // downloaded sample sets, kept for the rest of the session
 
 // Pushes the layer checkboxes and background controls onto the audio graph.
 export function applyMix() {
@@ -154,7 +154,11 @@ export async function loadAudio() {
     playBtn.textContent = 'Loading bass…';
     try { chillBass = await loadBassBuffers(); } catch (err) { chillBass = null; }   // falls back to the synth bass
   }
-  const bufs = warm && chillBass ? { bass: chillBass } : undefined;
+  if (isNeo() && !celloBufs) {
+    playBtn.textContent = 'Loading cello…';
+    try { celloBufs = await loadCelloBuffers(); } catch (err) { celloBufs = null; }   // falls back to the synth strings
+  }
+  const bufs = warm && chillBass ? { bass: chillBass } : isNeo() && celloBufs ? { cello: celloBufs } : undefined;
   setAudio(buildAudio(getStyle(), piano, bufs));
   applyMix();
   if (!piano) { playBtn.innerHTML = label; return; }

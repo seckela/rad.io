@@ -83,9 +83,9 @@ export const STYLES = [
   {
     id: 'neoclassical', name: 'Neo-classical', tint: '#e8c27a',
     tagline: 'Piano figures and strings',
-    blurb: "Each chord becomes a piano figure that rolls through it without stopping, in even eighths or flowing triplets. A bowed bass holds the root underneath, the melody sings above it a few notes at a time, and a string section swells in under the chords as the piece grows, then leaves before the end. Long lines move on through other chords of the key every few bars. The whole track follows one dynamic arc: soft, full in the middle, soft again. No drums.",
-    chips: ['76 BPM', 'Natural minor', 'Sampled piano', 'Rolling figure', 'Bowed bass', 'String swells'],
-    download: 'Piano samples (about 1 MB). The strings are synthesized.',
-    note: 'The Lead control switches the piano for a plain synth if you are offline.',
+    blurb: "Each chord becomes a piano figure that rolls through it without stopping, in even eighths or flowing triplets. A sampled cello holds the root underneath and, in some sections, takes the melody from the piano while the figure carries on. The melody sings above it a few notes at a time, and a synthesized string section swells in under the chords as the piece grows, then leaves before the end. Long lines move on through other chords of the key every few bars. The whole track follows one dynamic arc: soft, full in the middle, soft again. No drums.",
+    chips: ['76 BPM', 'Natural minor', 'Sampled piano', 'Rolling figure', 'Cello bass and solos', 'String swells'],
+    download: 'Piano samples (about 1 MB) and cello samples (about 1 MB). The string swells are synthesized.',
+    note: 'If the samples cannot be loaded, the piano and cello fall back to synths. The Lead control switches the piano for a plain synth.',
   },
 ];
