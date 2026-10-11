@@ -74,7 +74,7 @@ export function sound(e, time) {
       case 'stab':  s.stab.triggerAttackRelease(e.m.map(hz), unit * 1.2, time, v); break;
       case 'wob': {         // a saw whose filter is swept by an LFO locked to the tempo; it starts at the lowest cutoff on the note
         s.wob.triggerAttackRelease(hz(e.m), dur, time, v);
-        const lfo = new Tone.LFO({ frequency: Tone.Transport.bpm.value / 60 * e.r, min: 90, max: e.b, type: 'sine', phase: 270 });
+        const lfo = new Tone.LFO({ frequency: Tone.Transport.bpm.value / 60 * e.r, min: 70, max: e.b, type: 'sine', phase: 270 });
         lfo.connect(s.wobFilter.frequency);
         lfo.start(time).stop(time + dur + 0.05);
         setTimeout(() => { try { lfo.dispose(); } catch (err) { /* already gone */ } }, (time - Tone.now() + dur + 0.5) * 1000);

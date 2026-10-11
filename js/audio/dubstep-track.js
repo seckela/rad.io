@@ -28,11 +28,12 @@ export function buildDubstepTrack(reverb, bg, dryOut) {
   if (!bg) {
     const duckPad = new Tone.Gain(1).connect(group.pad), duckBass = new Tone.Gain(1).connect(group.bass);
     fx.padLp = new Tone.Filter(2200, 'lowpass').connect(duckPad);
-    fx.stabLp = new Tone.Filter(3500, 'lowpass').connect(duckPad);
-    fx.wobFilter = new Tone.Filter({ frequency: 200, type: 'lowpass', rolloff: -24, Q: 7 });   // the LFO sweeps this cutoff
-    fx.wobDist = new Tone.Distortion({ distortion: 0.55, wet: 0.7 });
+    fx.stabLp = new Tone.Filter(2200, 'lowpass').connect(duckPad);
+    fx.wobFilter = new Tone.Filter({ frequency: 200, type: 'lowpass', rolloff: -24, Q: 2.5 });   // the LFO sweeps this cutoff
+    fx.wobDist = new Tone.Distortion({ distortion: 0.2, wet: 0.35 });
+    fx.wobTame = new Tone.Filter(2200, 'lowpass').connect(duckBass);   // takes the fizz off the top so it growls instead of buzzing
     fx.wobFilter.connect(fx.wobDist);
-    fx.wobDist.connect(duckBass);
+    fx.wobDist.connect(fx.wobTame);
     fx.riserBp = new Tone.Filter(400, 'bandpass', -12);
     fx.riserBp.Q.value = 2;
     fx.riserBp.connect(group.accent);
@@ -49,7 +50,7 @@ export function buildDubstepTrack(reverb, bg, dryOut) {
         envelope: { attack: 0.003, decay: 0.2, sustain: 0.1, release: 0.15 },
       }),
       sub: new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.1, sustain: 1, release: 0.15 } }),
-      wob: new Tone.Synth({ oscillator: { type: 'fatsawtooth', count: 2, spread: 18 }, envelope: { attack: 0.005, decay: 0.1, sustain: 1, release: 0.05 } }),
+      wob: new Tone.Synth({ oscillator: { type: 'sawtooth' }, envelope: { attack: 0.005, decay: 0.1, sustain: 1, release: 0.05 } }),
       riserNoise: new Tone.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.05, decay: 0.1, sustain: 1, release: 0.1 } }),
       riserTone: new Tone.Synth({ oscillator: { type: 'sawtooth' }, envelope: { attack: 0.1, decay: 0.1, sustain: 1, release: 0.1 } }),
       impact: new Tone.MembraneSynth({ pitchDecay: 0.25, octaves: 5, envelope: { attack: 0.001, decay: 1.2, sustain: 0, release: 0.4 } }),
@@ -62,9 +63,9 @@ export function buildDubstepTrack(reverb, bg, dryOut) {
     });
     s.pad.maxPolyphony = 6; s.stab.maxPolyphony = 6;
     s.pad.volume.value = -22;        s.pad.connect(fx.padLp);
-    s.stab.volume.value = -17;       s.stab.connect(fx.stabLp);
-    s.sub.volume.value = -6;         s.sub.connect(duckBass);
-    s.wob.volume.value = -10;        s.wob.connect(fx.wobFilter);
+    s.stab.volume.value = -22;       s.stab.connect(fx.stabLp);
+    s.sub.volume.value = -7;         s.sub.connect(duckBass);
+    s.wob.volume.value = -15;        s.wob.connect(fx.wobFilter);
     s.riserNoise.volume.value = -20; s.riserNoise.connect(fx.riserBp);
     s.riserTone.volume.value = -26;  s.riserTone.connect(group.accent);
     s.impact.volume.value = -3;      s.impact.connect(group.accent);
