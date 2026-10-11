@@ -29,6 +29,16 @@ export async function loadCelloBuffers() {
   return Object.fromEntries(Object.entries(wrapped).map(([note, b]) => [note, b.get()]));
 }
 
+// French horn samples (also tonejs-instruments), for Cinematic: ten notes from A1 to F5 (about 2.4 MB).
+const HORN_FILES = { A1: 'A1', C2: 'C2', 'D#2': 'Ds2', G2: 'G2', D3: 'D3', F3: 'F3', A3: 'A3', C4: 'C4', D5: 'D5', F5: 'F5' };
+
+export async function loadHornBuffers() {
+  const wrapped = Object.fromEntries(Object.entries(HORN_FILES)
+    .map(([note, f]) => [note, new Tone.ToneAudioBuffer(INSTR_BASE + 'french-horn/' + f + '.mp3')]));
+  await Tone.loaded();
+  return Object.fromEntries(Object.entries(wrapped).map(([note, b]) => [note, b.get()]));
+}
+
 // Downloads and decodes the rock/metal guitar and bass samples once. Samplers are given the raw
 // AudioBuffers (they can't take already-wrapped Tone buffers), so every track shares one copy.
 export async function loadMetalBuffers() {

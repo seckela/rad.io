@@ -88,4 +88,12 @@ export const STYLES = [
     download: 'Piano samples (about 1 MB) and cello samples (about 1 MB). The string swells are synthesized.',
     note: 'If the samples cannot be loaded, the piano and cello fall back to synths. The Lead control switches the piano for a plain synth.',
   },
+  {
+    id: 'cinematic', name: 'Cinematic', tint: '#d1495b',
+    tagline: 'A long build to a huge climax',
+    blurb: "A film-trailer build. A cello drone and a driving ostinato underneath, a French horn carrying the melody, string and horn swells joining as it grows, then a taiko pulse, a riser and a snare roll, a beat of silence, and the climax: a huge impact and a boom on every bar. It holds at full power, then falls away to a last chord. A long text is a run of acts, each with its own build.",
+    chips: ['78 BPM', 'Natural minor', 'French horn', 'Cello ostinato', 'Taiko and riser', 'One big climax'],
+    download: 'Horn and cello samples (about 3.5 MB). The strings and drums are synthesized.',
+    note: 'The lead is always a French horn, so the Lead control is disabled. If the samples cannot be loaded, synth voices play instead.',
+  },
 ];

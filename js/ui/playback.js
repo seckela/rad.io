@@ -4,13 +4,13 @@ import { syncPicker } from './picker.js';
 import { $, view, playBtn } from './dom.js';
 import { getText, setEditorHidden } from './editor.js';
 import { renderView, highlight } from './view.js';
-import { getKey, getScale, getStyle, isChill, isLofi, isMetal, isChip, isAmbient, isSynthwave, isHouse, isTrance, isDubstep, isNeo, getOpts } from './settings.js';
+import { getKey, getScale, getStyle, isChill, isLofi, isMetal, isChip, isAmbient, isSynthwave, isHouse, isTrance, isDubstep, isNeo, isCine, getOpts } from './settings.js';
 import { compose } from '../compose/index.js';
 import { feelOf } from '../compose/feel.js';
 import { seedOf, parseSeed, variant } from '../compose/seed.js';
 import { audio, setAudio, buildAudio, disposeAudio } from '../audio/engine.js';
 import { sound } from '../audio/play.js';
-import { loadMetalBuffers, loadBassBuffers, loadCelloBuffers } from '../audio/samples.js';
+import { loadMetalBuffers, loadBassBuffers, loadCelloBuffers, loadHornBuffers } from '../audio/samples.js';
 import { STYLES } from '../styles.js';
 
 export let playing = false, paused = false, lastTotal = 0;   // playing is true while paused too (a session is open)
@@ -34,7 +34,7 @@ function armEnd(wait) {
   const my = ++endToken;
   setTimeout(() => { if (playing && !paused && my === endToken) stop(); }, wait);
 }
-let metalBufs = null, chillBass = null, celloBufs = null;   // downloaded sample sets, kept for the rest of the session
+let metalBufs = null, chillBass = null, celloBufs = null, hornBufs = null;   // downloaded sample sets, kept for the rest of the session
 
 // Pushes the layer checkboxes and background controls onto the audio graph.
 export function applyMix() {
@@ -116,12 +116,12 @@ export function applyFeel() {
 // Sets the tempo and scale that go with the selected style (both can be changed afterwards).
 export function applyStyleDefaults() {
   const st = $('style').value;
-  $('tempo').value = { chill: 70, lofi: 80, metal: 150, chiptune: 140, ambient: 60, synthwave: 100, house: 124, trance: 140, dubstep: 140, neoclassical: 76 }[st] || 130;
+  $('tempo').value = { chill: 70, lofi: 80, metal: 150, chiptune: 140, ambient: 60, synthwave: 100, house: 124, trance: 140, dubstep: 140, neoclassical: 76, cinematic: 78 }[st] || 130;
   $('tempoVal').textContent = $('tempo').value;
   Tone.Transport.bpm.value = +$('tempo').value;
-  $('scale').value = { chill: 'Natural minor', lofi: 'Natural minor', metal: 'Phrygian', chiptune: 'Major', ambient: 'Natural minor', synthwave: 'Natural minor', house: 'Dorian', trance: 'Natural minor', dubstep: 'Natural minor', neoclassical: 'Natural minor' }[st] || 'Dorian';
+  $('scale').value = { chill: 'Natural minor', lofi: 'Natural minor', metal: 'Phrygian', chiptune: 'Major', ambient: 'Natural minor', synthwave: 'Natural minor', house: 'Dorian', trance: 'Natural minor', dubstep: 'Natural minor', neoclassical: 'Natural minor', cinematic: 'Natural minor' }[st] || 'Dorian';
   applyFeel();                  // the seed then moves them within the style's range
-  $('leadsound').disabled = st === 'metal' || st === 'chiptune' || st === 'ambient' || st === 'synthwave' || st === 'house' || st === 'trance' || st === 'dubstep';   // each of these has its own fixed lead voice
+  $('leadsound').disabled = st === 'metal' || st === 'chiptune' || st === 'ambient' || st === 'synthwave' || st === 'house' || st === 'trance' || st === 'dubstep' || st === 'cinematic';   // each of these has its own fixed lead voice
   syncPicker();
 }
 
@@ -129,7 +129,7 @@ export function applyStyleDefaults() {
 // they can't be fetched (offline, blocked), falls back to something that needs no downloads.
 export async function loadAudio() {
   if (audio) disposeAudio();
-  const metal = isMetal(), piano = !metal && !isChip() && !isAmbient() && !isSynthwave() && !isHouse() && !isTrance() && !isDubstep() && $('leadsound').value === 'piano';
+  const metal = isMetal(), piano = !metal && !isChip() && !isAmbient() && !isSynthwave() && !isHouse() && !isTrance() && !isDubstep() && !isCine() && $('leadsound').value === 'piano';
   const label = playBtn.innerHTML;
   if (metal) {
     playBtn.textContent = 'Loading guitars…';
@@ -154,11 +154,15 @@ export async function loadAudio() {
     playBtn.textContent = 'Loading bass…';
     try { chillBass = await loadBassBuffers(); } catch (err) { chillBass = null; }   // falls back to the synth bass
   }
+  if (isCine() && !(celloBufs && hornBufs)) {
+    playBtn.textContent = 'Loading horn and cello…';
+    try { celloBufs = celloBufs || await loadCelloBuffers(); hornBufs = hornBufs || await loadHornBuffers(); } catch (err) { celloBufs = hornBufs = null; }   // falls back to the synth voices
+  }
   if (isNeo() && !celloBufs) {
     playBtn.textContent = 'Loading cello…';
     try { celloBufs = await loadCelloBuffers(); } catch (err) { celloBufs = null; }   // falls back to the synth strings
   }
-  const bufs = warm && chillBass ? { bass: chillBass } : isNeo() && celloBufs ? { cello: celloBufs } : undefined;
+  const bufs = warm && chillBass ? { bass: chillBass } : isNeo() && celloBufs ? { cello: celloBufs } : isCine() && celloBufs && hornBufs ? { cello: celloBufs, horn: hornBufs } : undefined;
   setAudio(buildAudio(getStyle(), piano, bufs));
   applyMix();
   if (!piano) { playBtn.innerHTML = label; return; }
