@@ -102,16 +102,15 @@ export function dubstepify(r, v = variant(), len = r.t) {
     const end = c.end;
     for (let b = c.drop, bar = 0; b < end; b += 16, bar++) {
       const a = chordAt(c, b), bi = Math.floor(bar / 4), half = (b - c.drop) < (end - c.drop) / 2 ? 0 : 1;
-      const fam = WOBS[half ? fam2 : fam1], fill = bar % 4 === 3 && end - b > 16;
+      const fam = WOBS[half ? fam2 : fam1], fill = bar % 4 === 3 || end - b <= 16;   // every fourth bar, and always the last, is a fill
       if (bar % 4 === 0 || b === c.drop) {            // the sub holds each chord's root for four bars
         const stop = Math.min(c.drop + (bi + 1) * 64, end);
         out.push({ t: b, tr, k: 'sub', m: fold(r.lead(a)), d: stop - b, v: 0.8 });
       }
-      const outro = end - b <= 16;                     // the last bar of the cycle winds down so the intro doesn't arrive as a cliff
-      for (const [off, len, move, rate] of (outro ? [[0, 16, 0, 'q']] : fill ? FILL : fam[bar % fam.length])) {
-        out.push({ t: b + off, tr, k: 'wob', m: fold(r.lead(a + move)), d: Math.min(len, end - b - off), r: RATE[rate], b: bright, v: outro ? 0.6 : 0.9 });
+      for (const [off, len, move, rate] of (fill ? FILL : fam[bar % fam.length])) {
+        out.push({ t: b + off, tr, k: 'wob', m: fold(r.lead(a + move)), d: Math.min(len, end - b - off), r: RATE[rate], b: bright, v: 0.9 });
       }
-      if (!outro && (half || ci > 0 || bar >= 2)) for (const off of zaps) {   // sharp high tones that sit between the wobble notes
+      if (half || ci > 0 || bar >= 2) for (const off of zaps) {   // sharp high tones that sit between the wobble notes
         if (fill && off < 8) continue;
         const step = [0, 2, 4, 7][(off + bar) % 4];
         let m = r.lead(a + step);
@@ -119,8 +118,8 @@ export function dubstepify(r, v = variant(), len = r.t) {
         while (m > 88) m -= 12;
         out.push({ t: b + off, tr, k: 'zap', m, d: 1, v: half || ci > 0 ? 0.8 : 0.6 });
       }
-      if (fill && end - b > 16) out.push({ t: b + 12, tr, k: 'zap', m: 84, d: 4, v: 0.9 });   // and a rising scream into the next four bars
-      if (!outro && (half || bar >= 2)) for (const off of stab) {
+      if (fill) out.push({ t: b + 12, tr, k: 'zap', m: 84, d: 4, v: 0.9 });   // and a rising scream into the next four bars
+      if (half || bar >= 2) for (const off of stab) {
         if (b + off < end) out.push({ t: b + off, tr, k: 'stab', m: [r.pad(a) + 12, r.pad(a + 2) + 12, r.pad(a + 4) + 12], d: 1, v: half ? 0.5 : 0.35 });
       }
     }
@@ -135,6 +134,7 @@ export function dubstepDrums(total, v = variant(), T = total) {
   const hit = (t, k, vel) => { if (t < total) ev.push({ t, k, v: vel, tr: 0 }); };
   cycles.forEach((c, ci) => {
     const kicks = KICKS[(kick0 + ci) % KICKS.length], hats = HATS[(hat0 + ci) % HATS.length];
+    if (c.t0 > 0) hit(c.t0, 'impact', 0.55);        // the breakdown lands on a softer impact
     // Intro: a kick on the bar line every other bar and quiet offbeat hats.
     for (let b = c.t0; b < c.build; b += 16) {
       if (c.t0 > 0) {                               // the breakdown keeps a half-time beat going under the tune
@@ -158,9 +158,10 @@ export function dubstepDrums(total, v = variant(), T = total) {
     // Drop: impact, then half-time drums with a fill at the end of every four bars.
     hit(c.drop, 'impact', 1);
     for (let b = c.drop, bar = 0; b < c.end; b += 16, bar++) {
-      const outro = c.end - b <= 16, fill = bar % 4 === 3 && !outro;
-      for (const o of outro ? [0] : kicks[bar % kicks.length]) if (!(fill && o > 8)) hit(b + o, 'kick', o === 0 ? 1 : 0.8);
-      hit(b + 8, 'snare', outro ? 0.7 : 1);
+      const outro = c.end - b <= 16, fill = bar % 4 === 3 || outro;
+      if (outro) hit(b, 'fall', 1), ev[ev.length - 1].d = 16;   // the drop falls away into whatever comes next
+      for (const o of kicks[bar % kicks.length]) if (!(fill && o > 8)) hit(b + o, 'kick', o === 0 ? 1 : 0.8);
+      hit(b + 8, 'snare', 1);
       for (const o of hats) if (!fill || o < 8) hit(b + o, o % 4 === 2 ? 'ohat' : 'hat', o % 4 === 0 ? 0.45 : 0.3);
       if (fill) for (const o of [8.5, 12, 13, 14, 14.5, 15]) hit(b + o, 'snare', o >= 14 ? 0.9 : 0.6);
     }

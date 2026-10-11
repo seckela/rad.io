@@ -108,9 +108,21 @@ export function sound(e, time) {
         s.riserTone.triggerAttackRelease(len, time, 0.7);
         break;
       }
+      case 'fall': {        // the opposite of a riser, over the last bar of a drop: a noise sweep and a tone falling away
+        const len = (e.d || 16) * unit;
+        s.riserBp.frequency.cancelScheduledValues(time);
+        s.riserBp.frequency.setValueAtTime(6000, time);
+        s.riserBp.frequency.exponentialRampToValueAtTime(200, time + len);
+        s.riserNoise.triggerAttackRelease(len, time, 0.8);
+        s.riserTone.frequency.cancelScheduledValues(time);
+        s.riserTone.frequency.setValueAtTime(1200, time);
+        s.riserTone.frequency.exponentialRampToValueAtTime(110, time + len);
+        s.riserTone.triggerAttackRelease(len, time, 0.6);
+        break;
+      }
       case 'impact':
-        s.impact.triggerAttackRelease('A0', 1.2, time, 1);
-        s.impactNoise.triggerAttackRelease(0.9, time, 0.9);
+        s.impact.triggerAttackRelease('A0', 1.2, time, v ?? 1);
+        s.impactNoise.triggerAttackRelease(0.9, time, (v ?? 1) * 0.9);
         break;
       case 'pluck': s.pluck.triggerAttackRelease(hz(e.m), dur * 0.8, time, v); break;
       case 'ohat':  s.ohat.triggerAttackRelease('16n', time, v ?? 0.6); break;
@@ -118,6 +130,7 @@ export function sound(e, time) {
       case 'snare':
         s.snare.triggerAttackRelease('16n', time, v ?? 0.7);
         if (s.snareBody) s.snareBody.triggerAttackRelease('G3', '32n', time, (v ?? 0.7) * 0.9);
+        if (s.clap) s.clap.triggerAttackRelease('16n', time, v ?? 0.7);
         break;
     }
   } catch (err) { /* monophonic voices can reject a duplicate start time; skip it */ }

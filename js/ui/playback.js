@@ -11,6 +11,7 @@ import { seedOf, parseSeed, variant } from '../compose/seed.js';
 import { audio, setAudio, buildAudio, disposeAudio } from '../audio/engine.js';
 import { sound } from '../audio/play.js';
 import { loadMetalBuffers, loadBassBuffers } from '../audio/samples.js';
+import { STYLES } from '../styles.js';
 
 export let playing = false, paused = false, lastTotal = 0;   // playing is true while paused too (a session is open)
 let endToken = 0, lastEvents = [], endReached = false;
@@ -66,9 +67,15 @@ function schedule(events, total) {
   }
 }
 
+// Some styles need a minimum amount of text to make sense (Dubstep's build-up and drop): a message saying how much more, or ''.
+export function tooShort(chars = getText().length) {
+  const st = STYLES.find(x => x.id === getStyle());
+  return st && st.minChars && chars < st.minChars ? `${st.name} needs at least ${st.minChars} characters (${st.minChars - chars} more) for a build-up and a drop.` : '';
+}
+
 export function updateStats(chars, total) {
   const secs = total * 60 / Tone.Transport.bpm.value / 4;
-  $('stats').textContent = `${chars} characters · ${total / 16} bars · ${secs.toFixed(1)}s`;
+  $('stats').textContent = tooShort(chars) || `${chars} characters · ${total / 16} bars · ${secs.toFixed(1)}s`;
 }
 
 export function rebuild() {
@@ -169,6 +176,8 @@ function releaseVoices() {
 
 // Starts from the beginning, or from the note at character `fromIdx` if one is given.
 export async function start(fromIdx = null) {
+  const short = tooShort();
+  if (short) { $('stats').textContent = short; return; }   // too little text for this style
   unlockAudio();             // must run inside the tap, before any await (iOS silent-switch workaround)
   await Tone.start();
   vizAttach();

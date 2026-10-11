@@ -34,15 +34,16 @@ export function buildDubstepTrack(reverb, bg, dryOut) {
     // dubstep bass, mixed with some of the unfiltered distortion for bite, and squashed by a compressor.
     fx.wobHp = new Tone.Filter(120, 'highpass');
     fx.wobDist = new Tone.Distortion({ distortion: 0.85, wet: 1 });
-    fx.wobBpA = new Tone.Filter({ frequency: 500, type: 'bandpass', Q: 3 });
+    fx.wobBpA = new Tone.Filter({ frequency: 400, type: 'lowpass', rolloff: -24, Q: 4 });   // a classic resonant wub sweep
     fx.wobBpB = new Tone.Filter({ frequency: 1500, type: 'bandpass', Q: 3 });
-    fx.wobBody = new Tone.Gain(0.25);
-    fx.wobMix = new Tone.Gain(0.6);
+    fx.wobBody = new Tone.Gain(0.08);
+    fx.wobPost = new Tone.Distortion({ distortion: 0.45, wet: 0.6 });   // a second stage of grit after the filters
+    fx.wobMix = new Tone.Gain(0.7);
     fx.wobComp = new Tone.Compressor({ threshold: -24, ratio: 6, attack: 0.003, release: 0.1 }).connect(duckBass);
     fx.wobHp.connect(fx.wobDist);
     fx.wobDist.connect(fx.wobBpA); fx.wobDist.connect(fx.wobBpB); fx.wobDist.connect(fx.wobBody);
     fx.wobBpA.connect(fx.wobMix); fx.wobBpB.connect(fx.wobMix); fx.wobBody.connect(fx.wobMix);
-    fx.wobMix.connect(fx.wobComp);
+    fx.wobMix.connect(fx.wobPost); fx.wobPost.connect(fx.wobComp);
     // The sharp high tones: a bright FM square with a quick pitch dive, high-passed and lightly distorted, with a short echo.
     fx.zapEcho = new Tone.FeedbackDelay({ delayTime: '8n.', feedback: 0.3, wet: 0.25 }).connect(group.accent);
     fx.zapDist = new Tone.Distortion({ distortion: 0.3, wet: 0.5 }).connect(fx.zapEcho);
@@ -53,6 +54,8 @@ export function buildDubstepTrack(reverb, bg, dryOut) {
     fx.impactLp = new Tone.Filter(900, 'lowpass').connect(group.accent);
     fx.hatHp = new Tone.Filter(7500, 'highpass').connect(group.perc);
     fx.snareBp = new Tone.Filter(1800, 'bandpass').connect(group.perc);
+    fx.clickHp = new Tone.Filter(3000, 'highpass').connect(group.perc);
+    fx.clapBp = new Tone.Filter(1100, 'bandpass').connect(group.perc);
     Object.assign(s, {
       pad: new Tone.PolySynth(Tone.Synth, {
         oscillator: { type: 'fatsawtooth', count: 3, spread: 35 },
@@ -75,7 +78,9 @@ export function buildDubstepTrack(reverb, bg, dryOut) {
       riserTone: new Tone.Synth({ oscillator: { type: 'sawtooth' }, envelope: { attack: 0.1, decay: 0.1, sustain: 1, release: 0.1 } }),
       impact: new Tone.MembraneSynth({ pitchDecay: 0.25, octaves: 5, envelope: { attack: 0.001, decay: 1.2, sustain: 0, release: 0.4 } }),
       impactNoise: new Tone.NoiseSynth({ noise: { type: 'pink' }, envelope: { attack: 0.001, decay: 0.9, sustain: 0, release: 0.2 } }),
-      kick: new Tone.MembraneSynth({ pitchDecay: 0.04, octaves: 6, envelope: { attack: 0.001, decay: 0.35, sustain: 0, release: 0.1 } }),
+      kick: new Tone.MembraneSynth({ pitchDecay: 0.03, octaves: 8, envelope: { attack: 0.001, decay: 0.4, sustain: 0, release: 0.1 } }),
+      kickClick: new Tone.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.0005, decay: 0.012, sustain: 0 } }),
+      clap: new Tone.NoiseSynth({ noise: { type: 'pink' }, envelope: { attack: 0.001, decay: 0.14, sustain: 0 } }),
       snare: new Tone.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.001, decay: 0.2, sustain: 0 } }),
       snareBody: new Tone.Synth({ oscillator: { type: 'triangle' }, envelope: { attack: 0.001, decay: 0.12, sustain: 0, release: 0.05 } }),
       hat: new Tone.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.001, decay: 0.04, sustain: 0 } }),
@@ -86,14 +91,16 @@ export function buildDubstepTrack(reverb, bg, dryOut) {
     s.stab.volume.value = -22;       s.stab.connect(fx.stabLp);
     s.zap.volume.value = -21;        s.zap.connect(fx.zapHp);
     s.sub.volume.value = -5;         s.sub.connect(duckBass);
-    s.wob.volume.value = -12;        s.wob.connect(fx.wobHp);
+    s.wob.volume.value = -9;         s.wob.connect(fx.wobHp);
     s.riserNoise.volume.value = -20; s.riserNoise.connect(fx.riserBp);
     s.riserTone.volume.value = -26;  s.riserTone.connect(group.accent);
     s.impact.volume.value = -3;      s.impact.connect(group.accent);
     s.impactNoise.volume.value = -14; s.impactNoise.connect(fx.impactLp);
-    s.kick.volume.value = -2;        s.kick.connect(group.perc);
-    s.snare.volume.value = -8;       s.snare.connect(fx.snareBp);
-    s.snareBody.volume.value = -9;   s.snareBody.connect(group.perc);
+    s.kick.volume.value = 1;         s.kick.connect(group.perc);
+    s.kickClick.volume.value = -12;  s.kickClick.connect(fx.clickHp);
+    s.clap.volume.value = -8;        s.clap.connect(fx.clapBp);
+    s.snare.volume.value = -3;       s.snare.connect(fx.snareBp);
+    s.snareBody.volume.value = -5;   s.snareBody.connect(group.perc);
     s.hat.volume.value = -26;        s.hat.connect(fx.hatHp);
     s.ohat.volume.value = -26;       s.ohat.connect(fx.hatHp);
     s.duckPad = duckPad; s.duckBass = duckBass;
