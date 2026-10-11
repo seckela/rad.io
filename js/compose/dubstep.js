@@ -107,7 +107,8 @@ export function dubstepify(r, v = variant(), len = r.t) {
       const fam = WOBS[half ? fam2 : fam1], fill = bar % 4 === 3 || end - b <= 16;   // every fourth bar, and always the last, is a fill
       if (bar % 4 === 0 || b === c.drop) {            // the sub holds each chord's root for four bars
         const stop = Math.min(c.drop + (bi + 1) * 64, end);
-        out.push({ t: b, tr, k: 'sub', m: fold(r.lead(a)), d: stop - b, v: 0.8 });
+        const dive = b === c.drop;                    // under the dive the sub waits until it has landed, so a bare low tone doesn't sit beneath it
+        out.push({ t: b + (dive ? 8 : 0), tr, k: 'sub', m: fold(r.lead(a)), d: stop - b - (dive ? 8 : 0), v: 0.8 });
       }
       // Call and response: in a "high" bar the wobble stops and the sharp high tones and a lead carry a melody on their own, which cuts
       // through, then the wobble comes back. The first drop waits until its third bar; later drops have more of them.
@@ -201,7 +202,7 @@ export function dubstepDrums(total, v = variant(), T = total) {
       else if (fill) hit(b + 8, 'riser', 0.8), ev[ev.length - 1].d = 8;   // a short riser under the lead's run
       for (const o of kicks[bar % kicks.length]) if (!(fill && o > 8)) hit(b + o, 'kick', o === 0 ? 1 : 0.8);
       hit(b + 8, 'snare', 1);
-      for (const o of hats) if (!fill || o < 8) hit(b + o, o % 4 === 2 ? 'ohat' : 'hat', o % 4 === 0 ? 0.45 : 0.3);
+      for (const o of hats) if ((!fill || o < 8) && b !== c.drop) hit(b + o, o % 4 === 2 ? 'ohat' : 'hat', o % 4 === 0 ? 0.45 : 0.3);
       if (fill) for (const o of [8.5, 12, 13, 14, 14.5, 15]) hit(b + o, 'snare', o >= 14 ? 0.9 : 0.6);
     }
   });
