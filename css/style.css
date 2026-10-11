@@ -118,3 +118,4 @@ body.mini .mini-bar.show { opacity:1; pointer-events:auto; }
 /* The seed field and its Pin / Random / Auto buttons, under the code box. */
 .seedrow { display:inline-flex; align-items:center; gap:6px; flex-wrap:wrap; }
 .seedrow input[type=text] { width:11ch; letter-spacing:.04em; }
+.actions-left { display:inline-flex; align-items:center; gap:6px; flex-wrap:wrap; }

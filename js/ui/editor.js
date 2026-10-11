@@ -30,6 +30,7 @@ src.addEventListener('input', () => changed());
 
 // plain: show the text without syntax colours (prose and poems look odd as JavaScript).
 let plain = false;
+export const isPlain = () => plain;
 export function setCode(text, isPlain = false) { plain = isPlain; src.value = text; if (jar) jar.updateCode(text); changed(); }
 const esc = t => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
