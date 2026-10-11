@@ -63,4 +63,12 @@ export const STYLES = [
     download: 'Nothing: every sound is synthesized.',
     note: 'The lead is always a pluck synth, so the Lead control is disabled.',
   },
+  {
+    id: 'trance', name: 'Trance', tint: '#5b8cff',
+    tagline: 'Soaring, driving euphoria',
+    blurb: 'Each line becomes a big supersaw chord with a fast pluck arpeggio over it, a rolling bass between the kicks, and a long-note supersaw lead with a dotted echo. Long chords end in a building snare roll, and the kick pumps everything on every beat.',
+    chips: ['138 BPM', 'Natural minor', 'Supersaw pad', 'Pluck arpeggio', 'Rolling bass', 'Snare builds'],
+    download: 'Nothing: every sound is synthesized.',
+    note: 'The lead is always a supersaw, so the Lead control is disabled.',
+  },
 ];

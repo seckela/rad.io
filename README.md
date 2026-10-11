@@ -8,7 +8,7 @@ Turn any JavaScript file into music. Paste or drop in code, press play, and ever
 
 It's a static page (plain ES modules, no bundler) built on [Tone.js](https://tonejs.github.io/), with [CodeJar](https://medv.io/codejar/) and [Prism](https://prismjs.com/) for the syntax-highlighted code box. There's no build step and nothing to install.
 
-Eight styles are included: an upbeat **Default**, a calm **Chillstep** for background listening, a dusty **Lo-fi** beat for studying, a **Rock / Metal** style with sampled electric guitar and bass, a bright **Chiptune** style with console-style synth voices, a slow, drumless **Ambient** style, a neon **Synthwave** style, and a four-on-the-floor **Techno / House** style. Pick one from the Style menu; a card underneath says what it offers.
+Nine styles are included: an upbeat **Default**, a calm **Chillstep** for background listening, a dusty **Lo-fi** beat for studying, a **Rock / Metal** style with sampled electric guitar and bass, a bright **Chiptune** style with console-style synth voices, a slow, drumless **Ambient** style, a neon **Synthwave** style, a four-on-the-floor **Techno / House** style, and an uplifting **Trance** style. Pick one from the Style menu; a card underneath says what it offers.
 
 ## Getting started
 
@@ -38,8 +38,9 @@ Any static server works if you'd rather not use Python, for example `npx serve`.
 - **Ambient:** about 60 BPM, built on the Chillstep layout but with nothing struck: each chord change becomes one long, soft drone (chord, low root and fifth) that lasts until the next change, the melody is thinned to a note every few beats and rings long, every few bars a soft gust of wind chimes drifts through, and there are no drums. Soft synthesized voices in a very large reverb; nothing to download.
 - **Synthwave:** about 100 BPM in Natural minor, built on the default composition: a bright detuned saw lead with a dotted echo over a wide saw pad, a pulsing 16th-note saw bass on each line's root, and a four-on-the-floor beat in place of the character-driven drum hits. Everything is synthesized; nothing to download.
 - **Techno / House:** about 124 BPM in Dorian, built on the default composition: a four-on-the-floor beat (kick, clap on 2 and 4, offbeat open hats, 16th hats) in place of the character-driven drum hits, an offbeat saw bass on each line's root, minor-7th chord stabs in a syncopated rhythm, a thinned, plucky lead, and the kick ducking the bass and stabs for the pump. Everything is synthesized; nothing to download.
+- **Trance:** about 138 BPM in Natural minor, built on the default composition: a held supersaw pad per line with a fast pluck arpeggio over it, a rolling 16th bass between the kicks, a thinned, long-note supersaw lead with a dotted echo, a building snare roll before long chords end, a four-on-the-floor beat in place of the character-driven drum hits, and the kick ducking the pad, arpeggio and bass for the pump. Everything is synthesized; nothing to download.
 *Rock / Metal* sets about 150 BPM and the Phrygian scale. Each line is a riff section with palm-muted guitar chugs (straight 8ths, a gallop, or a syncopated half-time rhythm) on a root note. The riff never stops between lines, and it changes bar to bar (rhythm variants, a root move every second bar, chord stabs, and a turnaround) so it doesn't loop. Only one part speeds up at a time: some sections have the lead guitar run up and down the scale in 8ths over a steady rhythm, and others end in a half-bar burst of 16th chugs and double kick while the lead rests. Brackets add power chords, the bass is its own part (several bar shapes that rotate, walking notes that follow the words in the line, and a walk up into the next section's root), the drums pick up accents from the code, and a lead guitar (with vibrato that fades in on held notes) plays over the other sections, mostly a note per beat or per 8th with stepwise pickup notes, and each section centers on a different scale step so the lead keeps moving. The guitar and bass are recorded samples; the drums are synthesized in layers (body tone plus noise or click, a room, and bus compression), and timing and velocity drift slightly, the same way every time, so it feels played rather than sequenced. The first Play in this style downloads about 3 MB of guitar and bass samples.
-- **Lead:** a sampled grand piano (default), or a plain synth if you're offline. (Rock / Metal always uses a guitar lead and Chiptune a pulse wave and Ambient a soft sine and Synthwave a saw synth and Techno / House a pluck synth.)
+- **Lead:** a sampled grand piano (default), or a plain synth if you're offline. (Rock / Metal always uses a guitar lead and Chiptune a pulse wave and Ambient a soft sine and Synthwave a saw synth and Techno / House a pluck synth and Trance a supersaw.)
 - **Key, Scale, Tempo, Loop:** these work while playing.
 - **Melody pace:** Chillstep, Lo-fi, Ambient and Rock / Metal. Busy, Medium, or Relaxed sets how far apart the lead melody's notes are.
 - **Evolving harmony:** gives each line its own chord and register so the music changes more over a file.
@@ -81,6 +82,7 @@ js/
     lofi.js            Lo-fi transform (built on Chillstep) and drums
     ambient.js         Ambient transform (held drones, no drums)
     house.js           Techno / House transform (offbeat bass, stabs) and drums
+    trance.js          Trance transform (pad, arpeggio, rolling bass, snare builds) and drums
     synthwave.js       Synthwave transform (pulsing bass, held chords) and drums
     chip.js            Chiptune transform (arpeggios, bouncing bass) and drums
     metal.js           Rock / Metal transform, riff tables and drums
@@ -93,6 +95,7 @@ js/
     ambient-track.js   Ambient voices
     synthwave-track.js Synthwave voices
     house-track.js     Techno / House voices
+    trance-track.js    Trance voices
     metal-track.js     Rock / Metal voices
     samples.js         Sample URLs and loaders
     play.js            Plays one event

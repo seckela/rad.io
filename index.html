@@ -10,36 +10,38 @@
   "imports": {
     "./js/audio/ambient-track.js": "./js/audio/ambient-track.js?v=f4717d5f",
     "./js/audio/chip-track.js": "./js/audio/chip-track.js?v=f9e18808",
-    "./js/audio/engine.js": "./js/audio/engine.js?v=4b7547a4",
+    "./js/audio/engine.js": "./js/audio/engine.js?v=a3ab72b0",
     "./js/audio/house-track.js": "./js/audio/house-track.js?v=969ce8f9",
     "./js/audio/lofi-track.js": "./js/audio/lofi-track.js?v=ef636558",
     "./js/audio/metal-track.js": "./js/audio/metal-track.js?v=4936a880",
-    "./js/audio/play.js": "./js/audio/play.js?v=4f63a165",
+    "./js/audio/play.js": "./js/audio/play.js?v=3254268a",
     "./js/audio/samples.js": "./js/audio/samples.js?v=93ceb03b",
     "./js/audio/synthwave-track.js": "./js/audio/synthwave-track.js?v=86cd6e7d",
     "./js/audio/track.js": "./js/audio/track.js?v=f2ceed6d",
+    "./js/audio/trance-track.js": "./js/audio/trance-track.js?v=21c9b7e8",
     "./js/audio/unlock.js": "./js/audio/unlock.js?v=c092791a",
     "./js/compose/ambient.js": "./js/compose/ambient.js?v=c04f4ea0",
     "./js/compose/chill.js": "./js/compose/chill.js?v=95ddda00",
     "./js/compose/chip.js": "./js/compose/chip.js?v=097c60e3",
     "./js/compose/house.js": "./js/compose/house.js?v=017786bb",
-    "./js/compose/index.js": "./js/compose/index.js?v=0ed4f1e5",
+    "./js/compose/index.js": "./js/compose/index.js?v=81927528",
     "./js/compose/lofi.js": "./js/compose/lofi.js?v=b3db2699",
     "./js/compose/melody.js": "./js/compose/melody.js?v=2c192c3a",
     "./js/compose/metal.js": "./js/compose/metal.js?v=ea8e6ab2",
     "./js/compose/synthwave.js": "./js/compose/synthwave.js?v=dc80f2ae",
     "./js/compose/track.js": "./js/compose/track.js?v=beaf256a",
+    "./js/compose/trance.js": "./js/compose/trance.js?v=951f6568",
     "./js/main.js": "./js/main.js?v=2f36f04e",
     "./js/sample.js": "./js/sample.js?v=8f9243aa",
     "./js/scales.js": "./js/scales.js?v=0d3598c0",
-    "./js/styles.js": "./js/styles.js?v=cadfcb65",
+    "./js/styles.js": "./js/styles.js?v=28d91825",
     "./js/ui/dom.js": "./js/ui/dom.js?v=365dd800",
     "./js/ui/editor.js": "./js/ui/editor.js?v=f23a7b5c",
     "./js/ui/minimal.js": "./js/ui/minimal.js?v=84b48614",
     "./js/ui/picker.js": "./js/ui/picker.js?v=4e1300ad",
-    "./js/ui/playback.js": "./js/ui/playback.js?v=656c1f3c",
-    "./js/ui/settings.js": "./js/ui/settings.js?v=9cff0385",
-    "./js/ui/tips.js": "./js/ui/tips.js?v=f65c0f82",
+    "./js/ui/playback.js": "./js/ui/playback.js?v=c0f810e4",
+    "./js/ui/settings.js": "./js/ui/settings.js?v=28317277",
+    "./js/ui/tips.js": "./js/ui/tips.js?v=72af3205",
     "./js/ui/view.js": "./js/ui/view.js?v=0386df12",
     "./js/ui/viz.js": "./js/ui/viz.js?v=18e57076"
   }
@@ -173,6 +175,7 @@
         <tr><td>Ambient style</td><td>About 60 BPM, built on the Chillstep layout (the same slow, sparse melody and i–VI–III–VII chord loop with one change per new line) but with nothing struck. Each chord change becomes one long, soft drone that lasts until the next change, with a low root and fifth underneath; the melody is thinned to a note every few beats and the notes ring long; bell chimes still mark quotes and semicolons, and every few bars a soft gust of wind chimes (two to four high notes close together, usually falling, ringing together for seconds) drifts through. The voices are slow-fading and synthesized (detuned triangle chords through a dark filter and a slow chorus, a soft sine lead with a long echo, sine bass) in a very large reverb. There are no drums, and nothing downloads.</td></tr>
         <tr><td>Synthwave style</td><td>About 100 BPM in Natural minor, built on the default composition and played like an 80s night-drive track. A bright, detuned saw lead with a dotted echo and chorus plays the melody over a wide detuned saw pad (chords are held at least a beat and a half), the bass is a relentless 16th-note filtered saw on each line's root with the beats accented, and the character-driven drum hits give way to a steady four-on-the-floor beat (kick on every beat, snare on 2 and 4, offbeat hats with quiet 16th ghosts). Digits and quotes keep their blips and plinks. Everything is synthesized, so nothing downloads.</td></tr>
         <tr><td>Techno / House style</td><td>About 124 BPM in Dorian, built on the default composition and played like a club track. The bass is an offbeat pump (short filtered saw notes on the "and" of every beat, with an occasional 16th pickup) on each line's root; the chords become minor-7th stabs (3rd, 5th and 7th of the line's chord) in a syncopated house rhythm that alternates between two bars; the melody is thinned to at most an 8th note's density and played as short plucks with a dotted echo. The character-driven drum hits give way to a four-on-the-floor beat (kick on every beat, clap on 2 and 4, open hats on the offbeats, 16th closed hats), and the kick ducks the bass and stabs on every beat for the pumping feel. Everything is synthesized, so nothing downloads.</td></tr>
+        <tr><td>Trance style</td><td>About 138 BPM in Natural minor, built on the default composition and played like an uplifting trance track. Each line's chord is held as a big detuned supersaw pad with a fast 16th-note pluck arpeggio over it (up the triad and into the octave, then back down); the bass rolls, three 16ths between every kick, on the line's root; the melody is thinned to a note every few beats, lengthened, and played by a supersaw lead with a long dotted echo. When a chord lasts two bars or more, its last half bar is a snare roll that builds in volume. The character-driven drum hits give way to a four-on-the-floor beat (kick on every beat, clap on 2 and 4, open hats on the offbeats), and the kick dips the pad, arpeggio and bass on every beat for the pump. Everything is synthesized, so nothing downloads.</td></tr>
         <tr><td>Minimal view</td><td>The button next to Play hides everything except the {rad.io} strip, which fills the page and turns into the equalizer while music plays. Moving the mouse (or tapping) fades in Play / Pause, Stop and a Full view button, and they fade out again after a couple of seconds. Esc goes back to the full view and Space plays or pauses. The equalizer runs in this view even if the Visualizer box is off.</td></tr>
         <tr><td>Evolving harmony</td><td>Each line's text picks its own chord root and register; every fourth line returns to the tonic. The melody lands on a chord tone on each beat, the step size depends on the letter pair (not just the letter), word-ending notes are longer, word starts are accented, and each line swells in pitch and volume. Turn it off for the plain mapping.</td></tr>
         <tr><td>Background track</td><td>Canon: the melody is echoed an octave up, a beat or a bar or two later, as a soft sine tone panned slightly right (just the melody, no bass, chords or drums). Alternating lines: odd lines play in the foreground while even lines play at the same time as a lower background voice, each on its own clock. The background cursor is blue.</td></tr>
