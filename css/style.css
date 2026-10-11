@@ -48,7 +48,7 @@ textarea.code { resize:vertical; display:block; }
 .token.operator, .token.arrow, .token.entity, .token.url { color:#89ddff; }
 .token.regex, .token.important { color:#f07178; }
 .token.interpolation-punctuation { color:#c792ea; }
-.code-actions { margin-top:10px; }
+.code-actions { margin-top:10px; display:flex; align-items:center; justify-content:space-between; gap:10px 16px; flex-wrap:wrap; }
 .meta { margin-top:8px; font-size:12px; color:var(--dim); display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; }
 details summary { cursor:pointer; color:var(--dim); font-size:13px; }
 table { border-collapse:collapse; width:100%; margin-top:10px; font-size:13px; }
