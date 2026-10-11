@@ -13,7 +13,7 @@ import { initTips } from './ui/tips.js';
 import { initDebug } from './audio/unlock.js';
 import { initViz } from './ui/viz.js';
 import { initMinimal } from './ui/minimal.js';
-import { playing, paused, lastTotal, applyMix, updateStats, rebuild, applyStyleDefaults, loadAudio, start, stop, pause, resume, seekTo } from './ui/playback.js';
+import { playing, paused, lastTotal, applyMix, updateStats, rebuild, applyStyleDefaults, applyFeel, loadAudio, start, stop, pause, resume, seekTo } from './ui/playback.js';
 
 KEYS.forEach((k, i) => $('key').add(new Option(k, i)));
 Object.keys(SCALES).forEach(k => $('scale').add(new Option(k, k)));
@@ -63,10 +63,12 @@ const showSeed = () => { $('seed').placeholder = formatSeed(seedOf(getText())); 
 const seedChanged = () => { if (playing) rebuild(); else updateStats(getText().length, compose(getText(), getKey(), getScale(), getOpts()).total); };
 onTextChange(showSeed);
 showSeed();
-$('seed').onchange = seedChanged;
+// A new seed (typed, random or back to Auto) also moves the tempo, scale and key to where it puts this style; Pin keeps the same seed.
+const newSeed = () => { applyFeel(); seedChanged(); };
+$('seed').onchange = newSeed;
 $('seed-pin').onclick = () => { $('seed').value = formatSeed(seedOf(getText())); seedChanged(); };
-$('seed-dice').onclick = () => { $('seed').value = formatSeed(Math.floor(Math.random() * 2 ** 32)); seedChanged(); };
-$('seed-auto').onclick = () => { $('seed').value = ''; seedChanged(); };
+$('seed-dice').onclick = () => { $('seed').value = formatSeed(Math.floor(Math.random() * 2 ** 32)); newSeed(); };
+$('seed-auto').onclick = () => { $('seed').value = ''; newSeed(); };
 $('leadsound').onchange = () => { if (audio) loadAudio(); };
 for (const g of EXAMPLES) {
   const og = document.createElement('optgroup');
@@ -80,6 +82,8 @@ $('sample').onchange = () => {
   if (!it) return;
   if (playing) stop();
   setCode(it.text, !it.code);
+  applyFeel();                                  // the new text's seed sets the tempo, scale and key
+  seedChanged();
 };
 
 // A rad.io session file (from Export) restores the text, seed and settings; any other file is loaded as text.
@@ -93,6 +97,8 @@ async function loadFile(f) {
     if (isSession(o)) return openSession(o);
   }
   setCode(text);
+  applyFeel();
+  seedChanged();
 }
 function openSession(o) {
   if (playing) stop();

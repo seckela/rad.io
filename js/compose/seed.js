@@ -39,3 +39,27 @@ export function parseSeed(str) {
   if (/^[0-9a-z]{1,7}$/i.test(t)) { const n = parseInt(t, 36); if (n < 2 ** 32) return n; }
   return hash(t);
 }
+
+// How a style takes its choices from the seed. Every style gets its own `variant`, made by compose/index.js from the text's seed
+// and the style's name, and uses it (and only it) for anything that should differ from one text to the next:
+//   v.pick('name', n)       a whole number from 0 to n-1, for choosing a table row or a pattern
+//   v.of('name', list)      one item from a list
+//   v.chance('name', p)     true with probability p (a yes/no choice, such as "add a pickup bar")
+//   v.noise('name')         a function x => number in [0, 1), for choices made note by note (ambient's chimes, vinyl crackle)
+// The name just has to be different for each choice within a style: different names (and different styles) make independent
+// choices, so the chord loop doesn't always move together with the drum pattern. Everything is a pure function of the seed, so the
+// same text and seed always give the same track. Never use Math.random in a style, and keep a style's identity (its tempo, sound
+// and overall feel) fixed: the seed picks between versions of a style, not between styles. See "Adding a style" in the README.
+export function variant(seed = 0, style = '') {
+  const key = name => style + ':' + name;
+  return {
+    seed, style,
+    pick: (name, n) => pick(seed, key(name), n),
+    of: (name, list) => list[pick(seed, key(name), list.length)],
+    chance: (name, p) => pick(seed, key(name), 1000) < p * 1000,
+    noise: name => {
+      const off = pick(seed, key(name), 100000);
+      return x => { const y = Math.sin((x + off) * 12.9898) * 43758.5453; return y - Math.floor(y); };
+    },
+  };
+}

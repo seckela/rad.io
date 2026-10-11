@@ -64,5 +64,15 @@ export function buildLofiTrack(reverb, bg, piano, bassSamples) {
     s.crackle.volume.value = -26;   s.crackle.connect(fx.crackleHp);
   }
   Object.assign(s, fx);   // so disposeAudio cleans the effect nodes up with the voices
-  return { s, group, out };
+  // The seed's tone settings (see seed.js), applied each time a track is built: how dark the tape is, how much it wobbles and
+  // saturates, how soft the piano and chords are, and how loud the crackle is. They stay within a warm, dusty range.
+  const feel = v => {
+    fx.warm.frequency.value = v.of('warm', [3200, 4200, 5000, 3800]);
+    fx.wobble.depth.value = v.of('wobble', [0.04, 0.07, 0.1, 0.13]);
+    fx.sat.wet.value = v.of('sat', [0.15, 0.25, 0.4]);
+    fx.leadLp.frequency.value = v.of('lead-tone', [1900, 2600, 3400]);
+    fx.padLp.frequency.value = v.of('pad-tone', [1400, 1800, 2400]);
+    if (s.crackle) s.crackle.volume.value = v.of('crackle', [-31, -26, -22]);
+  };
+  return { s, group, out, feel };
 }

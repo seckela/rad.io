@@ -29,7 +29,7 @@ Any static server works if you'd rather not use Python, for example `npx serve`.
 
 ## Using it
 
-- **Every text gets its own track:** a seed built from coarse features of the text (its length and line count in powers of two, how much of it is punctuation, capitals, digits and indentation, how long its lines are, and its three most common letters) changes where each letter pair lands in the melody's step and note-length tables, the starting note, the bass degrees, how often the chords return to the tonic and, in Trance, the chord loop, which phrase plays when, where the chorus pattern starts, the arpeggio shapes and small changes to each phrase. The same text always gives the same track, and a small edit (a typo, a changed word, an added line) keeps the same seed, so the music doesn't change under you while you type. The seed's 7-character code shows in the **Seed** box (as the placeholder while it follows the text). **Pin** keeps the current text's seed, so you can swap in any other text and keep the same musical choices; **Random** tries a new one; **Auto** goes back to the text's own. You can also type a code you were given, or any word or phrase (a phrase is turned into a seed), to use that seed with any text. See `js/compose/seed.js`.
+- **Every text gets its own track:** a seed built from coarse features of the text (its length and line count in powers of two, how much of it is punctuation, capitals, digits and indentation, how long its lines are, and its three most common letters) changes the melody (which note-length table it uses, whether its contour is flipped, how jumpy its steps are, and where the tables start), the starting note and how often the chords return to the tonic in every style, and it also changes the foundation: whole drum grooves and bass lines picked from families in `js/compose/groove.js` (boom-bap, half-time, broken beat, shuffle, four on the floor and more for drums; long root, pulse, offbeat, syncopated, octave and walking lines for bass), so the parts under the melody differ too, even for text with no symbols. The seed also sets where each style's **tempo, scale and key** start, within a range that still suits the style (for example Lo-fi 72–90 BPM in a minor, Dorian, Major or Lydian scale), when a new seed takes effect: picking a style, loading an example or a file, or changing the seed (not while typing, and you can change them afterwards). Lo-fi also gets its own tape tone (how dark, wobbly and saturated it is, and the crackle level), a seeded chord colour (9th, 7th, 6th or plain) and chord loop (8 options), and its melody sometimes sits an octave higher. Each style also makes its own choices from it: the chord loop (Chillstep, Lo-fi, Ambient, Trance), arpeggio shapes and bass bounce (Chiptune), bass line and hat patterns (Synthwave, Techno / House), stab rhythms, kick and hat grooves, drone intervals and chime density (Ambient), riff and kick patterns (Rock / Metal), and in Trance which phrase plays when and small changes to every phrase. The same text always gives the same track, and a small edit (a typo, a changed word, an added line) keeps the same seed, so the music doesn't change under you while you type. The seed's 7-character code shows in the **Seed** box (as the placeholder while it follows the text). **Pin** keeps the current text's seed, so you can swap in any other text and keep the same musical choices; **Random** tries a new one; **Auto** goes back to the text's own. You can also type a code you were given, or any word or phrase (a phrase is turned into a seed), to use that seed with any text. See `js/compose/seed.js`.
 - **Share a session:** **Export** saves the text, the seed and the settings (style, key, scale, tempo, melody pace, lead, loop, evolving harmony, background voice, volume and layers) as a small `session.radio.json` file. **Import** (or dropping that file onto the code area) restores all of it, so someone else hears exactly what you did. The seed is always saved, even when it came from the text. Imported files are treated as data: only known fields are read and every value is checked, so an odd file can't change anything it shouldn't.
 - **Load code:** type or paste into the code box (JavaScript is syntax-highlighted, and the colors carry over to the playback view), use **File**, drop a file onto the code area, or pick something from the **Load an example** menu: two code snippets, plus public-domain poems, prose and traditional songs (old text works just as well as code, and examples that aren't code are shown without syntax colours).
 - **Play / Pause / Stop:** while playing, the code is shown with a moving cursor on the character being played. Play becomes **Pause** (then **Resume**) and a separate **Stop** button appears. Pausing freezes the audio exactly where it is; Stop ends the session and returns to the editor.
@@ -79,6 +79,9 @@ js/
   scales.js            Keys and scales
   compose/             Text to timed events (no audio code)
     track.js           Per-line composition and the melody/harmony lookup tables
+    groove.js          Drum-groove and bass-line families the seed picks from
+    default.js         The Default style's seeded bass line and drum groove
+    feel.js            Where each style's tempo, scale and key start for a given seed
     seed.js            The text's seed (coarse features of the text) and the choices it makes
     melody.js          Melody helpers shared by Chillstep, Lo-fi and Rock / Metal
     chill.js           Chillstep transform and drums
@@ -114,6 +117,26 @@ js/
 ```
 
 The musical tuning is easy to change. The lookup tables at the top of `js/compose/track.js` (`FREQ`, `DUR`, `STEPS`, `PROG`, `BASS`) and `js/scales.js` (`SCALES`) control the melody and harmony, the riff tables are in `js/compose/metal.js`, and the instrument settings are in `js/audio/track.js` and `js/audio/metal-track.js`.
+
+## Adding a style
+
+Every style takes its seeded choices through one helper, so a new style gets the same behaviour as the rest. In `js/compose/index.js` each style gets a `variant` made from the text's seed and the style's name (`variant(seed, 'mystyle')`, from `js/compose/seed.js`) and passes it to its transform and its drums: `mystyleify(r, v)` and `mystyleDrums(total, v)`. Inside, ask it for choices:
+
+- `v.pick('name', n)`: a whole number from 0 to n-1, for choosing a table row or a pattern.
+- `v.of('name', list)`: one item from a list.
+- `v.chance('name', p)`: yes or no with probability p.
+- `v.noise('name')`: a function `x => [0, 1)` for choices made note by note (chimes, crackle).
+
+Rules of thumb:
+
+0. **Vary the foundation too, not only the top.** The seed should change what the bass and the drums do (pick families from `js/compose/groove.js` that suit the style, or add new ones there), otherwise different texts get different melodies over the same bottom end.
+1. **Vary the arrangement, not the identity.** Tempo, voices and the overall feel stay the same; the seed picks between versions of that style (a chord loop, a bass rhythm, a hat pattern, a fill), each of which should still sound right on its own.
+2. **Offer 2 to 5 options per choice, all of them good.** More choices that matter beat more options per choice. Aim for 3 or 4 independent choices spread across harmony, bass, drums and any signature element.
+3. **Use a different name for every choice** within a style, so choices don't move together. Different styles are independent automatically.
+4. **Everything must be a pure function of the seed.** Never use `Math.random`; the same text and seed must always give the same track (that is what makes Export and Pin work).
+5. **Keep the defaults first**: when a list has an obvious "classic" version, put it first and repeat it so it still comes up often.
+6. **Say where the style's feel can move.** Add the style to `FEEL` in `js/compose/feel.js` (a tempo range, the scales that suit it, whether the key may move). If its voices have a tone that can vary (filters, wobble, noise levels), return a `feel(v)` function from its track builder, as `js/audio/lofi-track.js` does.
+7. Mention what the seed changes in the style's README paragraph and in its `STYLES` blurb if it is worth knowing.
 
 ## Notes
 

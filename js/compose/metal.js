@@ -1,5 +1,6 @@
 import { degToMidi } from './track.js';
 import { groupLeads, fold, gridMelody } from './melody.js';
+import { variant } from './seed.js';
 
 // Riff note (scale steps above the section's root) by letter rank in FREQ: common letters chug on the root.
 const METAL_RIFF = [0,0,0,0,2,0,1,3,0,4, 2,3,4,1, 5,2,3,4, 5,1, 6, 2,3,4,5,6];
@@ -41,7 +42,10 @@ const RIFF_PICK = [0, 0, 1, 1, 2, 3];
 //  - The bass doubles every chug, and the drums follow the riff (see metalDrums).
 //  - A sparse lead guitar line is built with the same grid melody as chillstep.
 // Character-driven drums, pads, bells and digits go quiet.
-export function metalify(r, key, scale, base) {
+export function metalify(r, key, scale, base, v = variant()) {
+  // Seeded choices (see seed.js): which riff type each section gets (the text's lines still decide where they fall, the seed rotates the
+  // mapping), where the lead centers, and the order the bar roots move in.
+  const riffTurn = v.pick('riffs', RIFF_PICK.length), leadTurn = v.pick('lead', 5), BAR_MOVES = v.of('moves', [BAR_ROOT_MOVE, [0, 4, 3, 1, 2], [0, 2, 4, 3, 1]]);
   const n = r.n;
   const root = d => degToMidi(36 + key, scale, d);
   const ev = r.events.map(e => {
@@ -65,7 +69,7 @@ export function metalify(r, key, scale, base) {
   // the samples are closest to their recorded pitch). Up near G6 the shifted samples turn thin and flute-like.
   const lowLead = d => r.lead(d - n);
   list.forEach((grp, gi) => {
-    const h = grp[0].h, pick = RIFF_PICK[h % 6], a = grp[0].a;
+    const h = grp[0].h, pick = RIFF_PICK[(h + riffTurn) % 6], a = grp[0].a;
     // A section's riff runs from its first letter until the next section starts, so the guitar never
     // drops out across line breaks. The first section starts at the very beginning.
     const spanStart = gi === 0 ? 0 : grp[0].t;
@@ -74,7 +78,7 @@ export function metalify(r, key, scale, base) {
     const fillFrom = pick !== 3 && spanEnd - spanStart >= 24 && (h >> 2) % 3 === 0 ? spanEnd - 8 : null;
     const slots = [];
     const bar0 = Math.floor(spanStart / 16);
-    const move = bi => (bi % 2 === 1 ? BAR_ROOT_MOVE[(h >> 4) % 5] : 0);      // the riff's root shifts on every second bar
+    const move = bi => (bi % 2 === 1 ? BAR_MOVES[(h >> 4) % 5] : 0);      // the riff's root shifts on every second bar
     // Only one part speeds up at a time: in a burst section the lead takes the fast run while the rhythm
     // guitar holds steady 8ths, and in a section-ending fill the guitar speeds up while the lead rests.
     for (let bar = bar0 * 16; bar < spanEnd; bar += 16) {
@@ -133,7 +137,7 @@ export function metalify(r, key, scale, base) {
 
     if (pick === 3) {
       // Burst sections: the lead guitar runs up and down the scale in 8th notes, steered by the letters.
-      const A = near(a, n + 1) + LEAD_SHIFT(h);
+      const A = near(a, n + 1) + LEAD_SHIFT(h + (leadTurn << 5));
       let rp = 0, dir = 1;
       for (let t = Math.ceil(grp[0].t / 2) * 2; t <= grp[grp.length - 1].t; t += 2) {
         let c = null, nd = 2;
@@ -148,7 +152,7 @@ export function metalify(r, key, scale, base) {
     }
   });
   const fills = sections.filter(x => x.fillFrom !== null);
-  const lead = gridMelody({ ...r, lead: lowLead }, calm, base, true, { picks: LEAD_PICKS, shift: LEAD_SHIFT, fold: true, lo: -4, hi: 6 })
+  const lead = gridMelody({ ...r, lead: lowLead }, calm, base, true, { picks: LEAD_PICKS, shift: h => LEAD_SHIFT(h + (leadTurn << 5)), fold: true, lo: -4, hi: 6 })
     .map(e => ({ ...e, v: Math.min(1, e.v * 0.9) }))
     .filter(e => !fills.some(x => e.t >= x.fillFrom - 0.01 && e.t < x.spanEnd))          // the lead rests while the guitar bursts
     .map(e => { const f = fills.find(x => e.t < x.fillFrom && e.t + e.d > x.fillFrom); return f ? { ...e, d: Math.max(1, f.fillFrom - e.t) } : e; });
@@ -158,8 +162,9 @@ export function metalify(r, key, scale, base) {
 // Drums for rock/metal that follow each section's riff: a rock beat under straight chugs, kick-and-
 // gallop under galloping chugs, and a sparse half-time pattern under syncopated chugs. A crash lands
 // with each section's opening power chord, and a snare roll leads into it.
-export function metalDrums(total, sections) {
-  const KICKS = [[0, 2, 8, 10], [0, 2, 3, 6, 8, 10, 11, 14], [0, 3, 6, 11], [0, 2, 4, 6, 8, 10, 12, 14]];
+export function metalDrums(total, sections, v = variant()) {
+  // Seeded: which kick pattern a straight (rock) section gets.
+  const KICKS = [v.of('rock-kick', [[0, 2, 8, 10], [0, 2, 8, 11], [0, 3, 8, 10]]), [0, 2, 3, 6, 8, 10, 11, 14], [0, 3, 6, 11], [0, 2, 4, 6, 8, 10, 12, 14]];
   const SNARES = [[4, 12], [4, 12], [8], [4, 12]];
   const HATS = [[0, 2, 4, 6, 8, 10, 12, 14], [0, 4, 8, 12], [0, 4, 8, 12], [0, 4, 8, 12]];
   const secs = sections.slice().sort((a, b) => a.t0 - b.t0);

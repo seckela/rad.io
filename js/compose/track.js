@@ -1,16 +1,19 @@
 // Turns lines of text into timed events (no audio code). The lookup tables here set the melody and harmony.
 
-import { pick } from './seed.js';
+import { variant } from './seed.js';
 
 const FREQ = 'etaoinshrdlcumwfgypbvkjxqz';        // letters, most to least common
 
-const DUR  = [1, 1, 1, 2, 1, 1, 2, 3];            // note lengths in 16ths, picked by letter pair
+// Note lengths in 16ths, picked by letter pair. The seed picks one table: the original, a longer and flowing one, a short and
+// choppy one, or an uneven one with long notes.
+const DURS = [[1, 1, 1, 2, 1, 1, 2, 3], [2, 2, 3, 1, 2, 1, 2, 4], [1, 1, 1, 1, 1, 2, 1, 1], [1, 2, 1, 3, 1, 2, 1, 4]];
 
 const STEPS = [1, -1, 2, -2, 1, 3, -3, 0, -1, 2, -2, 4, -4];   // melodic steps picked by letter pair
 
-// Chillstep's chord roots, one per code line, cycling: i - VI - III - VII. Familiar, diatonic and close together,
-// so a new line changes the harmony gently instead of jumping to a root picked from the line's text.
-const CHILL_ROOTS = [0, 5, 2, 6];
+// Chillstep's chord roots, one per code line, cycling. The first loop is i - VI - III - VII; the seed picks one of these. All are
+// familiar, diatonic and close together, so a new line changes the harmony gently instead of jumping to a root picked from the
+// line's text.
+const CHILL_LOOPS = [[0, 5, 2, 6], [0, 3, 6, 2], [0, 6, 5, 2], [0, 5, 3, 6], [0, 2, 5, 6], [0, 4, 5, 3], [0, 3, 5, 4], [0, 6, 3, 5]];
 
 const PROG = [0, 3, 4, 2];                        // pad chord roots by nesting depth
 
@@ -23,15 +26,17 @@ export function degToMidi(root, scale, d) {
 
 // Plays one track's lines in order; times are in 16th-note units. The background track
 // sits an octave lower and drops the percussion (those characters become rests).
-export function composeTrack(items, key, scale, bg, vary, chill, seed = 0) {
+export function composeTrack(items, key, scale, bg, vary, chill, v = variant()) {
   const n = scale.length, ev = [];
   // What the seed (see seed.js) changes: where in the table of melodic steps and note lengths each letter pair lands, the bass
   // degrees, how often the harmony returns to the tonic, and where the melody starts.
-  const stepSh = pick(seed, 'steps', STEPS.length), durSh = pick(seed, 'dur', DUR.length), bassSh = pick(seed, 'bass', BASS.length);
-  const tonicEvery = 3 + pick(seed, 'tonic', 3), regSh = pick(seed, 'reg', 5), start = n + pick(seed, 'start', 5) - 2;
+  const chillLoop = v.of('chill-loop', CHILL_LOOPS);
+  const stepSh = v.pick('steps', STEPS.length), DUR = v.of('durs', DURS), durSh = v.pick('dur', DUR.length), mirror = v.chance('mirror', 0.5), leap = v.of('leap', [1, 1, 1.5, 2]), bassSh = v.pick('bass', BASS.length);
+  const tonicEvery = 3 + v.pick('tonic', 3), regSh = v.pick('reg', 5), start = n + v.pick('start', 5) - 2;
   const sh = bg ? -12 : 0;
   const push = o => ev.push({ tr: bg ? 1 : 0, ...o });
-  const lead = d => degToMidi((chill ? 48 : 60) + key + sh, scale, d);   // same tonic as pad/bass (C + key)
+  const lift = chill ? v.of('lift', [0, 0, 12]) : 0;     // seeded: the warm styles' melody sometimes sits an octave higher (brighter)
+  const lead = d => degToMidi((chill ? 48 : 60) + key + sh + lift, scale, d);   // same tonic as pad/bass (C + key)
   const pad  = d => degToMidi(48 + key, scale, d);
   // Chillstep keeps the bass in one low octave (G1 to F#2) whatever the chord: roots on higher scale degrees
   // used to sit up near 105-117 Hz, which sounded brighter and louder than the others, so a line change onto
@@ -58,7 +63,7 @@ export function composeTrack(items, key, scale, bg, vary, chill, seed = 0) {
     if (!blank) for (const ch of line.trim()) h = (h * 31 + ch.charCodeAt(0)) % 9973;
     if (vary && !blank) {
       lineNo++;
-      root = chill ? CHILL_ROOTS[lineNo % 4] % n : lineNo % tonicEvery === 0 ? 0 : (h + pick(seed, 'root', n)) % n;
+      root = chill ? chillLoop[lineNo % 4] % n : lineNo % tonicEvery === 0 ? 0 : (h + v.pick('root', n)) % n;
       reg = [0, 1, -1, 2, 1][((h >> 3) + regSh) % 5];
     }
     const tones = [root, root + 2, root + 4].map(d => d % n);
@@ -80,6 +85,8 @@ export function composeTrack(items, key, scale, bg, vary, chill, seed = 0) {
           const pr = isWord(prev) ? (/[_$]/.test(prev) ? 12 : FREQ.indexOf(prev.toLowerCase())) : 13;
           step = STEPS[(pr * 5 + rank * 3 + stepSh) % STEPS.length];
         }
+        if (mirror) step = -step;                       // the contour flips (seeded)
+        step = Math.round(step * leap);                 // and may be more or less jumpy (seeded)
         if (prev === c) step = 0;
         let next = pos + step;
         if (next < lo || next > hi) next = pos - step;
