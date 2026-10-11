@@ -6,6 +6,7 @@
 //  - The character-driven drum hits (= + - < > and so on) go quiet and a steady, tight beat takes over (see chipDrums).
 // Digits and quotes keep their blips and plinks, and the melody is untouched.
 import { variant } from './seed.js';
+import { drumGroove } from './groove.js';
 
 // Seeded choices (see seed.js): the arpeggio shape (indexes into the chord), how the bass bounces (semitones above the root, one
 // per 8th), and the drum groove (see chipDrums).
@@ -41,18 +42,8 @@ export function chipify(r, v = variant()) {
   return { events: out, t: r.t };
 }
 
-// A tight four-on-the-floor-ish beat: kick on 1 and 3 (plus a pickup every other bar), snare on 2 and 4,
-// and straight 8th hats with the beats accented.
+// The beat. The seed picks a whole groove (see groove.js) from the ones that suit an 8-bit track: a steady pulse, a four-on-the-floor,
+// straight 8th kicks, or a broken beat.
 export function chipDrums(total, v = variant()) {
-  // Seeded: where the kicks fall (1 and 3 with a pickup, 1 and the "and" of 2 and 3, or 1, 3 and a late kick), and 8th or 16th hats.
-  const kicks = v.of('kicks', [[0, 8], [0, 6, 8], [0, 8, 11]]), sixteenths = v.chance('hats16', 0.35);
-  const ev = [];
-  for (let b = 0; b < total; b += 16) {
-    for (const off of kicks) ev.push({ t: b + off, k: 'kick', v: off ? 0.8 : 0.9, tr: 0 });
-    if ((b / 16) % 2 === 1) ev.push({ t: b + 14, k: 'kick', v: 0.6, tr: 0 });
-    ev.push({ t: b + 4, k: 'snare', v: 0.8, tr: 0 }, { t: b + 12, k: 'snare', v: 0.8, tr: 0 });
-    if (sixteenths) for (let h = 0; h < 16; h++) ev.push({ t: b + h, k: 'hat', v: h % 4 === 0 ? 0.5 : h % 2 === 0 ? 0.3 : 0.16, tr: 0 });
-    else for (let h = 0; h < 8; h++) ev.push({ t: b + h * 2, k: 'hat', v: h % 2 ? 0.3 : 0.5, tr: 0 });
-  }
-  return ev;
+  return drumGroove(total, v.of('drums', ['pulse', 'four', 'driving', 'breaks', 'driving']), 1);
 }

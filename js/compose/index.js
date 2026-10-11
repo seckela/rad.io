@@ -8,6 +8,7 @@ import { synthwaveify, synthwaveDrums } from './synthwave.js';
 import { houseify, houseDrums } from './house.js';
 import { tranceify, tranceDrums } from './trance.js';
 import { seedOf, variant } from './seed.js';
+import { defaultify, defaultDrums } from './default.js';
 
 // o.mode: 'off' | 'canon' | 'split'
 //  canon: the background repeats the melody `o.delay` units late, an octave up (lead voice only)
@@ -20,7 +21,7 @@ export function compose(text, key, scale, o) {
   const style = trance ? 'trance' : house ? 'house' : synthwave ? 'synthwave' : ambient ? 'ambient' : chip ? 'chip' : metal ? 'metal' : lofi ? 'lofi' : chill ? 'chill' : 'default';
   const v = variant(sd, style), base = variant(sd, 'melody');
   const warm = chill || lofi || ambient;      // Lo-fi is composed on top of the Chillstep layout
-  const fix = r => trance ? tranceify(r, v) : house ? houseify(r, v) : synthwave ? synthwaveify(r, v) : ambient ? ambientify(r, key, scale, o.gap, v) : chip ? chipify(r, v) : metal ? metalify(r, key, scale, o.gap / 2, v) : lofi ? lofiify(r, key, scale, o.gap, v) : chill ? chillify(r, o.gap) : r;
+  const fix = r => trance ? tranceify(r, v) : house ? houseify(r, v) : synthwave ? synthwaveify(r, v) : ambient ? ambientify(r, key, scale, o.gap, v) : chip ? chipify(r, v) : metal ? metalify(r, key, scale, o.gap / 2, v) : lofi ? lofiify(r, key, scale, o.gap, v) : chill ? chillify(r, o.gap, v) : defaultify(r, v);
   const lines = text.split('\n');
   const tracks = [[], []];
   let idx = 0, k = -1;
@@ -45,7 +46,8 @@ export function compose(text, key, scale, o) {
     t += delay;
   }
   const total = Math.max(16, Math.ceil(t / 16) * 16);
-  if (lofi) events = events.concat(lofiDrums(total, v));
+  if (style === 'default') events = events.concat(defaultDrums(total, v));
+  else if (lofi) events = events.concat(lofiDrums(total, v));
   else if (chill) events = events.concat(chillDrums(total, v));
   if (chip) events = events.concat(chipDrums(total, v));
   if (synthwave) events = events.concat(synthwaveDrums(total, v));

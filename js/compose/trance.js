@@ -12,6 +12,7 @@
 //  - The character-driven drum hits go quiet and a four-on-the-floor beat takes over (see tranceDrums).
 // The kick dips the pad, the arpeggio and the bass on every beat (see audio/play.js), which gives the pumping feel.
 import { variant } from './seed.js';
+import { bassGroove } from './groove.js';
 
 const PATS = [[0, 1, 2, 3, 2, 1, 0, 1], [0, 2, 1, 3, 2, 1, 3, 2], [2, 3, 2, 1, 2, 3, 2, 1]];   // arpeggio shapes per half bar; index 3 is the root an octave up
 const LO = 55, HI = 79, MID = 67;                // the lead's range (MIDI) and the middle it leans toward
@@ -20,6 +21,7 @@ const LOOPS = [[0, 4, 5, 6, 2], [0, 5, 2, 6], [0, 6, 5, 4], [0, 2, 5, 6, 4], [0,
 const RISE = [[8, 0.3], [6, 0.4], [4, 0.5], [3, 0.6], [2, 0.75], [1, 0.95]];   // [sixteenths before the next chord, snare velocity]
 
 export function tranceify(r, v = variant()) {
+  const bassFam = v.of('bassfam', ['rolling', 'rolling', 'offbeat', 'octave', 'sync', 'pulse']);   // the rolling bass most of the time, or another family (see groove.js)
   const loop = LOOPS[v.pick('loop', LOOPS.length)], arp = v.pick('arp', PATS.length);
   shift = v.pick('chorus', 3);
   const out = [];
@@ -49,7 +51,8 @@ export function tranceify(r, v = variant()) {
       const pat = PATS[(Math.floor(t / 16) + Math.floor((t % 16) / 8) + arp) % PATS.length], x = pat[t % 8];
       out.push({ t, tr: c.tr, k: 'pluck', m: (x === 3 ? tri[0] + 12 : tri[x]) + 12, d: 1, v: (n % 4 === 0 ? 0.5 : 0.32) * (onAt(t) ? 0.85 : 1.3) });
     }
-    for (let b = Math.floor(c.t / 4) * 4; b < stop; b += 4) {
+    if (bassFam !== 'rolling') out.push(...bassGroove(c.t, stop, c.m, bassFam, c.tr, undefined, 0.62));
+    else for (let b = Math.floor(c.t / 4) * 4; b < stop; b += 4) {
       for (const off of [1, 2, 3]) {
         const t = b + off;
         if (t >= c.t && t < stop) out.push({ t, tr: c.tr, k: 'bass', m: c.m, d: 0.9, v: off === 2 ? 0.65 : 0.45 });

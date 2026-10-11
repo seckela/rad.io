@@ -8,6 +8,7 @@
 //    2 and 4, open hats on the offbeats and 16th closed hats in between.
 // The kick also ducks the bass and the stabs while they play (see audio/play.js), which gives the pumping feel.
 import { variant } from './seed.js';
+import { bassGroove } from './groove.js';
 
 // Seeded choices (see seed.js): the stab rhythm (16th offsets; the two bars alternate), and the bass bar (the offbeat 8ths, with one
 // note sometimes shifted a 16th). The drums vary too (see houseDrums).
@@ -21,6 +22,8 @@ const BASS_BARS = [[2, 6, 10, 14], [2, 6, 10, 14], [2, 6, 10, 13], [2, 5, 10, 14
 
 export function houseify(r, v = variant()) {
   const STAB_BARS = v.of('stabs', STAB_SETS), BASS_BAR = v.of('bass', BASS_BARS);
+  // The bass line: the offbeat pump most of the time, or another family (see groove.js) from some texts.
+  const bassFam = v.of('bassfam', ['house', 'house', 'sync', 'octave', 'pulse', 'walk']);
   const out = [];
   for (const e of r.events) {
     if (['kick', 'hat', 'snare'].includes(e.k)) { out.push({ ...e, k: 'rest' }); continue; }
@@ -39,16 +42,17 @@ export function houseify(r, v = variant()) {
     const stop = roots[j + 1] ? roots[j + 1].t : r.t;
     const chord = [r.pad(c.a + 2), r.pad(c.a + 4), r.pad(c.a + 6)];
     let first = true;
+    if (bassFam !== 'house') out.push(...bassGroove(c.t, stop, c.m, bassFam, c.tr, c.i, 0.66));
     for (let b = Math.floor(c.t / 16) * 16; b < stop; b += 16) {
       const bar = (b / 16) % 2;
-      BASS_BAR.forEach((off, k) => {
+      if (bassFam === 'house') BASS_BAR.forEach((off, k) => {
         const t = b + off;
         if (t < c.t || t >= stop) return;
         const o = { t, tr: c.tr, k: 'bass', m: c.m + (k === 3 && bar ? 12 : 0), d: 1.5, v: k % 2 ? 0.55 : 0.7 };
         if (first) { o.i = c.i; first = false; }
         out.push(o);
       });
-      if (bar && b + 11 >= c.t && b + 11 < stop) out.push({ t: b + 11, tr: c.tr, k: 'bass', m: c.m, d: 1, v: 0.4 });   // the pickup
+      if (bassFam === 'house' && bar && b + 11 >= c.t && b + 11 < stop) out.push({ t: b + 11, tr: c.tr, k: 'bass', m: c.m, d: 1, v: 0.4 });   // the pickup
       for (const off of STAB_BARS[bar]) {
         const t = b + off;
         if (t >= c.t && t < stop) out.push({ t, tr: c.tr, k: 'pad', m: chord, d: 1, v: off === 3 ? 0.55 : 0.4 });

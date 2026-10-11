@@ -5,6 +5,7 @@
 //    beat, snare / clap on 2 and 4, offbeat hats with 16th ghosts.
 // Digits and quotes keep their blips and plinks, and the melody is untouched (the voices give it a bright, echoing saw lead).
 import { variant } from './seed.js';
+import { bassGroove } from './groove.js';
 
 // Seeded choices (see seed.js): the bass line's rhythm (one entry per 16th, a semitone offset or null for a rest) and how long the pad
 // is held, plus the drums (see synthwaveDrums).
@@ -16,7 +17,7 @@ const BASS_LINES = [
 ];
 
 export function synthwaveify(r, v = variant()) {
-  const line = v.of('bass', BASS_LINES), padHold = v.of('pad', [6, 8, 12]);
+  const line = v.of('bass', BASS_LINES), bassFam = v.of('bassfam', ['line', 'line', 'sync', 'fifth', 'walk']), padHold = v.of('pad', [6, 8, 12]);
   const out = [];
   for (const e of r.events) {
     if (['kick', 'hat', 'snare'].includes(e.k)) { out.push({ ...e, k: 'rest' }); continue; }
@@ -27,6 +28,7 @@ export function synthwaveify(r, v = variant()) {
   const roots = r.events.filter(e => e.k === 'bass' && e.s !== undefined).sort((a, b) => a.t - b.t);
   roots.forEach((c, j) => {
     const stop = roots[j + 1] ? roots[j + 1].t : r.t;
+    if (bassFam !== 'line') { out.push(...bassGroove(c.t, stop, c.m, bassFam, c.tr, c.i, 0.7)); return; }
     for (let t = c.t, k = 0; t < stop; t++, k++) {
       const step = line[k % line.length];
       if (step === null && k > 0) continue;
