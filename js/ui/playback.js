@@ -47,8 +47,12 @@ export function applyMix() {
 
 // Dubstep easter egg: the style card glows from the drop's pitch dive until the drop falls away (see .neon in style.css).
 let neonTimer = 0;
-const neon = on => { clearTimeout(neonTimer); $('style-detail').classList.toggle('neon', on); };
-const neonOff = secs => { clearTimeout(neonTimer); neonTimer = setTimeout(() => neon(false), secs * 1000); };
+const card = () => $('style-detail').classList;
+const neon = on => { clearTimeout(neonTimer); card().remove('neon-out'); card().toggle('neon', on); };   // on / off at once (Stop)
+const neonOff = secs => {   // glow until the drop has fallen away, then fade out
+  clearTimeout(neonTimer);
+  neonTimer = setTimeout(() => { card().remove('neon'); card().add('neon-out'); neonTimer = setTimeout(() => card().remove('neon-out'), 1500); }, secs * 1000);
+};
 
 function schedule(events, total) {
   const T = Tone.Transport, U = T.PPQ / 4;
