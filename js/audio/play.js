@@ -72,12 +72,20 @@ export function sound(e, time) {
         break;
       case 'sub':   s.sub.triggerAttackRelease(hz(e.m), dur, time, v); break;
       case 'stab':  s.stab.triggerAttackRelease(e.m.map(hz), unit * 1.2, time, v); break;
-      case 'wob': {         // a saw whose filter is swept by an LFO locked to the tempo; it starts at the lowest cutoff on the note
-        s.wob.triggerAttackRelease(hz(e.m), dur, time, v);
-        const lfo = new Tone.LFO({ frequency: Tone.Transport.bpm.value / 60 * e.r, min: 70, max: e.b, type: 'sine', phase: 270 });
-        lfo.connect(s.wobFilter.frequency);
-        lfo.start(time).stop(time + dur + 0.05);
-        setTimeout(() => { try { lfo.dispose(); } catch (err) { /* already gone */ } }, (time - Tone.now() + dur + 0.5) * 1000);
+      case 'wob': {         // the growl: a quick pitch dive into the note, and two LFOs locked to the tempo sweeping the formant filters
+        const hzNote = hz(e.m);
+        s.wob.triggerAttackRelease(hzNote, dur, time, v);
+        s.wob.detune.cancelScheduledValues(time);
+        s.wob.detune.setValueAtTime(500, time);
+        s.wob.detune.exponentialRampToValueAtTime(1, time + 0.07);
+        s.wob.detune.setValueAtTime(0, time + 0.08);
+        const rate = Tone.Transport.bpm.value / 60 * e.r;
+        for (const [filt, lo, hi, ph] of [[s.wobBpA, 250, e.b, 270], [s.wobBpB, 900, e.b * 2.6, 90]]) {   // the second sweeps the opposite way
+          const lfo = new Tone.LFO({ frequency: rate, min: lo, max: hi, type: 'sine', phase: ph });
+          lfo.connect(filt.frequency);
+          lfo.start(time).stop(time + dur + 0.05);
+          setTimeout(() => { try { lfo.dispose(); } catch (err) { /* already gone */ } }, (time - Tone.now() + dur + 0.5) * 1000);
+        }
         break;
       }
       case 'riser': {       // swept noise and a rising tone over the build-up

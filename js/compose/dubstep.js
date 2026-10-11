@@ -45,7 +45,7 @@ export function layout(T) {
 export function dubstepify(r, v = variant(), len = r.t) {
   const T = layout(len).T, { cycles } = layout(T), tr = (r.events.find(e => e.tr !== undefined) || {}).tr || 0;
   const loop = v.of('loop', LOOPS), fam1 = v.of('wob1', Object.keys(WOBS)), fam2 = v.of('wob2', Object.keys(WOBS));
-  const bright = v.of('bright', [600, 800, 1100]), stab = v.of('stab', STABS), motif = v.of('motif', MOTIFS);
+  const bright = v.of('bright', [900, 1200, 1500]), stab = v.of('stab', STABS), motif = v.of('motif', MOTIFS);
   const out = [];
   for (const e of r.events) {                       // the text's own events become rests, which keeps the highlight moving
     if (e.i !== undefined) out.push({ t: e.t, i: e.i, tr: e.tr, k: 'rest' });

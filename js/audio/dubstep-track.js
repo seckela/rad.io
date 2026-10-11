@@ -1,5 +1,5 @@
 // The dubstep voices, all synthesized (nothing downloads): a sub sine, the wobble bass (a saw through a low-pass filter whose cutoff is
-// swept by a tempo-synced LFO that audio/play.js starts with each note, then distorted), short saw chord stabs, a soft pad and a lead
+// (see audio/play.js) with each note, then distorted), short saw chord stabs, a soft pad and a lead
 // for the intro and build-up, a riser (swept noise plus a rising tone), an impact for the drop, and the drums (a hard kick, a heavy
 // snare, hats). The kick ducks the pad, stabs, sub and wobble. The background track (the canon echo) only has the lead.
 export function buildDubstepTrack(reverb, bg, dryOut) {
@@ -29,11 +29,20 @@ export function buildDubstepTrack(reverb, bg, dryOut) {
     const duckPad = new Tone.Gain(1).connect(group.pad), duckBass = new Tone.Gain(1).connect(group.bass);
     fx.padLp = new Tone.Filter(2200, 'lowpass').connect(duckPad);
     fx.stabLp = new Tone.Filter(2200, 'lowpass').connect(duckPad);
-    fx.wobFilter = new Tone.Filter({ frequency: 200, type: 'lowpass', rolloff: -24, Q: 2.5 });   // the LFO sweeps this cutoff
-    fx.wobDist = new Tone.Distortion({ distortion: 0.2, wet: 0.35 });
-    fx.wobTame = new Tone.Filter(2200, 'lowpass').connect(duckBass);   // takes the fizz off the top so it growls instead of buzzing
-    fx.wobFilter.connect(fx.wobDist);
-    fx.wobDist.connect(fx.wobTame);
+    // The growl: an FM saw (rich in harmonics), high-passed so the sub layer carries the low end, heavily distorted, then pushed through
+    // two resonant band-pass filters that audio/play.js sweeps against each other with LFOs, which makes the vowel-like "yoi" of a
+    // dubstep bass, mixed with some of the unfiltered distortion for bite, and squashed by a compressor.
+    fx.wobHp = new Tone.Filter(120, 'highpass');
+    fx.wobDist = new Tone.Distortion({ distortion: 0.85, wet: 1 });
+    fx.wobBpA = new Tone.Filter({ frequency: 500, type: 'bandpass', Q: 3 });
+    fx.wobBpB = new Tone.Filter({ frequency: 1500, type: 'bandpass', Q: 3 });
+    fx.wobBody = new Tone.Gain(0.25);
+    fx.wobMix = new Tone.Gain(0.6);
+    fx.wobComp = new Tone.Compressor({ threshold: -24, ratio: 6, attack: 0.003, release: 0.1 }).connect(duckBass);
+    fx.wobHp.connect(fx.wobDist);
+    fx.wobDist.connect(fx.wobBpA); fx.wobDist.connect(fx.wobBpB); fx.wobDist.connect(fx.wobBody);
+    fx.wobBpA.connect(fx.wobMix); fx.wobBpB.connect(fx.wobMix); fx.wobBody.connect(fx.wobMix);
+    fx.wobMix.connect(fx.wobComp);
     fx.riserBp = new Tone.Filter(400, 'bandpass', -12);
     fx.riserBp.Q.value = 2;
     fx.riserBp.connect(group.accent);
@@ -50,7 +59,10 @@ export function buildDubstepTrack(reverb, bg, dryOut) {
         envelope: { attack: 0.003, decay: 0.2, sustain: 0.1, release: 0.15 },
       }),
       sub: new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.1, sustain: 1, release: 0.15 } }),
-      wob: new Tone.Synth({ oscillator: { type: 'sawtooth' }, envelope: { attack: 0.005, decay: 0.1, sustain: 1, release: 0.05 } }),
+      wob: new Tone.FMSynth({
+        harmonicity: 1, modulationIndex: 9, oscillator: { type: 'sawtooth' }, modulation: { type: 'square' },
+        envelope: { attack: 0.004, decay: 0.1, sustain: 1, release: 0.05 }, modulationEnvelope: { attack: 0.004, decay: 0.1, sustain: 1, release: 0.05 },
+      }),
       riserNoise: new Tone.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.05, decay: 0.1, sustain: 1, release: 0.1 } }),
       riserTone: new Tone.Synth({ oscillator: { type: 'sawtooth' }, envelope: { attack: 0.1, decay: 0.1, sustain: 1, release: 0.1 } }),
       impact: new Tone.MembraneSynth({ pitchDecay: 0.25, octaves: 5, envelope: { attack: 0.001, decay: 1.2, sustain: 0, release: 0.4 } }),
@@ -64,8 +76,8 @@ export function buildDubstepTrack(reverb, bg, dryOut) {
     s.pad.maxPolyphony = 6; s.stab.maxPolyphony = 6;
     s.pad.volume.value = -22;        s.pad.connect(fx.padLp);
     s.stab.volume.value = -22;       s.stab.connect(fx.stabLp);
-    s.sub.volume.value = -7;         s.sub.connect(duckBass);
-    s.wob.volume.value = -15;        s.wob.connect(fx.wobFilter);
+    s.sub.volume.value = -5;         s.sub.connect(duckBass);
+    s.wob.volume.value = -12;        s.wob.connect(fx.wobHp);
     s.riserNoise.volume.value = -20; s.riserNoise.connect(fx.riserBp);
     s.riserTone.volume.value = -26;  s.riserTone.connect(group.accent);
     s.impact.volume.value = -3;      s.impact.connect(group.accent);
