@@ -45,6 +45,11 @@ export function applyMix() {
   audio.bg.out.volume.value = +$('bgvol').value;
 }
 
+// Dubstep easter egg: the style card glows from the drop's pitch dive until the drop falls away (see .neon in style.css).
+let neonTimer = 0;
+const neon = on => { clearTimeout(neonTimer); $('style-detail').classList.toggle('neon', on); };
+const neonOff = secs => { clearTimeout(neonTimer); neonTimer = setTimeout(() => neon(false), secs * 1000); };
+
 function schedule(events, total) {
   const T = Tone.Transport, U = T.PPQ / 4;
   T.cancel(0);
@@ -55,7 +60,8 @@ function schedule(events, total) {
     T.schedule(time => {
       sound(e, time);
       if (e.i !== undefined) Tone.Draw.schedule(() => highlight(e.i, e.tr), time);
-      else if (e.k === 'wob' && e.dv) Tone.Draw.schedule(() => vizCue('dive', 8 * Tone.Time('16n').toSeconds()), time);   // dubstep: a pulse follows the drop's pitch dive down the bars,
+      else if (e.k === 'wob' && e.dv) Tone.Draw.schedule(() => { vizCue('dive', 8 * Tone.Time('16n').toSeconds()); neon(true); }, time);   // dubstep: a pulse follows the drop's pitch dive down the bars,
+      else if (e.k === 'fall') Tone.Draw.schedule(() => neonOff(e.d * Tone.Time('16n').toSeconds()), time);   // the card's glow lasts through the drop and goes out as it falls away
       else if (e.k === 'climb') Tone.Draw.schedule(() => vizCue('rise', e.d * Tone.Time('16n').toSeconds()), time);      // and back up for the rise (the bars map low pitch to the middle, high to the edges)
     }, Math.round(e.t * U) + 'i');
   }
@@ -237,6 +243,7 @@ export function seekTo(idx) {
 
 export function stop() {
   endToken++;
+  neon(false);
   releaseAudio();
   vizStop();
   if (paused) { try { Tone.getContext().rawContext.resume().catch(() => {}); } catch (e) {} }

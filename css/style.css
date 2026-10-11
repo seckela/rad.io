@@ -96,6 +96,14 @@ h1 { position:absolute; top:50%; transform:translateY(-50%); margin:0; font-size
 .detail .blurb { color:var(--text); }
 .chips { list-style:none; display:flex; flex-wrap:wrap; gap:6px; padding:0; margin:0 0 8px; }
 .chips li { padding:2px 9px; border:1px solid var(--line); border-radius:999px; font-size:12px; color:var(--dim); }
+/* Dubstep easter egg: while a drop is playing the style card glows in the style's colour and its chips flicker like neon tubes. */
+.detail.neon { border-color:var(--tint); box-shadow:0 0 12px var(--tint), inset 0 0 10px rgba(198,255,61,.12); animation:neon-glow .43s ease-in-out infinite alternate; }
+.detail.neon .chips li { border-color:var(--tint); color:var(--tint); text-shadow:0 0 6px var(--tint); animation:neon-flick 1.7s steps(1,end) infinite; }
+.detail.neon .chips li:nth-child(2n) { animation-delay:-.6s; }
+.detail.neon .chips li:nth-child(3n) { animation-delay:-1.1s; }
+@keyframes neon-glow { from { box-shadow:0 0 5px var(--tint), inset 0 0 4px rgba(198,255,61,.06); } to { box-shadow:0 0 18px var(--tint), inset 0 0 12px rgba(198,255,61,.16); } }
+@keyframes neon-flick { 0%,100% { opacity:1; } 8% { opacity:.35; } 12% { opacity:1; } 55% { opacity:1; } 58% { opacity:.5; } 61% { opacity:1; } }
+@media (prefers-reduced-motion: reduce) { .detail.neon, .detail.neon .chips li { animation:none; } }
 .detail .dl { font-size:12px; margin-bottom:4px; }
 
 /* Minimal view: only the masthead / equalizer, centred and large. The controls come back on mouse movement. */
