@@ -12,7 +12,7 @@ import { ambientify } from './ambient.js';
 export function compose(text, key, scale, o) {
   const { mode, delay, vary, chill, lofi, metal, chip, ambient } = o;
   const warm = chill || lofi || ambient;      // Lo-fi is composed on top of the Chillstep layout
-  const fix = r => ambient ? ambientify(r, o.gap) : chip ? chipify(r) : metal ? metalify(r, key, scale, o.gap / 2) : lofi ? lofiify(r, key, scale, o.gap) : chill ? chillify(r, o.gap) : r;
+  const fix = r => ambient ? ambientify(r, key, scale, o.gap) : chip ? chipify(r) : metal ? metalify(r, key, scale, o.gap / 2) : lofi ? lofiify(r, key, scale, o.gap) : chill ? chillify(r, o.gap) : r;
   const lines = text.split('\n');
   const tracks = [[], []];
   let idx = 0, k = -1;

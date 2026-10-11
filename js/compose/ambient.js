@@ -5,9 +5,11 @@ import { chillify } from './chill.js';
 //  - Each chord change becomes one long, soft drone: the chord and a low root with its fifth sustain until the next
 //    change instead of being restated every bar.
 //  - Melody notes are thinned to one every few beats and lengthened so they blend into the held chords.
+//  - Every few bars a soft gust of wind chimes drifts through: two to five high notes tumbling down a minor-pentatonic-like
+//    subset of the scale, each ringing for seconds. They are placed by a fixed hash, so the same code gets the same chimes.
 //  - There are no drums at all.
 // The slow fades, the filtering and the big reverb come from the voices (see audio/ambient-track.js).
-export function ambientify(r, base) {
+export function ambientify(r, key, scale, base) {
   const res = chillify(r, base);
   // Drop Chillstep's soft restatements (bass and chord events without a line segment); the changes themselves stay.
   const ev = res.events.filter(e => !((e.k === 'bass' || e.k === 'pad') && e.s === undefined));
@@ -29,5 +31,36 @@ export function ambientify(r, base) {
     if (e.t - lastLead < 10) { e.k = 'rest'; delete e.m; delete e.v; continue; }
     lastLead = e.t; e.d = Math.max(e.d || 0, 8); e.v *= 0.8;
   }
-  return { events: ev.concat(extra), t: res.t + 32 };    // a bar-and-a-half tail so the last chord rings out
+  return { events: ev.concat(extra, windChimes(res.t + 32, key, scale)), t: res.t + 32 };    // a bar-and-a-half tail so the last chord rings out
+}
+
+// Deterministic pseudo-random value in [0, 1).
+const hash = x => { const y = Math.sin(x * 12.9898) * 43758.5453; return y - Math.floor(y); };
+
+// Wind chimes: a gust every 1.5 to 4 bars, each a few quick, soft, high notes (mostly falling) from the scale. They carry no
+// text index, so the highlight is unaffected, and they stay clear of the melody's range.
+function windChimes(total, key, scale) {
+  const n = scale.length;
+  const picks = n === 7 ? [0, 2, 3, 4, 6] : scale.map((_, i) => i);   // leave out the notes most likely to clash with the chords
+  const out = [];
+  let t = 12 + Math.floor(hash(1) * 16), g = 0;
+  while (t < total - 8) {
+    const count = 2 + Math.floor(hash(g * 7.1 + 2) * 4);
+    const notes = [];
+    for (let j = 0; j < count; j++) {
+      const deg = picks[Math.floor(hash(g * 13.7 + j * 3.3 + 5) * picks.length)];
+      let m = 76 + key + scale[deg];
+      if (m + 12 <= 96 && hash(g * 5.9 + j * 1.9 + 9) > 0.6) m += 12;
+      notes.push(m);
+    }
+    if (hash(g * 3.3 + 4) < 0.7) notes.sort((a, b) => b - a);       // usually a falling cascade
+    let at = t;
+    notes.forEach((m, j) => {
+      out.push({ t: at, tr: 0, k: 'chime', m, d: 8, v: Math.max(0.1, 0.34 - j * 0.05 - hash(g * 2.7 + j) * 0.06) });
+      at += 1 + Math.floor(hash(g * 9.1 + j * 2.1 + 1) * 3);
+    });
+    t += 24 + Math.floor(hash(g * 4.4 + 6) * 40);
+    g++;
+  }
+  return out;
 }

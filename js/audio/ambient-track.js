@@ -1,6 +1,6 @@
 // The ambient voices: slow, soft and wide. Everything fades in and out over seconds (no attacks to speak of), the
 // chords are detuned triangle waves through a dark lowpass and a slow chorus, the lead is a soft sine with a long
-// echo, the bass is a sine drone, and the bells are long FM chimes. A big reverb (see engine.js) does the rest.
+// echo, the bass is a sine drone, the bells are long FM chimes, and now and then a gust of soft wind chimes passes through. A big reverb (see engine.js) does the rest.
 // There are no drums. The background track (the canon echo) has only the melodic voices.
 export function buildAmbientTrack(reverb, bg) {
   const out = new Tone.PanVol(bg ? 0.3 : 0, bg ? -6 : 0).connect(reverb);
@@ -32,11 +32,17 @@ export function buildAmbientTrack(reverb, bg) {
       envelope: { attack: 0.01, decay: 3, sustain: 0, release: 3 },
       modulationEnvelope: { attack: 0.01, decay: 2, sustain: 0, release: 2 },
     }),
+    chime: new Tone.PolySynth(Tone.FMSynth, {          // glassy, slightly inharmonic: like thin metal tubes
+      harmonicity: 3.5, modulationIndex: 2.5,
+      envelope: { attack: 0.002, decay: 3.5, sustain: 0, release: 3 },
+      modulationEnvelope: { attack: 0.002, decay: 1.2, sustain: 0, release: 1 },
+    }),
   };
   s.pad.volume.value = -16;                   s.pad.connect(fx.chorus);
   s.lead.volume.value = bg ? -17 : -12;       s.lead.connect(fx.leadLp);
   s.bass.volume.value = -14;                  s.bass.connect(group.bass);
   s.bell.volume.value = -22;                  s.bell.connect(group.accent);
+  s.chime.volume.value = -26;                 s.chime.connect(group.accent);
   Object.assign(s, fx);   // so disposeAudio cleans the effect nodes up with the voices
   return { s, group, out };
 }
