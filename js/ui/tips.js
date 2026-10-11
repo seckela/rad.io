@@ -10,6 +10,7 @@ const TIPS = {
   tempo: 'Speed in beats per minute. You can change it while it plays.',
   loop: 'Start over when the music reaches the end instead of stopping.',
   vary: 'Gives each line its own chord and register, so the music changes more across a file. Turn it off for a plainer, more repetitive sound.',
+  seed: 'Every text gets its own seed, built from its overall shape, which changes the chords, rhythms and melody the music uses. The placeholder shows this text\'s seed. Type a code or any word to use that seed instead, whatever the text, and use Pin to keep the current one. The same seed and text always sound the same.',
   bgmode: 'A second, quieter voice. Canon echoes the melody a little later. Alternating lines plays odd and even lines at the same time as two voices. Off plays a single voice.',
   delay: 'How far behind the echo comes. Only used by Canon.',
   'viz-on': 'While music plays, the title {rad.io} expands into moving bars. Turn it off on a slow phone to save battery.',

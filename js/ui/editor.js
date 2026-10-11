@@ -23,7 +23,12 @@ export function getStartIndex() {
 
 export const getText = () => (jar ? jar.toString() : src.value).replace(/\r\n?/g, '\n');
 
-export function setCode(text) { src.value = text; if (jar) jar.updateCode(text); }
+// One listener for "the text changed" (typing, pasting, loading an example or a file), used to show the text's seed.
+let changed = () => {};
+export const onTextChange = cb => { changed = cb; };
+src.addEventListener('input', () => changed());
+
+export function setCode(text) { src.value = text; if (jar) jar.updateCode(text); changed(); }
 
 export const setEditorHidden = h => { (editorEl || src).hidden = h; };
 
@@ -37,7 +42,7 @@ export async function initEditor(onFile) {
     jar = CodeJar(editorEl, el => {
       el.innerHTML = Prism.highlight(el.textContent, Prism.languages.javascript, 'javascript');
     }, { tab: '  ', addClosing: false });
-    jar.onUpdate(code => { src.value = code; });
+    jar.onUpdate(code => { src.value = code; changed(); });
     jar.updateCode(src.value);
     trackCaret(editorEl);
     src.hidden = true; editorEl.hidden = false;

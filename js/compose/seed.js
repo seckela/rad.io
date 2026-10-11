@@ -27,3 +27,15 @@ function hash(s) {
 // A choice in [0, n) for this seed and a name for what is being chosen. Different names give independent choices, so the chord loop
 // doesn't always move together with the drum pattern.
 export function pick(seed, name, n) { return hash(seed + ':' + name) % n; }
+
+// The seed as a short code to show and share: base 36, upper case, 7 characters.
+export const formatSeed = n => n.toString(36).toUpperCase().padStart(7, '0');
+
+// What the user typed in the seed box, as a seed: null for empty (use the text's own). A code from formatSeed, or any short run of
+// letters and digits, is read as base 36 so a code round-trips; anything else (a phrase, a name) is hashed, so any word works.
+export function parseSeed(str) {
+  const t = (str || '').trim();
+  if (!t) return null;
+  if (/^[0-9a-z]{1,7}$/i.test(t)) { const n = parseInt(t, 36); if (n < 2 ** 32) return n; }
+  return hash(t);
+}

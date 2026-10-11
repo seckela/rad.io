@@ -10,6 +10,7 @@ header p { margin:0 0 20px; color:var(--dim); }
 .panel { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px; margin-bottom:16px; }
 .controls { display:flex; flex-wrap:wrap; gap:12px 18px; align-items:center; }
 label { display:flex; align-items:center; gap:6px; color:var(--dim); font-size:13px; }
+input[type=text] { background:var(--bg); color:var(--text); border:1px solid var(--line); border-radius:6px; padding:6px 10px; font:inherit; font-size:13px; width:11ch; font-variant-numeric:tabular-nums; }
 select, input[type=range] { accent-color:var(--accent); }
 select, button { background:var(--bg); color:var(--text); border:1px solid var(--line);
                  border-radius:6px; padding:6px 10px; font:inherit; font-size:13px; }

@@ -1,4 +1,5 @@
 import { $ } from './dom.js';
+import { parseSeed } from '../compose/seed.js';
 import { SCALES } from '../scales.js';
 
 export const getKey = () => +$('key').value;
@@ -23,4 +24,4 @@ export const isTrance = () => $('style').value === 'trance';
 
 export const getStyle = () => $('style').value;
 
-export const getOpts = () => ({ mode: $('bgmode').value, delay: +$('delay').value, vary: $('vary').checked, chill: isChill(), lofi: isLofi(), metal: isMetal(), chip: isChip(), ambient: isAmbient(), synthwave: isSynthwave(), house: isHouse(), trance: isTrance(), gap: +$('gap').value });
+export const getOpts = () => ({ mode: $('bgmode').value, delay: +$('delay').value, vary: $('vary').checked, chill: isChill(), lofi: isLofi(), metal: isMetal(), chip: isChip(), ambient: isAmbient(), synthwave: isSynthwave(), house: isHouse(), trance: isTrance(), gap: +$('gap').value, seed: parseSeed($('seed').value) });

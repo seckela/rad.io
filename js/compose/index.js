@@ -15,7 +15,7 @@ import { seedOf } from './seed.js';
 // o.vary: evolving harmony; o.chill: chillstep feel; o.lofi: lo-fi feel; o.metal: rock/metal feel; o.chip: chiptune feel; o.ambient: ambient feel; o.synthwave: synthwave feel; o.house: techno / house feel; o.trance: trance feel; o.gap: melody pace
 export function compose(text, key, scale, o) {
   const { mode, delay, vary, chill, lofi, metal, chip, ambient, synthwave, house, trance } = o;
-  const sd = seedOf(text);
+  const sd = o.seed != null ? o.seed : seedOf(text);   // a seed typed in by the user, or the text's own
   const warm = chill || lofi || ambient;      // Lo-fi is composed on top of the Chillstep layout
   const fix = r => trance ? tranceify(r, sd) : house ? houseify(r) : synthwave ? synthwaveify(r) : ambient ? ambientify(r, key, scale, o.gap) : chip ? chipify(r) : metal ? metalify(r, key, scale, o.gap / 2) : lofi ? lofiify(r, key, scale, o.gap) : chill ? chillify(r, o.gap) : r;
   const lines = text.split('\n');

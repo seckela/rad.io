@@ -3,7 +3,8 @@ import { KEYS, SCALES } from './scales.js';
 import { SAMPLE } from './sample.js';
 import { compose } from './compose/index.js';
 import { audio } from './audio/engine.js';
-import { setCode, getText, initEditor, getStartIndex } from './ui/editor.js';
+import { setCode, getText, initEditor, getStartIndex, onTextChange } from './ui/editor.js';
+import { seedOf, formatSeed } from './compose/seed.js';
 import { indexFromPoint } from './ui/view.js';
 import { getKey, getScale, isChill, isLofi, getOpts } from './ui/settings.js';
 import { initPicker } from './ui/picker.js';
@@ -56,6 +57,15 @@ $('style').onchange = () => {
   if (playing) rebuild(); else updateStats(getText().length, compose(getText(), getKey(), getScale(), getOpts()).total);
 };
 $('gap').onchange = () => { if (playing) rebuild(); else if (isChill() || isLofi()) updateStats(getText().length, compose(getText(), getKey(), getScale(), getOpts()).total); };
+// The seed box: empty means the text's own seed, which is shown as the placeholder.
+const showSeed = () => { $('seed').placeholder = formatSeed(seedOf(getText())); };
+const seedChanged = () => { if (playing) rebuild(); else updateStats(getText().length, compose(getText(), getKey(), getScale(), getOpts()).total); };
+onTextChange(showSeed);
+showSeed();
+$('seed').onchange = seedChanged;
+$('seed-pin').onclick = () => { $('seed').value = formatSeed(seedOf(getText())); seedChanged(); };
+$('seed-dice').onclick = () => { $('seed').value = formatSeed(Math.floor(Math.random() * 2 ** 32)); seedChanged(); };
+$('seed-auto').onclick = () => { $('seed').value = ''; seedChanged(); };
 $('leadsound').onchange = () => { if (audio) loadAudio(); };
 $('sample').onclick = () => { if (playing) stop(); setCode(SAMPLE); };
 
