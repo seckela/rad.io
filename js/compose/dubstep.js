@@ -132,8 +132,8 @@ export function dubstepify(r, v = variant(), len = r.t) {
         const dive = b === c.drop && off === 0;
         out.push({ t: b + off, tr, k: 'wob', m: fold(r.lead(a + (ci === 0 ? 0 : move))), d: Math.min(len, end - b - off), r: RATE[rate], b: bright, v: 0.9, dv: dive ? 1 : 0, ...(afterDive ? { fl: 1 } : {}) });   // dv: the drop opens with a long pitch dive; fl: the note after it carries straight on
         if (dive) {
-          out.push({ t: b + 8, tr, k: 'climb', d: 7, v: 1 });
-          for (let k = 0; k < 4; k++) out.push({ t: b + 10 + k, tr, k: 'run', m: place(a + [0, 2, 4, 7][k] + 2, -1), d: 1, v: 0.45 + 0.15 * k });
+          out.push({ t: b + 8, tr, k: 'climb', d: 5, v: 1 });
+          for (let k = 0; k < 4; k++) out.push({ t: b + 9 + k, tr, k: 'run', m: place(a + [0, 2, 4, 5][k], -1), d: 1, v: 0.45 + 0.15 * k });
         }
         afterDive = dive;
       }
