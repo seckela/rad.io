@@ -118,7 +118,18 @@ export function dubstepify(r, v = variant(), len = r.t) {
         while (m > 88) m -= 12;
         out.push({ t: b + off, tr, k: 'zap', m, d: 1, v: half || ci > 0 ? 0.8 : 0.6 });
       }
-      if (fill) out.push({ t: b + 12, tr, k: 'zap', m: 84, d: 4, v: 0.9 });   // and a rising scream into the next four bars
+      if (fill) out.push({ t: b + 12, tr, k: 'zap', m: 84, d: 4, v: 0.9 });
+      // The build-up's climbing lead comes back over the drop as an accent: a run of 16ths up the scale in each fill bar (8 notes), and a
+      // shorter one (4 notes) on the last beat of every second bar once the drop has got going.
+      const climbRun = (from, n, p0, p1) => {
+        const climb = [0, 2, 4, 7, 9, 11, 14, 16];
+        for (let k = 0; k < n; k++) {
+          const p = n > 1 ? k / (n - 1) : 1;
+          out.push({ t: b + from + k, tr, k: 'lead', m: place(a + climb[k] + (k % 2 ? 2 : 0), -1), d: 1, v: p0 + (p1 - p0) * p });
+        }
+      };
+      if (fill) climbRun(8, 8, 0.4, 0.9);
+      else if ((half || ci > 0) && bar % 2 === 1) climbRun(12, 4, 0.5, 0.8);   // and a rising scream into the next four bars
       if (half || bar >= 2) for (const off of stab) {
         if (b + off < end) out.push({ t: b + off, tr, k: 'stab', m: [r.pad(a) + 12, r.pad(a + 2) + 12, r.pad(a + 4) + 12], d: 1, v: half ? 0.5 : 0.35 });
       }
@@ -160,6 +171,7 @@ export function dubstepDrums(total, v = variant(), T = total) {
     for (let b = c.drop, bar = 0; b < c.end; b += 16, bar++) {
       const outro = c.end - b <= 16, fill = bar % 4 === 3 || outro;
       if (outro) hit(b, 'fall', 1), ev[ev.length - 1].d = 16;   // the drop falls away into whatever comes next
+      else if (fill) hit(b + 8, 'riser', 0.8), ev[ev.length - 1].d = 8;   // a short riser under the lead's run
       for (const o of kicks[bar % kicks.length]) if (!(fill && o > 8)) hit(b + o, 'kick', o === 0 ? 1 : 0.8);
       hit(b + 8, 'snare', 1);
       for (const o of hats) if (!fill || o < 8) hit(b + o, o % 4 === 2 ? 'ohat' : 'hat', o % 4 === 0 ? 0.45 : 0.3);
