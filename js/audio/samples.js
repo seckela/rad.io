@@ -18,6 +18,17 @@ const GUITAR_FILES = { 'C#2': 'Cs2', E2: 'E2', 'F#2': 'Fs2', A2: 'A2', C3: 'C3',
 const BASS_FILES = { 'A#1': 'As1', 'C#1': 'Cs1', E1: 'E1', G1: 'G1', 'A#2': 'As2', 'C#2': 'Cs2', E2: 'E2', G2: 'G2',
   'A#3': 'As3', 'C#3': 'Cs3', E3: 'E3', G3: 'G3' };
 
+// Cello samples (also tonejs-instruments), for Neo-classical: one note every three semitones from C2 to C5 (about 1 MB).
+const CELLO_FILES = { C2: 'C2', 'D#2': 'Ds2', 'F#2': 'Fs2', A2: 'A2', C3: 'C3', 'D#3': 'Ds3', 'F#3': 'Fs3', A3: 'A3',
+  C4: 'C4', 'D#4': 'Ds4', 'F#4': 'Fs4', A4: 'A4', C5: 'C5' };
+
+export async function loadCelloBuffers() {
+  const wrapped = Object.fromEntries(Object.entries(CELLO_FILES)
+    .map(([note, f]) => [note, new Tone.ToneAudioBuffer(INSTR_BASE + 'cello/' + f + '.mp3')]));
+  await Tone.loaded();
+  return Object.fromEntries(Object.entries(wrapped).map(([note, b]) => [note, b.get()]));
+}
+
 // Downloads and decodes the rock/metal guitar and bass samples once. Samplers are given the raw
 // AudioBuffers (they can't take already-wrapped Tone buffers), so every track shares one copy.
 export async function loadMetalBuffers() {

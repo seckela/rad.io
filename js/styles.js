@@ -80,4 +80,12 @@ export const STYLES = [
     download: 'Nothing: every sound is synthesized.',
     note: 'The lead is always a saw synth, so the Lead control is disabled. It needs at least 200 characters of text, enough for an intro, a build-up and a drop; shorter text shows how many more to add.',
   },
+  {
+    id: 'neoclassical', name: 'Neo-classical', tint: '#e8c27a',
+    tagline: 'Piano figures and strings',
+    blurb: "Each chord becomes a piano figure that rolls through it without stopping, in even eighths or flowing triplets. A sampled cello holds the root underneath and, in some sections, takes the melody from the piano for stretches of eight bars or more while the figure carries on, and slips in a few notes between piano stretches. The melody sings above it a few notes at a time, and a synthesized string section swells in under the chords as the piece grows, then leaves before the end. Long lines move on through other chords of the key every few bars. The whole track follows one dynamic arc: soft, full in the middle, soft again. No drums.",
+    chips: ['76 BPM', 'Natural minor', 'Sampled piano', 'Rolling figure', 'Cello bass and solos', 'String swells'],
+    download: 'Piano samples (about 1 MB) and cello samples (about 1 MB). The string swells are synthesized.',
+    note: 'If the samples cannot be loaded, the piano and cello fall back to synths. The Lead control switches the piano for a plain synth.',
+  },
 ];
