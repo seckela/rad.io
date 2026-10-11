@@ -38,7 +38,7 @@ export function buildTranceTrack(reverb, bg, dryOut) {
     }),
     lead: new Tone.PolySynth(Tone.Synth, {
       oscillator: { type: 'fatsawtooth', count: 4, spread: 30 },
-      envelope: { attack: 0.014, decay: 0.28, sustain: 0.75, release: 0.35 },
+      envelope: { attack: 0.014, decay: 0.28, sustain: 0.75, release: 0.8 },
     }),
     digit: new Tone.PolySynth(Tone.Synth, {
       oscillator: { type: 'square' }, envelope: { attack: 0.001, decay: 0.07, sustain: 0, release: 0.07 },
