@@ -67,7 +67,7 @@ export function dubstepify(r, v = variant(), len = r.t) {
     for (let c = m - 24; c <= m + 24; c += 12) if (c >= LO && c <= HI && cost(c) < cost(best)) best = c;
     return best;
   };
-  let prev = -1;
+  let prev = -1, afterDive = false;
   cycles.forEach((c, ci) => {
     // Every drop is a step on from the one before: other chords, other wobble rhythms and stabs, a brighter wobble, and (after the
     // first) more of the sharp high tones, so a long track keeps developing.
@@ -125,9 +125,11 @@ export function dubstepify(r, v = variant(), len = r.t) {
       }
       // The first bar of a drop opens with one long note (8 sixteenths) for the pitch dive, then the pattern's own hits from the 3rd beat on.
       const pat = hi ? [] : fill ? FILL : fam[bar % fam.length];
-      for (const [off, len, move, rate] of b === c.drop ? [[0, 8, 0, pat[0][3]], ...pat.filter(x => x[0] >= 8)] : pat) {
+      const rest8 = pat.filter(x => x[0] >= 8), first = b === c.drop ? [[0, rest8.length ? 8 : 16, 0, pat[0][3]], ...rest8] : pat;   // if nothing follows the opening note in the bar it holds the whole bar
+      for (const [off, len, move, rate] of first) {
         // The first drop keeps the bass on the chord root (the rhythm and the sound carry it); later drops start moving it.
-        out.push({ t: b + off, tr, k: 'wob', m: fold(r.lead(a + (ci === 0 ? 0 : move))), d: Math.min(len, end - b - off), r: RATE[rate], b: bright, v: 0.9, dv: b === c.drop && off === 0 ? 1 : 0 });   // dv: the drop opens with a long pitch dive
+        out.push({ t: b + off, tr, k: 'wob', m: fold(r.lead(a + (ci === 0 ? 0 : move))), d: Math.min(len, end - b - off), r: RATE[rate], b: bright, v: 0.9, dv: b === c.drop && off === 0 ? 1 : 0, ...(afterDive ? { fl: 1 } : {}) });   // fl: the note after the dive carries straight on from it
+        afterDive = b === c.drop && off === 0;   // dv: the drop opens with a long pitch dive
       }
       if (!hi && (half || ci > 0 || bar >= 2)) for (const off of zaps) {   // sharp high tones that sit between the wobble notes
         if (fill && off < 8) continue;

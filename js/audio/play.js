@@ -83,7 +83,7 @@ export function sound(e, time) {
       }
       case 'wob': {         // the growl: a quick pitch dive into the note, and two LFOs locked to the tempo sweeping the formant filters
         const hzNote = hz(e.m);
-        s.wob.triggerAttackRelease(hzNote, dur, time, v);
+        s.wob.triggerAttackRelease(hzNote, e.dv ? (e.d || 1) * unit + 0.03 : dur, time, v);   // the dive's note runs right up to the next one
         s.wob.detune.cancelScheduledValues(time);
         s.wob.volume.cancelScheduledValues(time);
         if (e.dv) {         // the drop's opening: a separate bright, metallic FM voice falls three octaves onto the wobble's pitch, while the wobble itself swells in underneath, so the two meet on the same note
@@ -97,12 +97,15 @@ export function sound(e, time) {
           s.dive.modulationIndex.linearRampToValueAtTime(12, time + fall);
           s.dive.volume.cancelScheduledValues(time);
           s.dive.volume.setValueAtTime(-7, time);
-          s.dive.volume.setValueAtTime(-7, time + fall * 0.6);
+          s.dive.volume.setValueAtTime(-7, time + fall * 0.45);
           s.dive.volume.linearRampToValueAtTime(-40, time + fall * 1.05);
           s.dive.triggerAttackRelease(hzD, fall * 1.05, time, 1);
           s.wob.volume.setValueAtTime(WOB_DB - 18, time);
-          s.wob.volume.setValueAtTime(WOB_DB - 18, time + fall * 0.4);
-          s.wob.volume.linearRampToValueAtTime(WOB_DB, time + fall);
+          s.wob.volume.setValueAtTime(WOB_DB - 18, time + fall * 0.25);
+          s.wob.volume.linearRampToValueAtTime(WOB_DB, time + fall * 0.8);
+          s.wob.detune.setValueAtTime(0, time);
+        } else if (e.fl) {  // the note right after the dive: no extra dive of its own, so the voice carries straight on
+          s.wob.volume.setValueAtTime(WOB_DB, time);
           s.wob.detune.setValueAtTime(0, time);
         } else {
           s.wob.volume.setValueAtTime(WOB_DB, time);
@@ -111,8 +114,9 @@ export function sound(e, time) {
           s.wob.detune.setValueAtTime(0, time + 0.08);
         }
         const rate = Tone.Transport.bpm.value / 60 * e.r;
-        for (const [filt, lo, hi, ph] of [[s.wobBpA, 200, e.b, 270], [s.wobBpB, 600, e.b * 2.4, 90]]) {   // the second sweeps the opposite way
-          const lfo = new Tone.LFO({ frequency: rate, min: lo, max: hi, type: 'sine', phase: ph });
+        for (const [filt, lo, hi, ph] of [[s.wobBpA, 200, e.b, 270], [s.wobBpB, 600, e.b * 2.4, 90]]) {
+          // (the second sweeps the opposite way) The sweeps start at their lowest point, except for the dive and the note after it, where they start half-open so the tone doesn't close up at the join
+          const lfo = new Tone.LFO({ frequency: rate, min: lo, max: hi, type: 'sine', phase: e.fl || e.dv ? (ph === 270 ? 0 : 180) : ph });
           lfo.connect(filt.frequency);
           lfo.start(time).stop(time + dur + 0.05);
           setTimeout(() => { try { lfo.dispose(); } catch (err) { /* already gone */ } }, (time - Tone.now() + dur + 0.5) * 1000);
