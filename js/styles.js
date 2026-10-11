@@ -55,4 +55,12 @@ export const STYLES = [
     download: 'Nothing: every sound is synthesized.',
     note: 'The lead is always a saw synth, so the Lead control is disabled.',
   },
+  {
+    id: 'house', name: 'Techno / House', tint: '#37d6c4',
+    tagline: 'Four-on-the-floor club groove',
+    blurb: 'A club beat under the default melody: a kick on every beat, claps, offbeat open hats, an offbeat saw bass, minor-7th chord stabs in a syncopated house rhythm, and a plucky lead. The kick ducks the bass and stabs on every beat for the pump.',
+    chips: ['124 BPM', 'Dorian', 'Offbeat bass', 'Chord stabs', 'Plucky lead', 'Four-on-the-floor'],
+    download: 'Nothing: every sound is synthesized.',
+    note: 'The lead is always a pluck synth, so the Lead control is disabled.',
+  },
 ];
