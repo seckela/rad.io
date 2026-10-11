@@ -8,7 +8,7 @@
 import { $ } from './dom.js';
 
 const BAR = 6, GAP = 6, MAX_H = 44, REST_MIN = 4, REST_PEAK = 12;
-const FFT = 256;                         // 128 bins
+const FFT = 1024;                        // 512 bins (about 43 Hz each), fine enough that the middle bars read different low frequencies
 const PAD = 8;                           // space between a brace and the title / outermost bar (css px)
 // The icon's curly brace (viewBox 512; spans x 66..134, y 118..394), reused so the two match.
 const BRACE = new Path2D('M 134 118 C 104 118 100 138 100 168 L 100 218 C 100 240 90 256 66 256 C 90 256 100 272 100 294 L 100 344 C 100 374 104 394 134 394');
@@ -59,7 +59,8 @@ function size() {
 
 // Low frequencies sit in the middle and the highs spread outward, so it reads like the icon.
 // Each bar keeps its frequency as the strip widens, so expanding reveals the higher bands.
-function binFor(d, half, bins) { return 1 + Math.floor(Math.pow(d / half, 1.7) * (bins * 0.8)); }
+// The middle bars are kept on different bins (at least one apart), or the first few all read the same constant bass and sit still.
+function binFor(d, half, bins) { return Math.max(1 + d, 1 + Math.floor(Math.pow(d / half, 1.7) * (bins * 0.8))); }
 
 function drawBraces(c, leftX, rightX) {
   const k = braceScale * dpr, h = canvas.height;
@@ -111,7 +112,7 @@ function draw() {
           const lo = binFor(d, fullHalf, bins), hi = Math.max(lo + 1, binFor(d + 1, fullHalf, bins));
           let m = -140;
           for (let b = lo; b < hi && b < bins; b++) if (vals[b] > m) m = vals[b];
-          t = clamp01((m + 90) / 55);                                   // -90 dB .. -35 dB  ->  0 .. 1
+          t = clamp01((m + 93) / 55);                                   // -90 dB .. -35 dB  ->  0 .. 1
         }
         const idx = Math.min(nMax - 1, Math.round(d));
         levels[idx] = t > levels[idx] ? t : levels[idx] * 0.85;         // fast attack, slow decay
@@ -119,7 +120,11 @@ function draw() {
         let boost = 0;
         if (at >= 0) { const u = (d / Math.max(1, centre)) - at; boost = Math.exp(-(u * u) / 0.012); }   // a soft bump around the pulse
         const h = Math.min(H * 0.96, Math.max(rest, levels[idx] * (MAX_H * Kh) + boost * 0.7 * MAX_H * Kh) * dpr * (0.4 + 0.6 * alpha));
-        c.fillStyle = boost > 0.15 ? toWhite(Math.min(0.9, boost)) : color;
+        if (boost > 0.12) {                // the pulse is a spread of neon colours: magenta on the outer side, white-hot in the middle, cyan on the inner side
+          const u = (d / Math.max(1, centre)) - at, dir = pulse && pulse.kind === 'rise' ? -1 : 1;
+          const hue = 160 + 120 * clamp01(0.5 + dir * u / 0.3) + 20;            // 180 (cyan) .. 300 (magenta)
+          c.fillStyle = `hsl(${Math.round(hue)} 100% ${Math.round(58 + 34 * boost * boost)}%)`;
+        } else c.fillStyle = color;
         const x = x0 + i * step, y = mid - h / 2;
         c.beginPath();
         c.roundRect ? c.roundRect(x, y, bw, h, bw / 2) : c.rect(x, y, bw, h);
