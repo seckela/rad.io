@@ -23,6 +23,8 @@ const WOBS = {
   riff:    [[[0, 4, 0, 'e'], [4, 4, 3, 'e'], [8, 4, 0, 'e'], [12, 4, 4, 't']], [[0, 4, 0, 'e'], [4, 4, 3, 'e'], [8, 8, -1, 'q']]],
 };
 const FILL = [[0, 2, 0, 's'], [2, 2, 0, 's'], [4, 2, 0, 's'], [6, 2, 0, 's'], [8, 4, 0, 'e'], [12, 2, 0, 's'], [14, 2, 0, 's']];   // the last bar of every four
+// The melody of a "high" bar: [position in the bar, scale-degree step above the chord root].
+const HIGH = [[[0, 0], [3, 2], [6, 4], [8, 7], [11, 4], [14, 2]], [[0, 4], [2, 2], [4, 0], [6, 2], [8, 4], [10, 7], [12, 9], [14, 7]], [[0, 7], [3, 7], [6, 4], [8, 2], [10, 4], [14, 0]]];
 const ZAPS = [[6, 14], [3, 11], [4, 12, 15], [10], [2, 7, 13]];   // where the sharp high tones go in a bar
 const STABS = [[3, 6, 11], [6, 14], [0, 10], [3, 7, 10, 14]];
 // Kick patterns for the drop, two bars each (the snare is always on beat 3).
@@ -107,10 +109,24 @@ export function dubstepify(r, v = variant(), len = r.t) {
         const stop = Math.min(c.drop + (bi + 1) * 64, end);
         out.push({ t: b, tr, k: 'sub', m: fold(r.lead(a)), d: stop - b, v: 0.8 });
       }
-      for (const [off, len, move, rate] of (fill ? FILL : fam[bar % fam.length])) {
+      // Call and response: in a "high" bar the wobble stops and the sharp high tones and a lead carry a melody on their own, which cuts
+      // through, then the wobble comes back. The first drop waits until its third bar; later drops have more of them.
+      const hi = !fill && (bar % 4 === 2 || (ci >= 2 && bar % 4 === 1)) && (half || ci > 0 || bar >= 2);
+      if (hi) {
+        const pat = HIGH[(zap0 + ci + bi) % HIGH.length];
+        pat.forEach(([off, step], k) => {
+          let m = r.lead(a + step);
+          while (m < 76) m += 12;
+          while (m > 90) m -= 12;
+          out.push({ t: b + off, tr, k: 'zap', m, d: 1, v: 0.9 });
+          out.push({ t: b + off, tr, k: 'lead', m: place(a + step, -1), d: 1, v: 0.55 });
+          if (k === pat.length - 1) out.push({ t: b + off, tr, k: 'zap', m: m + 12, d: 1, v: 0.7 });
+        });
+      }
+      for (const [off, len, move, rate] of (hi ? [] : fill ? FILL : fam[bar % fam.length])) {
         out.push({ t: b + off, tr, k: 'wob', m: fold(r.lead(a + move)), d: Math.min(len, end - b - off), r: RATE[rate], b: bright, v: 0.9 });
       }
-      if (half || ci > 0 || bar >= 2) for (const off of zaps) {   // sharp high tones that sit between the wobble notes
+      if (!hi && (half || ci > 0 || bar >= 2)) for (const off of zaps) {   // sharp high tones that sit between the wobble notes
         if (fill && off < 8) continue;
         const step = [0, 2, 4, 7][(off + bar) % 4];
         let m = r.lead(a + step);
@@ -130,7 +146,7 @@ export function dubstepify(r, v = variant(), len = r.t) {
       };
       if (fill) climbRun(8, 8, 0.4, 0.9);
       else if ((half || ci > 0) && bar % 2 === 1) climbRun(12, 4, 0.5, 0.8);   // and a rising scream into the next four bars
-      if (half || bar >= 2) for (const off of stab) {
+      if (!hi && (half || bar >= 2)) for (const off of stab) {
         if (b + off < end) out.push({ t: b + off, tr, k: 'stab', m: [r.pad(a) + 12, r.pad(a + 2) + 12, r.pad(a + 4) + 12], d: 1, v: half ? 0.5 : 0.35 });
       }
     }

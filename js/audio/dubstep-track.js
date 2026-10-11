@@ -33,12 +33,12 @@ export function buildDubstepTrack(reverb, bg, dryOut) {
     // two resonant band-pass filters that audio/play.js sweeps against each other with LFOs, which makes the vowel-like "yoi" of a
     // dubstep bass, mixed with some of the unfiltered distortion for bite, and squashed by a compressor.
     fx.wobHp = new Tone.Filter(120, 'highpass');
-    fx.wobDist = new Tone.Distortion({ distortion: 0.85, wet: 1 });
+    fx.wobDist = new Tone.Distortion({ distortion: 0.6, wet: 1 });
     fx.wobBpA = new Tone.Filter({ frequency: 400, type: 'lowpass', rolloff: -24, Q: 4 });   // a classic resonant wub sweep
     fx.wobBpB = new Tone.Filter({ frequency: 1500, type: 'bandpass', Q: 3 });
     fx.wobBody = new Tone.Gain(0.08);
-    fx.wobPost = new Tone.Distortion({ distortion: 0.45, wet: 0.6 });   // a second stage of grit after the filters
-    fx.wobMix = new Tone.Gain(0.7);
+    fx.wobPost = new Tone.Distortion({ distortion: 0.15, wet: 0.4 });   // a second stage of grit after the filters
+    fx.wobMix = new Tone.Gain(0.6);
     fx.wobComp = new Tone.Compressor({ threshold: -24, ratio: 6, attack: 0.003, release: 0.1 }).connect(duckBass);
     fx.wobHp.connect(fx.wobDist);
     fx.wobDist.connect(fx.wobBpA); fx.wobDist.connect(fx.wobBpB); fx.wobDist.connect(fx.wobBody);
@@ -91,7 +91,7 @@ export function buildDubstepTrack(reverb, bg, dryOut) {
     s.stab.volume.value = -22;       s.stab.connect(fx.stabLp);
     s.zap.volume.value = -21;        s.zap.connect(fx.zapHp);
     s.sub.volume.value = -5;         s.sub.connect(duckBass);
-    s.wob.volume.value = -9;         s.wob.connect(fx.wobHp);
+    s.wob.volume.value = -12;        s.wob.connect(fx.wobHp);
     s.riserNoise.volume.value = -20; s.riserNoise.connect(fx.riserBp);
     s.riserTone.volume.value = -26;  s.riserTone.connect(group.accent);
     s.impact.volume.value = -3;      s.impact.connect(group.accent);
