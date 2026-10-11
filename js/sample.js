@@ -146,10 +146,10 @@ export const EXAMPLES = [
   { group: 'Prose', items: [
     { id: 'darcy', name: 'Mr. Darcy\'s proposal – Pride and Prejudice', text: DARCY },
   ] },
-  { group: 'Songs (public domain)', items: [
+  { group: 'Songs', items: [
     { id: 'grace', name: 'Amazing Grace', text: GRACE },
     { id: 'auld', name: 'Auld Lang Syne', text: AULD_LANG_SYNE },
-    { id: 'auld', name: 'Wanna Be', text: WANNA_BE },
+    { id: 'wannabe', name: 'Wanna Be', text: WANNA_BE },
   ] },
 ];
 
