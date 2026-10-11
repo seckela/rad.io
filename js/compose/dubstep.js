@@ -137,7 +137,7 @@ export function dubstepify(r, v = variant(), len = r.t) {
         }
         afterDive = dive;
       }
-      if (!hi && (half || ci > 0 || bar >= 2)) for (const off of zaps) {   // sharp high tones that sit between the wobble notes
+      if (!hi && b !== c.drop && (half || ci > 0 || bar >= 2)) for (const off of zaps) {   // (not in the opening bar, which belongs to the dive and the rise)   // sharp high tones that sit between the wobble notes
         if (fill && off < 8) continue;
         const step = [0, 2, 4, 7][(off + bar) % 4];
         let m = r.lead(a + step);
