@@ -69,8 +69,8 @@ export function dubstepify(r, v = variant(), len = r.t) {
     for (let b = c.t0; b < c.drop; b += 64) {
       const a = chordAt(c, b), stop = Math.min(b + 64, last);
       if (stop <= b) continue;
-      out.push({ t: b, tr, k: 'pad', m: [r.pad(a), r.pad(a + 2), r.pad(a + 4)], d: stop - b, v: 0.4 });
-      out.push({ t: b, tr, k: 'sub', m: fold(r.lead(a)), d: stop - b, v: b < c.build ? 0.3 : 0.45 });
+      out.push({ t: b, tr, k: 'pad', m: [r.pad(a), r.pad(a + 2), r.pad(a + 4)], d: stop - b, v: c.t0 > 0 && b < c.build ? 0.6 : 0.4 });   // after the first drop the intro keeps more of its weight
+      out.push({ t: b, tr, k: 'sub', m: fold(r.lead(a)), d: stop - b, v: b < c.build ? (c.t0 > 0 ? 0.5 : 0.3) : 0.45 });
     }
     for (let b = c.t0; b + 16 <= c.build; b += 32) {
       const a = chordAt(c, b);
@@ -98,10 +98,11 @@ export function dubstepify(r, v = variant(), len = r.t) {
         const stop = Math.min(c.drop + (bi + 1) * 64, end);
         out.push({ t: b, tr, k: 'sub', m: fold(r.lead(a)), d: stop - b, v: 0.8 });
       }
-      for (const [off, len, move, rate] of (fill ? FILL : fam[bar % fam.length])) {
-        out.push({ t: b + off, tr, k: 'wob', m: fold(r.lead(a + move)), d: Math.min(len, end - b - off), r: RATE[rate], b: bright, v: 0.9 });
+      const outro = end - b <= 16;                     // the last bar of the cycle winds down so the intro doesn't arrive as a cliff
+      for (const [off, len, move, rate] of (outro ? [[0, 16, 0, 'q']] : fill ? FILL : fam[bar % fam.length])) {
+        out.push({ t: b + off, tr, k: 'wob', m: fold(r.lead(a + move)), d: Math.min(len, end - b - off), r: RATE[rate], b: bright, v: outro ? 0.6 : 0.9 });
       }
-      if (half || bar >= 2) for (const off of stab) {
+      if (!outro && (half || bar >= 2)) for (const off of stab) {
         if (b + off < end) out.push({ t: b + off, tr, k: 'stab', m: [r.pad(a) + 12, r.pad(a + 2) + 12, r.pad(a + 4) + 12], d: 1, v: half ? 0.5 : 0.35 });
       }
     }
@@ -117,8 +118,8 @@ export function dubstepDrums(total, v = variant(), T = total) {
   cycles.forEach(c => {
     // Intro: a kick on the bar line every other bar and quiet offbeat hats.
     for (let b = c.t0; b < c.build; b += 16) {
-      if (introKick && ((b - c.t0) / 16) % 2 === 0) hit(b, 'kick', 0.55);
-      for (const o of [2, 6, 10, 14]) hit(b + o, 'hat', 0.2);
+      if ((introKick || c.t0 > 0) && (c.t0 > 0 || ((b - c.t0) / 16) % 2 === 0)) hit(b, 'kick', c.t0 > 0 ? 0.75 : 0.55);   // after the first drop the beat carries straight on
+      for (const o of [2, 6, 10, 14]) hit(b + o, 'hat', c.t0 > 0 ? 0.32 : 0.2);
     }
     // Build: a snare roll that speeds up and gets louder, a riser, then silence.
     const last = c.drop - GAP, len = last - c.build;
@@ -133,9 +134,9 @@ export function dubstepDrums(total, v = variant(), T = total) {
     // Drop: impact, then half-time drums with a fill at the end of every four bars.
     hit(c.drop, 'impact', 1);
     for (let b = c.drop, bar = 0; b < c.end; b += 16, bar++) {
-      const fill = bar % 4 === 3 && c.end - b > 16;
-      for (const o of kicks[bar % kicks.length]) if (!(fill && o > 8)) hit(b + o, 'kick', o === 0 ? 1 : 0.8);
-      hit(b + 8, 'snare', 1);
+      const outro = c.end - b <= 16, fill = bar % 4 === 3 && !outro;
+      for (const o of outro ? [0] : kicks[bar % kicks.length]) if (!(fill && o > 8)) hit(b + o, 'kick', o === 0 ? 1 : 0.8);
+      hit(b + 8, 'snare', outro ? 0.7 : 1);
       for (const o of hats) if (!fill || o < 8) hit(b + o, o % 4 === 2 ? 'ohat' : 'hat', o % 4 === 0 ? 0.45 : 0.3);
       if (fill) for (const o of [8.5, 12, 13, 14, 14.5, 15]) hit(b + o, 'snare', o >= 14 ? 0.9 : 0.6);
     }
