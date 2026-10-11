@@ -127,6 +127,7 @@ export function dubstepify(r, v = variant(), len = r.t) {
       const pat = hi ? [] : fill ? FILL : fam[bar % fam.length];
       const rest8 = pat.filter(x => x[0] >= 8), first = b === c.drop ? [[0, rest8.length ? 8 : 16, 0, pat[0][3]], ...rest8] : pat;   // if nothing follows the opening note in the bar it holds the whole bar
       for (const [off, len, move, rate] of first) {
+        if (afterDive) out.push({ t: b + off - 3, tr, k: 'climb', m: fold(r.lead(a + (ci === 0 ? 0 : move))), v: 0.8 });   // a mini reverse dive: a short rise that lands on the first note after the dive
         // The first drop keeps the bass on the chord root (the rhythm and the sound carry it); later drops start moving it.
         out.push({ t: b + off, tr, k: 'wob', m: fold(r.lead(a + (ci === 0 ? 0 : move))), d: Math.min(len, end - b - off), r: RATE[rate], b: bright, v: 0.9, dv: b === c.drop && off === 0 ? 1 : 0, ...(afterDive ? { fl: 1 } : {}) });   // fl: the note after the dive carries straight on from it
         afterDive = b === c.drop && off === 0;   // dv: the drop opens with a long pitch dive

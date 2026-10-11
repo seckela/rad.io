@@ -81,6 +81,19 @@ export function sound(e, time) {
         s.zap.triggerAttackRelease(hz(e.m), long ? (e.d || 1) * unit : unit * 0.8, time, v);
         break;
       }
+      case 'climb': {       // the reverse of the dive in miniature: the dive voice rises an octave over three 16ths and lands on the next note
+        s.dive.detune.cancelScheduledValues(time);
+        s.dive.detune.setValueAtTime(-1200, time);
+        s.dive.detune.linearRampToValueAtTime(0, time + 3 * unit);
+        s.dive.modulationIndex.cancelScheduledValues(time);
+        s.dive.modulationIndex.setValueAtTime(12, time);
+        s.dive.modulationIndex.linearRampToValueAtTime(24, time + 3 * unit);
+        s.dive.volume.cancelScheduledValues(time);
+        s.dive.volume.setValueAtTime(-40, time);
+        s.dive.volume.linearRampToValueAtTime(-11, time + 3 * unit);
+        s.dive.triggerAttackRelease(hz(e.m), 3 * unit, time, v);
+        break;
+      }
       case 'wob': {         // the growl: a quick pitch dive into the note, and two LFOs locked to the tempo sweeping the formant filters
         const hzNote = hz(e.m);
         s.wob.triggerAttackRelease(hzNote, e.dv ? (e.d || 1) * unit + 0.03 : dur, time, v);   // the dive's note runs right up to the next one
