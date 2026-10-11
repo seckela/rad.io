@@ -2,14 +2,16 @@
 //  - Each line's chord is held as a big pad, with a fast 16th-note pluck arpeggio running over it (up the triad and into the
 //    octave, then back down).
 //  - The bass rolls: three 16ths between every kick, on the line's root.
-//  - The melody is rebuilt as a lead line: thinned to a note every few beats, lifted above the arpeggio, and shaped per chord. Each
-//    section opens on a held chord tone, then climbs and falls through a rising arc (so it never sits on one note), lands on
-//    chord tones on the beats, and never repeats the same pitch twice in a row.
+//  - The melody becomes a tune: a short, mostly stepwise motif (picked by the code, the same for the whole piece) is replayed in
+//    every section on that section's chord, so the lead is the same shape moving with the harmony, which ties the sections
+//    together. The notes join up (each lasts until the next), lean on the 8th-note grid, and are placed in the octave
+//    nearest the previous note so the line glides across chord changes instead of jumping.
 //  - When a chord lasts two bars or more, the last half bar before the next chord is a snare roll that builds in volume.
 //  - The character-driven drum hits go quiet and a four-on-the-floor beat takes over (see tranceDrums).
 // The kick dips the pad, the arpeggio and the bass on every beat (see audio/play.js), which gives the pumping feel.
 const PATS = [[0, 1, 2, 3, 2, 1, 0, 1], [0, 2, 1, 3, 2, 1, 3, 2], [2, 3, 2, 1, 2, 3, 2, 1]];   // arpeggio shapes per half bar; index 3 is the root an octave up
-const ARC = [0, 1, 2, 4, 2, 1];                  // how many scale steps above the written note each melody note in a section sits
+const LO = 62, HI = 96, MID = 78;                // the lead's range (MIDI) and the middle it leans toward
+const MOTIFS = [[0, 2, 1, 2, 4, 3, 2, 1], [4, 3, 2, 3, 4, 5, 4, 2], [2, 4, 3, 2, 1, 2, 3, 0]];   // scale steps above the chord root, one per lead note
 const RISE = [[8, 0.3], [6, 0.4], [4, 0.5], [3, 0.6], [2, 0.75], [1, 0.95]];   // [sixteenths before the next chord, snare velocity]
 
 export function tranceify(r) {
@@ -56,33 +58,39 @@ export function tranceDrums(total) {
   return ev;
 }
 
-// Reshapes the (already thinned) lead notes in place; see the header comment. Works in scale degrees (the lead events carry
-// theirs in `g`) so the result stays in the scale, then places each note in the 72 to 93 range, above the arpeggio.
+// Replaces the lead events' pitches and lengths in place; see the header comment. The code's own lead events supply the timing
+// (and the text highlight), thinned to a note every 4 sixteenths at least and snapped to the 8th-note grid, and the motif supplies
+// the pitches, in scale degrees so everything stays in the scale.
 function shapeLead(out, r, roots) {
-  const n = r.n;
+  const n = r.n, motif = MOTIFS[(Math.round(r.t) + roots.length * 7) % MOTIFS.length];
   const leads = out.filter(x => x.k === 'lead' && x.m !== undefined).sort((x, y) => x.t - y.t);
-  let sec = -2, k = 0, prev = -1;
+  const place = (d, prev) => {
+    let m = r.lead(d);
+    while (m < LO) m += 12;
+    while (m > HI) m -= 12;
+    // The octave nearest the last note, so the line glides, with a gentle lean toward the middle of the range (MID) so it can't
+    // ratchet up or down across a run of chord changes.
+    const cost = c => prev > 0 ? Math.abs(c - prev) + 0.15 * Math.abs(c - MID) : Math.abs(c - MID);
+    let best = m;
+    for (let c = m - 24; c <= m + 24; c += 12) if (c >= LO && c <= HI && cost(c) < cost(best)) best = c;
+    return best;
+  };
+  let prev = -1, lastT = -99, sec = -2, k = 0, held = null;
+  const close = end => { if (held) held.d = Math.max(2, Math.min(8, end - held.t)); };    // each note lasts until the next
   for (const e of leads) {
     let idx = -1;
     roots.forEach((c, j) => { if (c.t <= e.t) idx = j; });
     const c = roots[Math.max(0, idx)];
     if (!c) break;
-    if (idx !== sec) { sec = idx; k = 0; }
-    const chord = [c.a, c.a + 2, c.a + 4].map(d => ((d % n) + n) % n);
-    let g = (e.g ?? 0) + ARC[k % ARC.length];
-    if (k === 0 || e.t % 4 === 0) {                                  // land on a chord tone on the beats and at the section start
-      let best = g, bd = 99;
-      for (const cd of chord) {
-        const cand = cd + Math.round((g - cd) / n) * n;
-        if (Math.abs(cand - g) < bd) { bd = Math.abs(cand - g); best = cand; }
-      }
-      g = best;
-    }
-    const place = d => { let m = r.lead(d); while (m < 72) m += 12; while (m > 93) m -= 12; return m; };
-    let m = place(g);
-    if (m === prev) m = place(g + (k % 2 ? -1 : 1));                 // never the same pitch twice in a row
-    e.m = prev = m;
-    if (k === 0) { e.d = 8; e.v = Math.max(e.v || 0, 0.8); }          // each section opens on a held note
-    k++;
+    const t = Math.round(e.t / 2) * 2;
+    if (idx !== sec) { close(Math.max(t, c.t)); sec = idx; k = 0; lastT = -99; held = null; }
+    if (t - lastT < 4) { e.k = 'rest'; delete e.m; delete e.v; delete e.d; continue; }   // dropped; the highlight still moves
+    const deg = c.a + motif[k % motif.length] + (Math.floor(k / motif.length) % 2 ? 1 : 0);   // the second time round, a step higher
+    let m = place(deg, prev);
+    if (m === prev) m = place(deg + 1, prev);                         // never the same pitch twice in a row
+    close(t);
+    e.t = t; e.m = prev = m; e.v = k % motif.length === 0 ? 0.9 : 0.75;
+    held = e; lastT = t; k++;
   }
+  close(r.t);
 }
