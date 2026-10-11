@@ -84,9 +84,17 @@ export function sound(e, time) {
         const hzNote = hz(e.m);
         s.wob.triggerAttackRelease(hzNote, dur, time, v);
         s.wob.detune.cancelScheduledValues(time);
-        if (e.dv) {         // the first note of a drop falls two octaves into place over six 16ths
-          s.wob.detune.setValueAtTime(2400, time);
-          s.wob.detune.linearRampToValueAtTime(0, time + 6 * unit);
+        if (e.dv) {         // the first note of a drop falls three octaves into place over eight 16ths, with the FM going from a bright, metallic ring (high index, inharmonic ratio) down to the normal growl
+          const fall = 8 * unit;
+          s.wob.detune.setValueAtTime(3600, time);
+          s.wob.detune.exponentialRampToValueAtTime(1, time + fall * 0.7);
+          s.wob.detune.setValueAtTime(0, time + fall * 0.7 + 0.001);
+          s.wob.modulationIndex.cancelScheduledValues(time);
+          s.wob.modulationIndex.setValueAtTime(45, time);
+          s.wob.modulationIndex.linearRampToValueAtTime(9, time + fall);
+          s.wob.harmonicity.cancelScheduledValues(time);
+          s.wob.harmonicity.setValueAtTime(3.5, time);
+          s.wob.harmonicity.linearRampToValueAtTime(1, time + fall);
         } else {
           s.wob.detune.setValueAtTime(500, time);
           s.wob.detune.exponentialRampToValueAtTime(1, time + 0.07);

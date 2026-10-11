@@ -123,7 +123,9 @@ export function dubstepify(r, v = variant(), len = r.t) {
           if (k === pat.length - 1) out.push({ t: b + off, tr, k: 'zap', m: m + 12, d: 1, v: 0.7 });
         });
       }
-      for (const [off, len, move, rate] of (hi ? [] : fill ? FILL : fam[bar % fam.length])) {
+      // The first bar of a drop opens with one long note (8 sixteenths) for the pitch dive, then the pattern's own hits from the 3rd beat on.
+      const pat = hi ? [] : fill ? FILL : fam[bar % fam.length];
+      for (const [off, len, move, rate] of b === c.drop ? [[0, 8, 0, pat[0][3]], ...pat.filter(x => x[0] >= 8)] : pat) {
         // The first drop keeps the bass on the chord root (the rhythm and the sound carry it); later drops start moving it.
         out.push({ t: b + off, tr, k: 'wob', m: fold(r.lead(a + (ci === 0 ? 0 : move))), d: Math.min(len, end - b - off), r: RATE[rate], b: bright, v: 0.9, dv: b === c.drop && off === 0 ? 1 : 0 });   // dv: the drop opens with a long pitch dive
       }
