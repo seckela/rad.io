@@ -90,18 +90,18 @@ export function sound(e, time) {
           s.wob.detune.exponentialRampToValueAtTime(1, time + fall * 0.7);
           s.wob.detune.setValueAtTime(0, time + fall * 0.7 + 0.001);
           s.wob.modulationIndex.cancelScheduledValues(time);
-          s.wob.modulationIndex.setValueAtTime(45, time);
-          s.wob.modulationIndex.linearRampToValueAtTime(9, time + fall);
+          s.wob.modulationIndex.setValueAtTime(28, time);
+          s.wob.modulationIndex.linearRampToValueAtTime(9, time + fall * 0.7);
           s.wob.harmonicity.cancelScheduledValues(time);
-          s.wob.harmonicity.setValueAtTime(3.5, time);
-          s.wob.harmonicity.linearRampToValueAtTime(1, time + fall);
+          s.wob.harmonicity.setValueAtTime(2.5, time);
+          s.wob.harmonicity.linearRampToValueAtTime(1, time + fall * 0.7);
         } else {
           s.wob.detune.setValueAtTime(500, time);
           s.wob.detune.exponentialRampToValueAtTime(1, time + 0.07);
           s.wob.detune.setValueAtTime(0, time + 0.08);
         }
         const rate = Tone.Transport.bpm.value / 60 * e.r;
-        for (const [filt, lo, hi, ph] of [[s.wobBpA, 250, e.b, 270], [s.wobBpB, 900, e.b * 2.6, 90]]) {   // the second sweeps the opposite way
+        for (const [filt, lo, hi, ph] of [[s.wobBpA, 200, e.b, 270], [s.wobBpB, 600, e.b * 2.4, 90]]) {   // the second sweeps the opposite way
           const lfo = new Tone.LFO({ frequency: rate, min: lo, max: hi, type: 'sine', phase: ph });
           lfo.connect(filt.frequency);
           lfo.start(time).stop(time + dur + 0.05);

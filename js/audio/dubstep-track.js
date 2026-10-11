@@ -32,7 +32,7 @@ export function buildDubstepTrack(reverb, bg, dryOut) {
     // The growl: an FM saw (rich in harmonics), high-passed so the sub layer carries the low end, heavily distorted, then pushed through
     // two resonant band-pass filters that audio/play.js sweeps against each other with LFOs, which makes the vowel-like "yoi" of a
     // dubstep bass, mixed with some of the unfiltered distortion for bite, and squashed by a compressor.
-    fx.wobHp = new Tone.Filter(120, 'highpass');
+    fx.wobHp = new Tone.Filter(90, 'highpass');
     fx.wobDist = new Tone.Distortion({ distortion: 0.45, wet: 1 });
     fx.wobBpA = new Tone.Filter({ frequency: 400, type: 'lowpass', rolloff: -24, Q: 4 });   // a classic resonant wub sweep
     fx.wobBpB = new Tone.Filter({ frequency: 1500, type: 'bandpass', Q: 3 });
@@ -43,7 +43,8 @@ export function buildDubstepTrack(reverb, bg, dryOut) {
     fx.wobHp.connect(fx.wobDist);
     fx.wobDist.connect(fx.wobBpA); fx.wobDist.connect(fx.wobBpB); fx.wobDist.connect(fx.wobBody);
     fx.wobBpA.connect(fx.wobMix); fx.wobBpB.connect(fx.wobMix); fx.wobBody.connect(fx.wobMix);
-    fx.wobMix.connect(fx.wobPost); fx.wobPost.connect(fx.wobComp);
+    fx.wobLp = new Tone.Filter(1800, 'lowpass');   // a ceiling so it stays dark and heavy
+    fx.wobMix.connect(fx.wobPost); fx.wobPost.connect(fx.wobLp); fx.wobLp.connect(fx.wobComp);
     // The sharp high tones: a bright FM square with a quick pitch dive, high-passed and lightly distorted, with a short echo.
     fx.zapEcho = new Tone.FeedbackDelay({ delayTime: '8n.', feedback: 0.3, wet: 0.25 }).connect(group.accent);
     fx.zapDist = new Tone.Distortion({ distortion: 0.3, wet: 0.5 }).connect(fx.zapEcho);

@@ -49,14 +49,14 @@ export function dubstepify(r, v = variant(), len = r.t) {
   const T = layout(len).T, { cycles } = layout(T), tr = (r.events.find(e => e.tr !== undefined) || {}).tr || 0;
   const names = Object.keys(WOBS), loop0 = v.pick('loop', LOOPS.length), w1 = v.pick('wob1', names.length), w2 = v.pick('wob2', names.length);
   const stab0 = v.pick('stab', STABS.length), zap0 = v.pick('zap', ZAPS.length);
-  const bright0 = v.of('bright', [900, 1200, 1500]), motif = v.of('motif', MOTIFS), motif2 = MOTIFS[(MOTIFS.indexOf(motif) + 1) % MOTIFS.length];
+  const bright0 = v.of('bright', [550, 750, 950]), motif = v.of('motif', MOTIFS), motif2 = MOTIFS[(MOTIFS.indexOf(motif) + 1) % MOTIFS.length];
   const out = [];
   for (const e of r.events) {                       // the text's own events become rests, which keeps the highlight moving
     if (e.i !== undefined) out.push({ t: e.t, i: e.i, tr: e.tr, k: 'rest' });
   }
   let loop = LOOPS[0];
   const chordAt = (c, t) => loop[Math.floor((t - c.t0) / 64) % loop.length];
-  const fold = m => m - 12 * Math.round((m - 34) / 12);                    // the bass octave: about E1 to E2
+  const fold = m => m - 12 * Math.round((m - 31) / 12);                    // the bass octave: about C1 to C2, centred on G1 like the reference
   const LO = 60, HI = 84, MID = 70;
   const place = (d, prev) => {
     let m = r.lead(d);
@@ -73,7 +73,7 @@ export function dubstepify(r, v = variant(), len = r.t) {
     // first) more of the sharp high tones, so a long track keeps developing.
     loop = LOOPS[(loop0 + ci) % LOOPS.length];
     const fam1 = names[(w1 + ci) % names.length], fam2 = names[(w2 + 2 * ci + 1) % names.length];
-    const stab = STABS[(stab0 + ci) % STABS.length], zaps = ZAPS[(zap0 + ci) % ZAPS.length], bright = Math.round(bright0 * (1 + 0.12 * Math.min(ci, 4)));
+    const stab = STABS[(stab0 + ci) % STABS.length], zaps = ZAPS[(zap0 + ci) % ZAPS.length], bright = Math.round(bright0 * (1 + 0.08 * Math.min(ci, 4)));
     const last = c.drop - GAP;                      // everything but the drop stops here
     // Intro and build: a pad on each chord, and the intro's lead phrase.
     for (let b = c.t0; b < c.drop; b += 64) {
