@@ -99,7 +99,7 @@ export function chillify(r, base, v = variant()) {
   thin('bell', 12);
 
   const groups = groupLeads(ev);
-  return { events: ev.concat(gridMelody(r, groups, base, true, { legato: true, sticky: true })), t: r.t * S };
+  return { events: ev.concat(gridMelody(r, groups, base, true, { legato: true, sticky: true, turn: v.pick('pace', 6) })), t: r.t * S };
 }
 
 // The groove. The seed picks a whole one (see groove.js) from the slow, spacious kinds: half-time, boom-bap, shuffle or sparse; the hats

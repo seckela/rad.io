@@ -13,7 +13,7 @@ const STEPS = [1, -1, 2, -2, 1, 3, -3, 0, -1, 2, -2, 4, -4];   // melodic steps 
 // Chillstep's chord roots, one per code line, cycling. The first loop is i - VI - III - VII; the seed picks one of these. All are
 // familiar, diatonic and close together, so a new line changes the harmony gently instead of jumping to a root picked from the
 // line's text.
-const CHILL_LOOPS = [[0, 5, 2, 6], [0, 3, 6, 2], [0, 6, 5, 2], [0, 5, 3, 6]];
+const CHILL_LOOPS = [[0, 5, 2, 6], [0, 3, 6, 2], [0, 6, 5, 2], [0, 5, 3, 6], [0, 2, 5, 6], [0, 4, 5, 3], [0, 3, 5, 4], [0, 6, 3, 5]];
 
 const PROG = [0, 3, 4, 2];                        // pad chord roots by nesting depth
 
@@ -35,7 +35,8 @@ export function composeTrack(items, key, scale, bg, vary, chill, v = variant()) 
   const tonicEvery = 3 + v.pick('tonic', 3), regSh = v.pick('reg', 5), start = n + v.pick('start', 5) - 2;
   const sh = bg ? -12 : 0;
   const push = o => ev.push({ tr: bg ? 1 : 0, ...o });
-  const lead = d => degToMidi((chill ? 48 : 60) + key + sh, scale, d);   // same tonic as pad/bass (C + key)
+  const lift = chill ? v.of('lift', [0, 0, 12]) : 0;     // seeded: the warm styles' melody sometimes sits an octave higher (brighter)
+  const lead = d => degToMidi((chill ? 48 : 60) + key + sh + lift, scale, d);   // same tonic as pad/bass (C + key)
   const pad  = d => degToMidi(48 + key, scale, d);
   // Chillstep keeps the bass in one low octave (G1 to F#2) whatever the chord: roots on higher scale degrees
   // used to sit up near 105-117 Hz, which sounded brighter and louder than the others, so a line change onto

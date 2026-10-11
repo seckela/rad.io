@@ -13,7 +13,7 @@ import { variant } from './seed.js';
 export function ambientify(r, key, scale, base, v = variant()) {
   // Seeded choices (see seed.js): the interval held above each drone's root, how sparse the melody is, and the chimes (see windChimes).
   const above = v.of('above', [7, 7, 12, 9]), thinGap = v.of('thin', [8, 10, 14, 18]);
-  const res = chillify(r, base);
+  const res = chillify(r, base, v);
   // Drop Chillstep's soft restatements (bass and chord events without a line segment); the changes themselves stay.
   const ev = res.events.filter(e => !((e.k === 'bass' || e.k === 'pad') && e.s === undefined));
   const changes = ev.filter(e => e.k === 'bass' && e.s !== undefined && e.m !== undefined).sort((a, b) => a.t - b.t);

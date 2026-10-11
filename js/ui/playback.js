@@ -6,6 +6,8 @@ import { getText, setEditorHidden } from './editor.js';
 import { renderView, highlight } from './view.js';
 import { getKey, getScale, getStyle, isChill, isLofi, isMetal, isChip, isAmbient, isSynthwave, isHouse, isTrance, getOpts } from './settings.js';
 import { compose } from '../compose/index.js';
+import { feelOf } from '../compose/feel.js';
+import { seedOf, parseSeed, variant } from '../compose/seed.js';
 import { audio, setAudio, buildAudio, disposeAudio } from '../audio/engine.js';
 import { sound } from '../audio/play.js';
 import { loadMetalBuffers, loadBassBuffers } from '../audio/samples.js';
@@ -72,9 +74,24 @@ export function updateStats(chars, total) {
 export function rebuild() {
   const text = getText();
   const { events, total } = compose(text, getKey(), getScale(), getOpts());
+  if (audio && audio.fg.feel) { audio.fg.feel(variant(currentSeed(), getStyle() + '-sound')); if (audio.bg.feel) audio.bg.feel(variant(currentSeed(), getStyle() + '-sound')); }   // the seed's tone settings
   lastTotal = total;
   schedule(events, total);
   updateStats(text.length, total);
+}
+
+// The seed in effect: the one typed in the Seed box, or the text's own.
+export const currentSeed = () => parseSeed($('seed').value) ?? seedOf(getText());
+
+// Moves the tempo, scale and key to where this seed puts the selected style (see compose/feel.js). Called when a seed takes effect:
+// a style is picked, an example or file is loaded, or the seed is changed. The user can still change all three afterwards.
+export function applyFeel() {
+  const f = feelOf($('style').value, currentSeed());
+  $('tempo').value = f.tempo;
+  $('tempoVal').textContent = f.tempo;
+  Tone.Transport.bpm.value = f.tempo;
+  $('scale').value = f.scale;
+  if (f.key != null) $('key').value = f.key;
 }
 
 // Sets the tempo and scale that go with the selected style (both can be changed afterwards).
@@ -84,6 +101,7 @@ export function applyStyleDefaults() {
   $('tempoVal').textContent = $('tempo').value;
   Tone.Transport.bpm.value = +$('tempo').value;
   $('scale').value = { chill: 'Natural minor', lofi: 'Natural minor', metal: 'Phrygian', chiptune: 'Major', ambient: 'Natural minor', synthwave: 'Natural minor', house: 'Dorian', trance: 'Natural minor' }[st] || 'Dorian';
+  applyFeel();                  // the seed then moves them within the style's range
   $('leadsound').disabled = st === 'metal' || st === 'chiptune' || st === 'ambient' || st === 'synthwave' || st === 'house' || st === 'trance';   // each of these has its own fixed lead voice
   syncPicker();
 }

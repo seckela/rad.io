@@ -32,7 +32,7 @@ export function gridMelody(r, groups, base, withFillers, o = {}) {
   const kept = [];
   let lastT = -99, prevPick = null, held = 0;
   for (const grp of groups.values()) {
-    let pick = picks[grp[0].h % 6];
+    let pick = picks[(grp[0].h + (o.turn || 0)) % 6];      // o.turn: the seed rotates which sections are slow, medium or lively
     if (o.sticky && prevPick !== null) {
       // The pace moves one step at a time, and only after the same pace has held for two sections.
       pick = held >= 2 ? prevPick + Math.sign(pick - prevPick) : prevPick;

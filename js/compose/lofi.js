@@ -7,6 +7,8 @@ import { DRUMS, drumGroove } from './groove.js';
 // The seed picks one set of each (see seed.js).
 const CHORD_SETS = [
   [[[0, 0.26, 7], [6, 0.17, 4], [10, 0.14, 4]], [[0, 0.26, 9], [7, 0.18, 5]]],
+  [[[0, 0.26, 12]], [[0, 0.26, 6], [8, 0.17, 5]]],
+  [[[0, 0.26, 5], [3, 0.15, 3], [8, 0.17, 4], [11, 0.14, 3]], [[0, 0.26, 7], [10, 0.16, 5]]],
   [[[0, 0.26, 6], [4, 0.16, 3], [10, 0.16, 5]], [[0, 0.26, 8], [6, 0.18, 4], [12, 0.14, 3]]],
   [[[0, 0.26, 9], [8, 0.16, 4]], [[0, 0.26, 5], [6, 0.18, 4], [10, 0.15, 4]]],
 ];
@@ -23,7 +25,9 @@ export function lofiify(r, key, scale, base, v = variant()) {
   const CHORD_HITS = v.of('chords', CHORD_SETS);
   // The bass plays on the groove's kicks, so it always locks with the drums (the same pick lofiDrums makes).
   const BASS_HITS = DRUMS[v.of('drums', LOFI_DRUMS)].kick.map(bar => bar.map((p, k) => [p, p === 0 ? 0.42 : 0.3, k % 2 ? 3 : 5]));
-  const res = chillify(r, base);
+  const res = chillify(r, base, v);
+  // Seeded: what colours each chord on top: a 9th (the classic), a 7th, a 6th, or nothing extra.
+  const colour = v.of('colour', [1, 1, 6, 5, null]);
   const n = scale.length, pcs = scale.map(x => (key + x) % 12);
   // Drop Chillstep's soft restatements (the bass and chord events without a line segment); the changes themselves stay.
   let ev = res.events.filter(e => !((e.k === 'bass' || e.k === 'pad') && e.s === undefined));
@@ -36,7 +40,8 @@ export function lofiify(r, key, scale, base, v = variant()) {
     if (!chord) continue;
     const at = pcs.indexOf(c.m % 12);
     if (at < 0) continue;
-    const ninth = pcs[(at + 1) % n];
+    if (colour === null) continue;
+    const ninth = pcs[(at + colour) % n];
     if ((ninth - c.m % 12 + 12) % 12 === 1) continue;           // a flat 9th grates; leave that chord as it is
     const top = chord.m[chord.m.length - 1];
     let m = top + 1;
