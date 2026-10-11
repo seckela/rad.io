@@ -44,6 +44,16 @@ That could abash the little Bird
 That kept so many warm -
 `;
 
+const CLOTHS = `Had I the heavens' embroidered cloths,
+Enwrought with golden and silver light,
+The blue and the dim and the dark cloths
+Of night and light and the half-light,
+I would spread the cloths under your feet:
+But I, being poor, have only my dreams;
+I have spread my dreams under your feet;
+Tread softly because you tread on my dreams.
+`;
+
 const DARCY = `In vain have I struggled. It will not do. My feelings will not be repressed. You must allow me to tell you how ardently I admire and love you.
 `;
 
@@ -71,6 +81,7 @@ export const EXAMPLES = [
   ] },
   { group: 'Poetry', items: [
     { id: 'hope', name: '“Hope” is the thing with feathers – Dickinson', text: HOPE },
+    { id: 'cloths', name: 'Aedh Wishes for the Cloths of Heaven – Yeats', text: CLOTHS },
   ] },
   { group: 'Prose', items: [
     { id: 'darcy', name: 'Mr. Darcy\'s proposal – Pride and Prejudice', text: DARCY },
