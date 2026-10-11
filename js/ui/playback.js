@@ -80,7 +80,7 @@ export function rebuild() {
 // Sets the tempo and scale that go with the selected style (both can be changed afterwards).
 export function applyStyleDefaults() {
   const st = $('style').value;
-  $('tempo').value = { chill: 70, lofi: 80, metal: 150, chiptune: 140, ambient: 60, synthwave: 100, house: 124, trance: 138 }[st] || 130;
+  $('tempo').value = { chill: 70, lofi: 80, metal: 150, chiptune: 140, ambient: 60, synthwave: 100, house: 124, trance: 140 }[st] || 130;
   $('tempoVal').textContent = $('tempo').value;
   Tone.Transport.bpm.value = +$('tempo').value;
   $('scale').value = { chill: 'Natural minor', lofi: 'Natural minor', metal: 'Phrygian', chiptune: 'Major', ambient: 'Natural minor', synthwave: 'Natural minor', house: 'Dorian', trance: 'Natural minor' }[st] || 'Dorian';

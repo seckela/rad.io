@@ -19,7 +19,7 @@ export function buildTranceTrack(reverb, bg, dryOut) {
   fx.pluckEcho = new Tone.FeedbackDelay({ delayTime: '8n.', feedback: 0.35, wet: 0.3 }).connect(duckPad);
   fx.pluckLp = new Tone.Filter(3000, 'lowpass').connect(fx.pluckEcho);
   fx.leadEcho = new Tone.FeedbackDelay({ delayTime: '8n.', feedback: 0.45, wet: bg ? 0.15 : 0.35 }).connect(group.lead);
-  fx.leadLp = new Tone.Filter(bg ? 2500 : 4200, 'lowpass').connect(fx.leadEcho);
+  fx.leadLp = new Tone.Filter(bg ? 2500 : 3600, 'lowpass').connect(fx.leadEcho);
 
   const s = {
     pad: new Tone.PolySynth(Tone.Synth, {
@@ -38,7 +38,7 @@ export function buildTranceTrack(reverb, bg, dryOut) {
     }),
     lead: new Tone.PolySynth(Tone.Synth, {
       oscillator: { type: 'fatsawtooth', count: 4, spread: 30 },
-      envelope: { attack: 0.008, decay: 0.25, sustain: 0.7, release: 0.3 },
+      envelope: { attack: 0.014, decay: 0.28, sustain: 0.75, release: 0.35 },
     }),
     digit: new Tone.PolySynth(Tone.Synth, {
       oscillator: { type: 'square' }, envelope: { attack: 0.001, decay: 0.07, sustain: 0, release: 0.07 },

@@ -2,8 +2,8 @@
 //  - Each line's chord is held as a big pad, with a fast 16th-note pluck arpeggio running over it (up the triad and into the
 //    octave, then back down).
 //  - The bass rolls: three 16ths between every kick, on the line's root.
-//  - The melody becomes a tune: a short, mostly stepwise motif (picked by the code, the same for the whole piece) is replayed in
-//    every section on that section's chord, so the lead is the same shape moving with the harmony, which ties the sections
+//  - The melody becomes a tune: a short, mostly stepwise hook (the same for the whole piece) is replayed in
+//    every section on that section's chord, and the chords follow a fixed loop (i v VI VII III, as in much uplifting trance), so the lead is the same shape moving with the harmony, which ties the sections
 //    together. The notes join up (each lasts until the next), lean on the 8th-note grid, and are placed in the octave
 //    nearest the previous note so the line glides across chord changes instead of jumping.
 //  - When a chord lasts two bars or more, the last half bar before the next chord is a snare roll that builds in volume.
@@ -11,7 +11,8 @@
 // The kick dips the pad, the arpeggio and the bass on every beat (see audio/play.js), which gives the pumping feel.
 const PATS = [[0, 1, 2, 3, 2, 1, 0, 1], [0, 2, 1, 3, 2, 1, 3, 2], [2, 3, 2, 1, 2, 3, 2, 1]];   // arpeggio shapes per half bar; index 3 is the root an octave up
 const LO = 62, HI = 96, MID = 78;                // the lead's range (MIDI) and the middle it leans toward
-const MOTIFS = [[0, 2, 1, 2, 4, 3, 2, 1], [4, 3, 2, 3, 4, 5, 4, 2], [2, 4, 3, 2, 1, 2, 3, 0]];   // scale steps above the chord root, one per lead note
+const LOOP = [0, 4, 5, 6, 2];                    // the chord loop as scale degrees: i  v  VI  VII  III (Cm Gm Ab Bb Eb in C minor), one chord per line
+const HOOK = [4, 3, 2, 4, 5, 4, 2, 3];          // the lead's hook: scale steps above the chord root, one per lead note, strong notes on chord tones
 const RISE = [[8, 0.3], [6, 0.4], [4, 0.5], [3, 0.6], [2, 0.75], [1, 0.95]];   // [sixteenths before the next chord, snare velocity]
 
 export function tranceify(r) {
@@ -27,7 +28,12 @@ export function tranceify(r) {
     if (e.t - last < 3) { e.k = 'rest'; delete e.m; delete e.v; delete e.d; continue; }
     last = e.t; e.d = Math.max(e.d || 0, 3); e.v = (e.v || 0.5) * 0.9;
   }
-  const roots = r.events.filter(e => e.k === 'bass' && e.s !== undefined).sort((a, b) => a.t - b.t);
+  // The chords follow a fixed minor loop whatever the text, so every line leads naturally into the next. The bass note is the
+  // chord root folded into the bass octave (a copy, so the source events are untouched).
+  const roots = r.events.filter(e => e.k === 'bass' && e.s !== undefined).sort((a, b) => a.t - b.t).map((c, j) => {
+    const a = LOOP[j % LOOP.length], m = r.lead(a);
+    return { ...c, a, m: m - 24 - (m >= 72 ? 12 : 0) + (m < 60 ? 12 : 0) };
+  });
   shapeLead(out, r, roots);
   roots.forEach((c, j) => {
     const stop = roots[j + 1] ? roots[j + 1].t : r.t, span = stop - c.t;
@@ -62,7 +68,7 @@ export function tranceDrums(total) {
 // (and the text highlight), thinned to a note every 4 sixteenths at least and snapped to the 8th-note grid, and the motif supplies
 // the pitches, in scale degrees so everything stays in the scale.
 function shapeLead(out, r, roots) {
-  const n = r.n, motif = MOTIFS[(Math.round(r.t) + roots.length * 7) % MOTIFS.length];
+  const n = r.n, motif = HOOK;
   const leads = out.filter(x => x.k === 'lead' && x.m !== undefined).sort((x, y) => x.t - y.t);
   const place = (d, prev) => {
     let m = r.lead(d);
@@ -85,7 +91,10 @@ function shapeLead(out, r, roots) {
     const t = Math.round(e.t / 2) * 2;
     if (idx !== sec) { close(Math.max(t, c.t)); sec = idx; k = 0; lastT = -99; held = null; }
     if (t - lastT < 4) { e.k = 'rest'; delete e.m; delete e.v; delete e.d; continue; }   // dropped; the highlight still moves
-    const deg = c.a + motif[k % motif.length] + (Math.floor(k / motif.length) % 2 ? 1 : 0);   // the second time round, a step higher
+    // The same hook every time round; the last note of every second pass leans into the next chord (its third) so the line tells
+    // you where the harmony is going.
+    const nx = roots[idx + 1], pos = k % motif.length, pass = Math.floor(k / motif.length);
+    const deg = c.a + motif[pos] + (pos === motif.length - 1 && pass % 2 && nx ? nx.a + 2 - c.a - motif[pos] : 0);
     let m = place(deg, prev);
     if (m === prev) m = place(deg + 1, prev);                         // never the same pitch twice in a row
     close(t);
