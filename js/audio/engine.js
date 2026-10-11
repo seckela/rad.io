@@ -5,13 +5,14 @@ import { buildChipTrack } from './chip-track.js';
 import { buildSynthwaveTrack } from './synthwave-track.js';
 import { buildHouseTrack } from './house-track.js';
 import { buildTranceTrack } from './trance-track.js';
+import { buildDubstepTrack } from './dubstep-track.js';
 import { buildAmbientTrack } from './ambient-track.js';
 
 // The current set of voices (null until the first Play). Importers see the live value.
 export let audio = null;
 export function setAudio(a) { audio = a; }
 
-// style: 'default' | 'chill' | 'lofi' | 'metal' | 'chiptune' | 'ambient' | 'synthwave' | 'house' | 'trance'. bufs: the decoded samples for that style (guitar and bass for
+// style: 'default' | 'chill' | 'lofi' | 'metal' | 'chiptune' | 'ambient' | 'synthwave' | 'house' | 'trance' | 'dubstep'. bufs: the decoded samples for that style (guitar and bass for
 // metal, bass for chill and lofi), or undefined to use the synth fallbacks.
 export function buildAudio(style, piano, bufs) {
   try { Tone.getContext().lookAhead = 0.2; } catch (e) { /* a longer scheduling window rides out brief main-thread stalls (the default is 0.1 s) */ }
@@ -20,6 +21,11 @@ export function buildAudio(style, piano, bufs) {
     const reverb = new Tone.Reverb({ decay: 1.6, wet: 0.12 }).connect(limiter);
     return { reverb, limiter, piano: false, chill: false, metal: true,
       fg: buildMetalTrack(reverb, false, bufs), bg: buildMetalTrack(reverb, true, bufs) };
+  }
+  if (style === 'dubstep') {             // a short, dark room: the drums and bass stay dry and heavy
+    const reverb = new Tone.Reverb({ decay: 2.2, wet: 0.18 }).connect(limiter);
+    return { reverb, limiter, piano: false, chill: false, dubstep: true,
+      fg: buildDubstepTrack(reverb, false, limiter), bg: buildDubstepTrack(reverb, true) };
   }
   if (style === 'trance') {              // a wide hall for the pad and lead; the drums stay dry
     const reverb = new Tone.Reverb({ decay: 3, wet: 0.28 }).connect(limiter);

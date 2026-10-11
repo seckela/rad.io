@@ -4,7 +4,7 @@ import { syncPicker } from './picker.js';
 import { $, view, playBtn } from './dom.js';
 import { getText, setEditorHidden } from './editor.js';
 import { renderView, highlight } from './view.js';
-import { getKey, getScale, getStyle, isChill, isLofi, isMetal, isChip, isAmbient, isSynthwave, isHouse, isTrance, getOpts } from './settings.js';
+import { getKey, getScale, getStyle, isChill, isLofi, isMetal, isChip, isAmbient, isSynthwave, isHouse, isTrance, isDubstep, getOpts } from './settings.js';
 import { compose } from '../compose/index.js';
 import { feelOf } from '../compose/feel.js';
 import { seedOf, parseSeed, variant } from '../compose/seed.js';
@@ -97,12 +97,12 @@ export function applyFeel() {
 // Sets the tempo and scale that go with the selected style (both can be changed afterwards).
 export function applyStyleDefaults() {
   const st = $('style').value;
-  $('tempo').value = { chill: 70, lofi: 80, metal: 150, chiptune: 140, ambient: 60, synthwave: 100, house: 124, trance: 140 }[st] || 130;
+  $('tempo').value = { chill: 70, lofi: 80, metal: 150, chiptune: 140, ambient: 60, synthwave: 100, house: 124, trance: 140, dubstep: 140 }[st] || 130;
   $('tempoVal').textContent = $('tempo').value;
   Tone.Transport.bpm.value = +$('tempo').value;
-  $('scale').value = { chill: 'Natural minor', lofi: 'Natural minor', metal: 'Phrygian', chiptune: 'Major', ambient: 'Natural minor', synthwave: 'Natural minor', house: 'Dorian', trance: 'Natural minor' }[st] || 'Dorian';
+  $('scale').value = { chill: 'Natural minor', lofi: 'Natural minor', metal: 'Phrygian', chiptune: 'Major', ambient: 'Natural minor', synthwave: 'Natural minor', house: 'Dorian', trance: 'Natural minor', dubstep: 'Natural minor' }[st] || 'Dorian';
   applyFeel();                  // the seed then moves them within the style's range
-  $('leadsound').disabled = st === 'metal' || st === 'chiptune' || st === 'ambient' || st === 'synthwave' || st === 'house' || st === 'trance';   // each of these has its own fixed lead voice
+  $('leadsound').disabled = st === 'metal' || st === 'chiptune' || st === 'ambient' || st === 'synthwave' || st === 'house' || st === 'trance' || st === 'dubstep';   // each of these has its own fixed lead voice
   syncPicker();
 }
 
@@ -110,7 +110,7 @@ export function applyStyleDefaults() {
 // they can't be fetched (offline, blocked), falls back to something that needs no downloads.
 export async function loadAudio() {
   if (audio) disposeAudio();
-  const metal = isMetal(), piano = !metal && !isChip() && !isAmbient() && !isSynthwave() && !isHouse() && !isTrance() && $('leadsound').value === 'piano';
+  const metal = isMetal(), piano = !metal && !isChip() && !isAmbient() && !isSynthwave() && !isHouse() && !isTrance() && !isDubstep() && $('leadsound').value === 'piano';
   const label = playBtn.innerHTML;
   if (metal) {
     playBtn.textContent = 'Loading guitars…';

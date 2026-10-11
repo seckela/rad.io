@@ -58,7 +58,7 @@ export function sound(e, time) {
         else s.pad.triggerAttackRelease(e.m.map(hz), dur, time, v);
         break;
       case 'kick':
-        if ((audio.house || audio.trance) && !e.tr) for (const [g, dip] of [[s.duckPad, 0.3], [s.duckBass, 0.35]]) {   // the pump: a deep, quick dip
+        if ((audio.house || audio.trance || audio.dubstep) && !e.tr && s.duckPad) for (const [g, dip] of [[s.duckPad, 0.3], [s.duckBass, 0.35]]) {   // the pump: a deep, quick dip
           g.gain.cancelScheduledValues(time);
           g.gain.setValueAtTime(dip, time);
           g.gain.linearRampToValueAtTime(1, time + 0.2);
@@ -69,6 +69,32 @@ export function sound(e, time) {
         }
         s.kick.triggerAttackRelease(audio.metal ? 'F1' : 'C1', '16n', time, v ?? 0.9);
         if (s.kickClick) s.kickClick.triggerAttackRelease('64n', time, v ?? 0.9);
+        break;
+      case 'sub':   s.sub.triggerAttackRelease(hz(e.m), dur, time, v); break;
+      case 'stab':  s.stab.triggerAttackRelease(e.m.map(hz), unit * 1.2, time, v); break;
+      case 'wob': {         // a saw whose filter is swept by an LFO locked to the tempo; it starts at the lowest cutoff on the note
+        s.wob.triggerAttackRelease(hz(e.m), dur, time, v);
+        const lfo = new Tone.LFO({ frequency: Tone.Transport.bpm.value / 60 * e.r, min: 90, max: e.b, type: 'sine', phase: 270 });
+        lfo.connect(s.wobFilter.frequency);
+        lfo.start(time).stop(time + dur + 0.05);
+        setTimeout(() => { try { lfo.dispose(); } catch (err) { /* already gone */ } }, (time - Tone.now() + dur + 0.5) * 1000);
+        break;
+      }
+      case 'riser': {       // swept noise and a rising tone over the build-up
+        const len = (e.d || 16) * unit;
+        s.riserBp.frequency.cancelScheduledValues(time);
+        s.riserBp.frequency.setValueAtTime(300, time);
+        s.riserBp.frequency.exponentialRampToValueAtTime(7000, time + len);
+        s.riserNoise.triggerAttackRelease(len, time, 0.9);
+        s.riserTone.frequency.cancelScheduledValues(time);
+        s.riserTone.frequency.setValueAtTime(220, time);
+        s.riserTone.frequency.exponentialRampToValueAtTime(1760, time + len);
+        s.riserTone.triggerAttackRelease(len, time, 0.7);
+        break;
+      }
+      case 'impact':
+        s.impact.triggerAttackRelease('A0', 1.2, time, 1);
+        s.impactNoise.triggerAttackRelease(0.9, time, 0.9);
         break;
       case 'pluck': s.pluck.triggerAttackRelease(hz(e.m), dur * 0.8, time, v); break;
       case 'ohat':  s.ohat.triggerAttackRelease('16n', time, v ?? 0.6); break;
