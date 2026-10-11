@@ -115,10 +115,6 @@ body.mini .mini-bar { display:flex; }
 body.mini .mini-bar.show { opacity:1; pointer-events:auto; }
 @media (prefers-reduced-motion: reduce) { .mini-bar { transition:none; } }
 
-/* The seed field with its Pin / Random / Auto buttons inside it. */
-.seedbox { display:inline-flex; align-items:center; background:var(--bg); border:1px solid var(--line); border-radius:6px; padding-right:3px; }
-.seedbox:hover { border-color:var(--dim); }
-.seedbox:focus-within { border-color:var(--accent); }
-.seedbox input[type=text] { border:0; background:transparent; width:10ch; padding:6px 4px 6px 10px; outline:0; letter-spacing:.04em; }
-.seedbox button { border:0; background:transparent; color:var(--dim); padding:5px; line-height:0; border-radius:4px; cursor:pointer; }
-.seedbox button:hover, .seedbox button:focus-visible { color:var(--accent); background:var(--panel); }
+/* The seed field and its Pin / Random / Auto buttons, under the code box. */
+.seedrow { display:inline-flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.seedrow input[type=text] { width:11ch; letter-spacing:.04em; }
