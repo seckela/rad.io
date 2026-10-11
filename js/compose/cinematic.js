@@ -61,17 +61,17 @@ export function cinematicify(r, key, scale, base, v = variant()) {
     // Strings swell in under the chords once the build is under way, and horns join them further on.
     const x0 = actOf(start), into = (start - x0.s) / (x0.c - x0.s);
     if (into >= 0.3 && start < x0.e - 16 && stop - start >= 8) extra.push({ t: start, tr: c.tr, k: 'strings', m: tones.map((m, q) => m + 12 + (q === 2 ? stringsAbove - 12 : 0)), d: stop - start + 6, v: 0.25 + 0.4 * a });
-    if (into >= 0.55 && start < x0.e - 16 && stop - start >= 8) extra.push({ t: start, tr: c.tr, k: 'brass', m: tones, d: stop - start + 2, v: 0.3 + 0.5 * a });
+    if (into >= 0.55 && start < x0.e - 16 && stop - start >= 8) extra.push({ t: start, tr: c.tr, k: 'brass', m: tones, d: Math.min(stop - start, 32) + 2, v: 0.2 + 0.35 * a });   // a swell of a couple of bars, not a held drone
   });
 
   // The melody: the Chillstep notes, in the horn's range, each held longer and swelling with the track.
   for (const e of ev) {
     if (e.k !== 'lead') continue;
     let m = e.m;
-    while (m > 72) m -= 12;
-    while (m < 50) m += 12;
+    while (m > 66) m -= 12;           // the horn samples jump from C4 to D5, and the top ones turn thin and whistly, so the melody stays below them
+    while (m < 48) m += 12;
     e.m = m;
-    e.d = Math.max(e.d || 2, 5);
+    e.d = Math.min(8, Math.max(e.d || 2, 3));   // notes held for a few beats at most: longer ones drone like an organ
     e.v = Math.min(1, (e.v || 0.5) * (0.5 + 0.7 * lvl(e.t)));
   }
 

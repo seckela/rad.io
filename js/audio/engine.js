@@ -45,7 +45,7 @@ export function buildAudio(style, piano, bufs) {
       fg: buildSynthwaveTrack(reverb, false), bg: buildSynthwaveTrack(reverb, true) };
   }
   if (style === 'cinematic') {           // a huge hall: the horn, cello and drums all sit in it
-    const reverb = new Tone.Reverb({ decay: 6, wet: 0.35 }).connect(limiter);
+    const reverb = new Tone.Reverb({ decay: 3.8, wet: 0.22 }).connect(limiter);
     return { reverb, limiter, piano: false, chill: false, cine: true,
       fg: buildCineTrack(reverb, false, bufs), bg: buildCineTrack(reverb, true, bufs) };
   }

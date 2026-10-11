@@ -9,27 +9,27 @@ export function buildCineTrack(reverb, bg, samples) {
   for (const name of ['lead', 'bass', 'pad', 'accent', 'perc']) group[name] = new Tone.Volume(0).connect(out);
   const fx = {};
 
-  fx.hornLp = new Tone.Filter(horn ? 3200 : 1800, 'lowpass').connect(group.lead);
-  fx.brassLp = new Tone.Filter(horn ? 2400 : 1500, 'lowpass').connect(group.pad);
+  fx.hornLp = new Tone.Filter(horn ? 2600 : 1800, 'lowpass').connect(group.lead);
+  fx.brassLp = new Tone.Filter(horn ? 1500 : 1200, 'lowpass').connect(group.pad);
   fx.arpLp = new Tone.Filter(cello ? 2600 : 1400, 'lowpass').connect(group.pad);
-  fx.stringLp = new Tone.Filter(1700, 'lowpass').connect(group.pad);
+  fx.stringLp = new Tone.Filter(1300, 'lowpass').connect(group.pad);
   fx.vibrato = new Tone.Vibrato({ frequency: 5, depth: 0.1 }).connect(fx.stringLp);
   fx.celloLp = new Tone.Filter(cello ? 1400 : 650, 'lowpass').connect(group.bass);
 
   const soft = (type, env, extra = {}) => new Tone.PolySynth(Tone.Synth, { oscillator: { type, ...extra }, envelope: env });
   const s = {
-    lead: horn ? new Tone.Sampler({ urls: horn, attack: 0.08, release: 1.2 }) : soft('fatsawtooth', { attack: 0.15, decay: 0.4, sustain: 0.8, release: 1.2 }, { count: 2, spread: 10 }),
-    bass: cello ? new Tone.Sampler({ urls: cello, attack: 0.3, release: 1.5 }) : soft('fatsawtooth', { attack: 0.4, decay: 0.4, sustain: 0.85, release: 1.8 }, { count: 2, spread: 10 }),
+    lead: horn ? new Tone.Sampler({ urls: horn, attack: 0.06, release: 0.45 }) : soft('fatsawtooth', { attack: 0.15, decay: 0.4, sustain: 0.8, release: 1.2 }, { count: 2, spread: 10 }),
+    bass: cello ? new Tone.Sampler({ urls: cello, attack: 0.3, release: 1.0 }) : soft('fatsawtooth', { attack: 0.4, decay: 0.4, sustain: 0.85, release: 1.8 }, { count: 2, spread: 10 }),
     strings: soft('fatsawtooth', { attack: 1.2, decay: 0.5, sustain: 0.85, release: 2.4 }, { count: 3, spread: 18 }),
     sub: soft('sine', { attack: 0.4, decay: 0.3, sustain: 0.9, release: 1.5 }),
-    brass: horn ? new Tone.Sampler({ urls: horn, attack: 0.45, release: 1.8 }) : soft('fatsawtooth', { attack: 0.5, decay: 0.4, sustain: 0.85, release: 1.8 }, { count: 2, spread: 12 }),
+    brass: horn ? new Tone.Sampler({ urls: horn, attack: 0.6, release: 1.0 }) : soft('fatsawtooth', { attack: 0.5, decay: 0.4, sustain: 0.85, release: 1.8 }, { count: 2, spread: 12 }),
     arp: cello ? new Tone.Sampler({ urls: cello, attack: 0.01, release: 0.35 }) : soft('sawtooth', { attack: 0.01, decay: 0.2, sustain: 0.3, release: 0.3 }),
   };
   s.lead.volume.value = bg ? -10 : -6;   s.lead.connect(fx.hornLp);
   s.bass.volume.value = cello ? -11 : -17; s.bass.connect(fx.celloLp);
-  s.strings.volume.value = -22;          s.strings.connect(fx.vibrato);
-  s.sub.volume.value = -17;              s.sub.connect(group.bass);
-  s.brass.volume.value = horn ? -12 : -20; s.brass.connect(fx.brassLp);
+  s.strings.volume.value = -25;          s.strings.connect(fx.vibrato);
+  s.sub.volume.value = -19;              s.sub.connect(group.bass);
+  s.brass.volume.value = horn ? -14 : -21; s.brass.connect(fx.brassLp);
   s.arp.volume.value = cello ? -9 : -18;   s.arp.connect(fx.arpLp);
   if (!bg) {
     fx.riserBp = new Tone.Filter(400, 'bandpass', -12);
@@ -55,9 +55,9 @@ export function buildCineTrack(reverb, bg, samples) {
   Object.assign(s, fx);   // so disposeAudio cleans the effect nodes up with the voices
   // The seed's tone settings (see seed.js), applied each time a track is built: how bright the horn, the ostinato and the strings are.
   const feel = v => {
-    fx.hornLp.frequency.value = horn ? v.of('horn-tone', [2600, 3200, 3900]) : 1800;
+    fx.hornLp.frequency.value = horn ? v.of('horn-tone', [2200, 2600, 3200]) : 1800;
     fx.arpLp.frequency.value = cello ? v.of('arp-tone', [2000, 2600, 3300]) : 1400;
-    fx.stringLp.frequency.value = v.of('string-tone', [1400, 1700, 2100]);
+    fx.stringLp.frequency.value = v.of('string-tone', [1100, 1300, 1600]);
   };
   return { s, group, out, feel };
 }
