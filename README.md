@@ -29,7 +29,7 @@ Any static server works if you'd rather not use Python, for example `npx serve`.
 
 ## Using it
 
-- **Load code:** type or paste into the code box (JavaScript is syntax-highlighted, and the colors carry over to the playback view), use **File**, drop a file onto the code area, or press **Sample** for a small fizzbuzz example.
+- **Load code:** type or paste into the code box (JavaScript is syntax-highlighted, and the colors carry over to the playback view), use **File**, drop a file onto the code area, or pick something from the **Load an example** menu: two code snippets, plus public-domain poems, prose and traditional songs (old text works just as well as code, and examples that aren't code are shown without syntax colours).
 - **Play / Pause / Stop:** while playing, the code is shown with a moving cursor on the character being played. Play becomes **Pause** (then **Resume**) and a separate **Stop** button appears. Pausing freezes the audio exactly where it is; Stop ends the session and returns to the editor.
 - **Start or jump to a character:** while playing or paused, click any character in the code to jump there. To start from a spot, click into the code in the editor and press Play; click at the very start (or type or paste) to start from the beginning again. Chords that began before the spot you jump to aren't re-played, so the harmony catches up at the next chord.
 - **Style:** *Default* is an upbeat arrangement. *Chillstep* sets about 70 BPM and a minor scale, with a half-time drum groove, a few long grid-aligned piano notes, and soft piano chords under it, and a recorded electric bass. The chords follow a steady i–VI–III–VII loop with one change per code line, so a new line shifts the harmony gently. The chords sit low under the melody and the bass restates the root every bar, so the harmony never drops out between lines. It's meant as calm background music.
@@ -72,7 +72,7 @@ index.html             Markup, plus the Tone.js and Prism script tags
 css/style.css          Styles
 js/
   main.js              Entry point: fills the menus, wires up the controls
-  sample.js            The text behind the Sample button
+  sample.js            The example texts behind the Examples menu
   scales.js            Keys and scales
   compose/             Text to timed events (no audio code)
     track.js           Per-line composition and the melody/harmony lookup tables

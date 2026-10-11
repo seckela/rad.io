@@ -23,7 +23,10 @@ export function getStartIndex() {
 
 export const getText = () => (jar ? jar.toString() : src.value).replace(/\r\n?/g, '\n');
 
-export function setCode(text) { src.value = text; if (jar) jar.updateCode(text); }
+// plain: show the text without syntax colours (prose and poems look odd as JavaScript).
+let plain = false;
+export function setCode(text, isPlain = false) { plain = isPlain; src.value = text; if (jar) jar.updateCode(text); }
+const esc = t => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 export const setEditorHidden = h => { (editorEl || src).hidden = h; };
 
@@ -35,7 +38,7 @@ export async function initEditor(onFile) {
     const { CodeJar } = await import('https://cdn.jsdelivr.net/npm/codejar@4.2.0/dist/codejar.js');
     editorEl = $('editor');
     jar = CodeJar(editorEl, el => {
-      el.innerHTML = Prism.highlight(el.textContent, Prism.languages.javascript, 'javascript');
+      el.innerHTML = plain ? esc(el.textContent) : Prism.highlight(el.textContent, Prism.languages.javascript, 'javascript');
     }, { tab: '  ', addClosing: false });
     jar.onUpdate(code => { src.value = code; });
     jar.updateCode(src.value);
