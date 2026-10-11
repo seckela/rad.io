@@ -10,9 +10,9 @@
 //  - The character-driven drum hits go quiet and a four-on-the-floor beat takes over (see tranceDrums).
 // The kick dips the pad, the arpeggio and the bass on every beat (see audio/play.js), which gives the pumping feel.
 const PATS = [[0, 1, 2, 3, 2, 1, 0, 1], [0, 2, 1, 3, 2, 1, 3, 2], [2, 3, 2, 1, 2, 3, 2, 1]];   // arpeggio shapes per half bar; index 3 is the root an octave up
-const LO = 62, HI = 96, MID = 78;                // the lead's range (MIDI) and the middle it leans toward
+const LO = 55, HI = 79, MID = 67;                // the lead's range (MIDI) and the middle it leans toward
 const LOOP = [0, 4, 5, 6, 2];                    // the chord loop as scale degrees: i  v  VI  VII  III (Cm Gm Ab Bb Eb in C minor), one chord per line
-const HOOK = [4, 3, 2, 4, 5, 4, 2, 3];          // the lead's hook: scale steps above the chord root, one per lead note, strong notes on chord tones
+const HOOK = [4, 3, 2, 3, 4, 5, 4, 3];          // the lead's hook: scale steps above the chord root, one per lead note, strong notes on chord tones
 const RISE = [[8, 0.3], [6, 0.4], [4, 0.5], [3, 0.6], [2, 0.75], [1, 0.95]];   // [sixteenths before the next chord, snare velocity]
 
 export function tranceify(r) {
@@ -82,7 +82,7 @@ function shapeLead(out, r, roots) {
     return best;
   };
   let prev = -1, lastT = -99, sec = -2, k = 0, held = null;
-  const close = end => { if (held) held.d = Math.max(2, Math.min(8, end - held.t)); };    // each note lasts until the next
+  const close = end => { if (held) held.d = Math.max(2, Math.min(14, end - held.t)); };    // each note lasts until the next
   for (const e of leads) {
     let idx = -1;
     roots.forEach((c, j) => { if (c.t <= e.t) idx = j; });
@@ -96,6 +96,9 @@ function shapeLead(out, r, roots) {
     const nx = roots[idx + 1], pos = k % motif.length, pass = Math.floor(k / motif.length);
     const deg = c.a + motif[pos] + (pos === motif.length - 1 && pass % 2 && nx ? nx.a + 2 - c.a - motif[pos] : 0);
     let m = place(deg, prev);
+    if (k === 0 && prev > 0) {                                        // a new chord starts on whichever of its notes is nearest the last pitch
+      for (const d of [c.a, c.a + 2, c.a + 4]) { const q = place(d, prev); if (Math.abs(q - prev) < Math.abs(m - prev)) m = q; }
+    }
     if (m === prev) m = place(deg + 1, prev);                         // never the same pitch twice in a row
     close(t);
     e.t = t; e.m = prev = m; e.v = k % motif.length === 0 ? 0.9 : 0.75;
