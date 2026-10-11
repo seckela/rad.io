@@ -78,7 +78,11 @@ function draw() {
   c.clearRect(0, 0, W, H);
   const e = ease(p);
   const now = performance.now();
-  const tension = !reduced && buildLen ? Math.pow(clamp01((now - buildT0) / buildLen), 2) : 0;   // 0 .. 1 over a build-up
+  // The tension only starts once the snare roll speeds up (about 40% into the build-up), reaches 1 at the drop, and lets go by itself a
+  // moment after the build-up should have ended, even if the drop's cue never arrives.
+  const bp = buildLen ? (now - buildT0) / buildLen : 0;
+  if (buildLen && bp > 1.6) buildLen = 0;
+  const tension = !reduced && playing && buildLen ? Math.pow(clamp01((bp - 0.4) / 0.6), 1.5) : 0;   // 0 .. 1
   const burst = !reduced && burstT0 ? Math.exp(-(now - burstT0) / 260) : 0;                        // 1 at the drop, then fades
   const fx = tension + burst;
   const rightX = idleRight + (wCss - idleRight) * e;                   // right edge of the right brace
@@ -95,7 +99,7 @@ function draw() {
     if (n % 2 === 0) n--;
     n = Math.min(n, nMax);
     if (n >= 1) {
-      const stepCss = ((BAR * Kw) + (GAP * Kw)) * (1 - 0.3 * tension);     // the bars tighten toward the middle during a build-up
+      const stepCss = ((BAR * Kw) + (GAP * Kw)) * (1 - 0.22 * tension);     // the bars tighten toward the middle during a build-up
       const used = n * stepCss - (stepCss - BAR * Kw), x0 = (innerL + (avail - used) / 2) * dpr;
       const bw = (BAR * Kw) * dpr, step = stepCss * dpr, centre = (n - 1) / 2, fullHalf = (nMax - 1) / 2;
       let vals = null, bins = 0;
@@ -108,7 +112,7 @@ function draw() {
       c.fillStyle = fill;
       for (let i = 0; i < n; i++) {
         const d = Math.abs(i - centre);
-        const rest = (REST_MIN * Kh) + ((REST_PEAK * Kh) - (REST_MIN * Kh)) * (1 - d / Math.max(1, centre));
+        const rest = ((REST_MIN * Kh) + ((REST_PEAK * Kh) - (REST_MIN * Kh)) * (1 - d / Math.max(1, centre))) * (1 + 0.8 * tension);   // (the bars never shrink away as it builds)
         let t = 0;
         if (vals) {
           const lo = binFor(d, fullHalf, bins), hi = Math.max(lo + 1, binFor(d + 1, fullHalf, bins));
