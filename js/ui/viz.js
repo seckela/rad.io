@@ -29,9 +29,12 @@ let Kw = 1, Kh = 1;                      // size factors: 1 for the 52px masthea
 let forced = false;                      // minimal view: show the bars even if the Visualizer box is off
 let dpr = 1, wCss = 0, hCss = 0, braceScale = 1, braceW = 0, idleRight = 0;
 
-// Dubstep lasers (see vizCue): thin beams fan out from the braces and sweep with each wobble note. Flat lines only, a few per brace, never
-// a strobe, and nothing with reduced motion.
-let laserT0 = 0, laserEnd = 0, laserHz = 0, laserLevel = 0;
+// Dubstep pulse (see vizCue): the bars put low pitches in the middle and high ones at the edges, so the drop's pitch dive is a bright pulse
+// that falls from the edges to the middle, and the rise after it a pulse that climbs back out and stops dead.
+let pulse = null;                        // { kind: 'dive' | 'rise', t0, ms }
+let rgb = null;                          // the bar colour as [r, g, b] if it is a #rrggbb value
+const parse = c => { const m = /^#([0-9a-f]{6})$/i.exec(c); return m ? [0, 2, 4].map(i => parseInt(m[1].substr(i, 2), 16)) : null; };
+const toWhite = t => rgb ? `rgb(${rgb.map(v => Math.round(v + (255 - v) * t)).join(',')})` : color;
 const clamp01 = x => Math.min(1, Math.max(0, x));
 const ease = x => x * x * (3 - 2 * x);
 
@@ -51,6 +54,7 @@ function size() {
   const cs = getComputedStyle(document.documentElement);
   color = cs.getPropertyValue('--bars').trim() || cs.getPropertyValue('--accent').trim() || color;
   braceColor = cs.getPropertyValue('--text').trim() || braceColor;
+  rgb = parse(color);
 }
 
 // Low frequencies sit in the middle and the highs spread outward, so it reads like the icon.
@@ -69,33 +73,20 @@ function drawBraces(c, leftX, rightX) {
   c.setTransform(1, 0, 0, 1, 0, 0);
 }
 
-function drawLasers(c, W, H, mid, rightX, alpha) {
-  const now = performance.now();
-  const want = !reduced && playing && alpha > 0 ? clamp01(1 - Math.max(0, now - laserEnd) / 200) : 0;
-  laserLevel += (want - laserLevel) * 0.35;
-  if (laserLevel < 0.02) return;
-  const phase = 2 * Math.PI * laserHz * (now - laserT0) / 1000, reach = (rightX - 2 * braceW) * dpr * 0.46;
-  c.lineWidth = Math.max(1, 1.4 * dpr * Kh); c.lineCap = 'round';
-  for (const side of [-1, 1]) {
-    const ox = side < 0 ? braceW * dpr * 0.92 : (rightX - braceW * 0.92) * dpr;
-    for (let k = 0; k < 3; k++) {
-      const a = Math.sin(side * phase + k * 2.1) * 0.5 * H;       // where this beam's far end is, above or below the middle
-      c.globalAlpha = 0.5 * laserLevel * alpha * (k === 1 ? 1 : 0.6);
-      c.strokeStyle = k === 1 ? '#ffffff' : color;
-      c.beginPath(); c.moveTo(ox, mid); c.lineTo(ox - side * reach, mid + a); c.stroke();
-    }
-  }
-  c.globalAlpha = 1;
-}
-
 function draw() {
   const c = ctx2d, W = canvas.width, H = canvas.height, mid = H / 2;
   c.clearRect(0, 0, W, H);
   const e = ease(p);
+  // Where the pulse is now (0 = the middle bar, 1 = the outermost), or -1 when there isn't one.
+  let at = -1;
+  if (pulse && !reduced && playing) {
+    const f = (performance.now() - pulse.t0) / pulse.ms;
+    if (f >= 1) pulse = null;
+    else at = pulse.kind === 'dive' ? Math.pow(1 - f, 1.8) : 0.15 + 0.85 * Math.pow(f, 1.4);
+  }
   const rightX = idleRight + (wCss - idleRight) * e;                   // right edge of the right brace
   drawBraces(c, 0, rightX);
   if (title) title.style.opacity = String(1 - clamp01(p / 0.35));
-  drawLasers(c, W, H, mid, rightX, clamp01((p - 0.3) / 0.5));
 
   // Bars live between the braces, centred in that gap, and appear once the title has mostly faded.
   const alpha = clamp01((p - 0.3) / 0.5);
@@ -125,7 +116,10 @@ function draw() {
         const idx = Math.min(nMax - 1, Math.round(d));
         levels[idx] = t > levels[idx] ? t : levels[idx] * 0.85;         // fast attack, slow decay
         energy += levels[idx];
-        const h = Math.max(rest, levels[idx] * (MAX_H * Kh)) * dpr * (0.4 + 0.6 * alpha);
+        let boost = 0;
+        if (at >= 0) { const u = (d / Math.max(1, centre)) - at; boost = Math.exp(-(u * u) / 0.012); }   // a soft bump around the pulse
+        const h = Math.min(H * 0.96, Math.max(rest, levels[idx] * (MAX_H * Kh) + boost * 0.7 * MAX_H * Kh) * dpr * (0.4 + 0.6 * alpha));
+        c.fillStyle = boost > 0.15 ? toWhite(Math.min(0.9, boost)) : color;
         const x = x0 + i * step, y = mid - h / 2;
         c.beginPath();
         c.roundRect ? c.roundRect(x, y, bw, h, bw / 2) : c.rect(x, y, bw, h);
@@ -161,6 +155,7 @@ export function vizRetint() {
   if (!wCss) return;                    // not laid out yet; initViz will read it
   const cs = getComputedStyle(document.documentElement);
   color = cs.getPropertyValue('--bars').trim() || cs.getPropertyValue('--accent').trim() || color;
+  rgb = parse(color);
   if (!raf) draw();
 }
 
@@ -172,16 +167,15 @@ export function vizAttach() {
     Tone.getDestination().connect(analyser);
   } catch (e) { analyser = null; }
 }
-// Cues from the music (dubstep only): 'laser' sweeps the beams at `hz` cycles a second for `secs` seconds (one wobble note).
-export function vizCue(kind, hz = 2, secs = 0.2) {
-  if (reduced || kind !== 'laser') return;
-  const now = performance.now();
-  laserT0 = now; laserHz = Math.min(4, hz / 2); laserEnd = now + secs * 1000;
+// Cues from the music (dubstep only): 'dive' is the drop's pitch dive (it lasts `secs`), 'rise' the rise after it.
+export function vizCue(kind, secs = 0.5) {
+  if (reduced) return;
+  pulse = { kind, t0: performance.now(), ms: Math.max(100, secs * 1000) };
   if (playing && enabled()) loop();
 }
 
 export function vizStart() {
-  laserEnd = 0; laserLevel = 0;
+  pulse = null;
   playing = true;
   if (!enabled()) return;
   target = 1;
@@ -190,12 +184,12 @@ export function vizStart() {
 }
 // Paused: the audio is frozen, so the bars settle to rest but the strip stays expanded.
 export function vizPause() {
-  laserEnd = 0;
+  pulse = null;
   playing = false;
   if (enabled() && !reduced) loop();
 }
 export function vizStop() {
-  laserEnd = 0;
+  pulse = null;
   playing = false;
   target = 0;
   if (reduced || !enabled()) { jump(); return; }

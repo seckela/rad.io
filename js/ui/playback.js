@@ -55,7 +55,8 @@ function schedule(events, total) {
     T.schedule(time => {
       sound(e, time);
       if (e.i !== undefined) Tone.Draw.schedule(() => highlight(e.i, e.tr), time);
-      else if (e.k === 'wob') Tone.Draw.schedule(() => vizCue('laser', Tone.Transport.bpm.value / 60 * e.r, (e.d || 1) * Tone.Time('16n').toSeconds()), time);   // dubstep: lasers sweep with the wobble
+      else if (e.k === 'wob' && e.dv) Tone.Draw.schedule(() => vizCue('dive', 8 * Tone.Time('16n').toSeconds()), time);   // dubstep: a pulse follows the drop's pitch dive down the bars,
+      else if (e.k === 'climb') Tone.Draw.schedule(() => vizCue('rise', e.d * Tone.Time('16n').toSeconds()), time);      // and back up for the rise (the bars map low pitch to the middle, high to the edges)
     }, Math.round(e.t * U) + 'i');
   }
   lastEvents = events;
