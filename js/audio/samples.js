@@ -29,12 +29,12 @@ export async function loadCelloBuffers() {
   return Object.fromEntries(Object.entries(wrapped).map(([note, b]) => [note, b.get()]));
 }
 
-// French horn samples (also tonejs-instruments), for Cinematic: ten notes from A1 to F5 (about 2.4 MB).
-const HORN_FILES = { A1: 'A1', C2: 'C2', 'D#2': 'Ds2', G2: 'G2', D3: 'D3', F3: 'F3', A3: 'A3', C4: 'C4', D5: 'D5', F5: 'F5' };
+// Violin samples (also tonejs-instruments), for Cinematic: eight notes from G3 to C6 (about 2.6 MB).
+const VIOLIN_FILES = { G3: 'G3', C4: 'C4', E4: 'E4', G4: 'G4', C5: 'C5', E5: 'E5', G5: 'G5', C6: 'C6' };
 
-export async function loadHornBuffers() {
-  const wrapped = Object.fromEntries(Object.entries(HORN_FILES)
-    .map(([note, f]) => [note, new Tone.ToneAudioBuffer(INSTR_BASE + 'french-horn/' + f + '.mp3')]));
+export async function loadViolinBuffers() {
+  const wrapped = Object.fromEntries(Object.entries(VIOLIN_FILES)
+    .map(([note, f]) => [note, new Tone.ToneAudioBuffer(INSTR_BASE + 'violin/' + f + '.mp3')]));
   await Tone.loaded();
   return Object.fromEntries(Object.entries(wrapped).map(([note, b]) => [note, b.get()]));
 }

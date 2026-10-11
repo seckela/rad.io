@@ -1,16 +1,16 @@
-// The cinematic voices: a French horn (sampled; bowed synth saws if the samples can't be loaded) for the melody and the charging horn line, a
-// cello (sampled, with the same fallback) for the drone and the driving ostinato, a sine sub under the drone, a synthesized string section for the
+// The cinematic voices: a lively violin (sampled; synth saws if the samples can't be loaded) for the melody, a cello (sampled, with the
+// same fallback) for the drone, the driving ostinato and the low charging line, a sine sub under the drone, a synthesized string section for the
 // swells, and synthesized percussion: a deep taiko-like boom, a snare for the roll, a riser (swept noise and a rising tone) and a huge
 // impact for the climax. A big hall reverb (see engine.js) holds it together. The background track (the canon echo) has only the melody.
 export function buildCineTrack(reverb, bg, samples) {
-  const horn = samples && samples.horn, cello = samples && samples.cello;
+  const violin = samples && samples.violin, cello = samples && samples.cello;
   const out = new Tone.PanVol(bg ? 0.3 : 0, bg ? -6 : 0).connect(reverb);
   const group = {};
   for (const name of ['lead', 'bass', 'pad', 'accent', 'perc']) group[name] = new Tone.Volume(0).connect(out);
   const fx = {};
 
-  fx.hornLp = new Tone.Filter(horn ? 2600 : 1800, 'lowpass').connect(group.lead);
-  fx.brassLp = new Tone.Filter(horn ? 2600 : 1800, 'lowpass').connect(group.pad);
+  fx.violinLp = new Tone.Filter(violin ? 5000 : 2400, 'lowpass').connect(group.lead);
+  fx.chargeLp = new Tone.Filter(cello ? 3000 : 1800, 'lowpass').connect(group.pad);
   fx.arpLp = new Tone.Filter(cello ? 2600 : 1400, 'lowpass').connect(group.pad);
   fx.stringLp = new Tone.Filter(1300, 'lowpass').connect(group.pad);
   fx.vibrato = new Tone.Vibrato({ frequency: 5, depth: 0.1 }).connect(fx.stringLp);
@@ -18,18 +18,18 @@ export function buildCineTrack(reverb, bg, samples) {
 
   const soft = (type, env, extra = {}) => new Tone.PolySynth(Tone.Synth, { oscillator: { type, ...extra }, envelope: env });
   const s = {
-    lead: horn ? new Tone.Sampler({ urls: horn, attack: 0.06, release: 0.45 }) : soft('fatsawtooth', { attack: 0.15, decay: 0.4, sustain: 0.8, release: 1.2 }, { count: 2, spread: 10 }),
+    lead: violin ? new Tone.Sampler({ urls: violin, attack: 0.04, release: 0.4 }) : soft('sawtooth', { attack: 0.05, decay: 0.2, sustain: 0.7, release: 0.4 }),
     bass: cello ? new Tone.Sampler({ urls: cello, attack: 0.3, release: 1.0 }) : soft('fatsawtooth', { attack: 0.4, decay: 0.4, sustain: 0.85, release: 1.8 }, { count: 2, spread: 10 }),
     strings: soft('fatsawtooth', { attack: 1.2, decay: 0.5, sustain: 0.85, release: 2.4 }, { count: 3, spread: 18 }),
     sub: soft('sine', { attack: 0.4, decay: 0.3, sustain: 0.9, release: 1.5 }),
-    brass: horn ? new Tone.Sampler({ urls: horn, attack: 0.025, release: 0.3 }) : soft('sawtooth', { attack: 0.02, decay: 0.15, sustain: 0.5, release: 0.2 }),
+    charge: cello ? new Tone.Sampler({ urls: cello, attack: 0.01, release: 0.25 }) : soft('sawtooth', { attack: 0.01, decay: 0.15, sustain: 0.5, release: 0.2 }),
     arp: cello ? new Tone.Sampler({ urls: cello, attack: 0.01, release: 0.35 }) : soft('sawtooth', { attack: 0.01, decay: 0.2, sustain: 0.3, release: 0.3 }),
   };
-  s.lead.volume.value = bg ? -10 : -6;   s.lead.connect(fx.hornLp);
+  s.lead.volume.value = bg ? -11 : -7;   s.lead.connect(fx.violinLp);
   s.bass.volume.value = cello ? -11 : -17; s.bass.connect(fx.celloLp);
   s.strings.volume.value = -25;          s.strings.connect(fx.vibrato);
   s.sub.volume.value = -19;              s.sub.connect(group.bass);
-  s.brass.volume.value = horn ? -8 : -17; s.brass.connect(fx.brassLp);
+  s.charge.volume.value = cello ? -7 : -17; s.charge.connect(fx.chargeLp);
   s.arp.volume.value = cello ? -9 : -18;   s.arp.connect(fx.arpLp);
   if (!bg) {
     fx.riserBp = new Tone.Filter(400, 'bandpass', -12);
@@ -53,10 +53,11 @@ export function buildCineTrack(reverb, bg, samples) {
     s.riserTone.volume.value = -26;          s.riserTone.connect(group.accent);
   }
   Object.assign(s, fx);   // so disposeAudio cleans the effect nodes up with the voices
-  // The seed's tone settings (see seed.js), applied each time a track is built: how bright the horn, the ostinato and the strings are.
+  // The seed's tone settings (see seed.js), applied each time a track is built: how bright the violin, the cello's lines and the strings are.
   const feel = v => {
-    fx.hornLp.frequency.value = horn ? v.of('horn-tone', [2200, 2600, 3200]) : 1800;
+    fx.violinLp.frequency.value = violin ? v.of('violin-tone', [4200, 5000, 6200]) : 2400;
     fx.arpLp.frequency.value = cello ? v.of('arp-tone', [2000, 2600, 3300]) : 1400;
+    fx.chargeLp.frequency.value = cello ? v.of('charge-tone', [2400, 3000, 3800]) : 1800;
     fx.stringLp.frequency.value = v.of('string-tone', [1100, 1300, 1600]);
   };
   return { s, group, out, feel };
