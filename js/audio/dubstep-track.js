@@ -43,6 +43,10 @@ export function buildDubstepTrack(reverb, bg, dryOut) {
     fx.wobDist.connect(fx.wobBpA); fx.wobDist.connect(fx.wobBpB); fx.wobDist.connect(fx.wobBody);
     fx.wobBpA.connect(fx.wobMix); fx.wobBpB.connect(fx.wobMix); fx.wobBody.connect(fx.wobMix);
     fx.wobMix.connect(fx.wobComp);
+    // The sharp high tones: a bright FM square with a quick pitch dive, high-passed and lightly distorted, with a short echo.
+    fx.zapEcho = new Tone.FeedbackDelay({ delayTime: '8n.', feedback: 0.3, wet: 0.25 }).connect(group.accent);
+    fx.zapDist = new Tone.Distortion({ distortion: 0.3, wet: 0.5 }).connect(fx.zapEcho);
+    fx.zapHp = new Tone.Filter(1200, 'highpass').connect(fx.zapDist);
     fx.riserBp = new Tone.Filter(400, 'bandpass', -12);
     fx.riserBp.Q.value = 2;
     fx.riserBp.connect(group.accent);
@@ -57,6 +61,10 @@ export function buildDubstepTrack(reverb, bg, dryOut) {
       stab: new Tone.PolySynth(Tone.Synth, {
         oscillator: { type: 'sawtooth' },
         envelope: { attack: 0.003, decay: 0.2, sustain: 0.1, release: 0.15 },
+      }),
+      zap: new Tone.FMSynth({
+        harmonicity: 2.5, modulationIndex: 12, oscillator: { type: 'square' }, modulation: { type: 'sawtooth' },
+        envelope: { attack: 0.002, decay: 0.12, sustain: 0.25, release: 0.12 }, modulationEnvelope: { attack: 0.002, decay: 0.2, sustain: 0.3, release: 0.1 },
       }),
       sub: new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.1, sustain: 1, release: 0.15 } }),
       wob: new Tone.FMSynth({
@@ -76,6 +84,7 @@ export function buildDubstepTrack(reverb, bg, dryOut) {
     s.pad.maxPolyphony = 6; s.stab.maxPolyphony = 6;
     s.pad.volume.value = -22;        s.pad.connect(fx.padLp);
     s.stab.volume.value = -22;       s.stab.connect(fx.stabLp);
+    s.zap.volume.value = -21;        s.zap.connect(fx.zapHp);
     s.sub.volume.value = -5;         s.sub.connect(duckBass);
     s.wob.volume.value = -12;        s.wob.connect(fx.wobHp);
     s.riserNoise.volume.value = -20; s.riserNoise.connect(fx.riserBp);

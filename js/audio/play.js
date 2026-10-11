@@ -72,6 +72,14 @@ export function sound(e, time) {
         break;
       case 'sub':   s.sub.triggerAttackRelease(hz(e.m), dur, time, v); break;
       case 'stab':  s.stab.triggerAttackRelease(e.m.map(hz), unit * 1.2, time, v); break;
+      case 'zap': {         // a sharp high tone: a quick pitch dive into the note, or a rising scream if it is held
+        const long = (e.d || 1) > 2;
+        s.zap.detune.cancelScheduledValues(time);
+        s.zap.detune.setValueAtTime(long ? -300 : 600, time);
+        s.zap.detune.linearRampToValueAtTime(long ? 1200 : 0, time + (long ? (e.d || 1) * unit : 0.06));
+        s.zap.triggerAttackRelease(hz(e.m), long ? (e.d || 1) * unit : unit * 0.8, time, v);
+        break;
+      }
       case 'wob': {         // the growl: a quick pitch dive into the note, and two LFOs locked to the tempo sweeping the formant filters
         const hzNote = hz(e.m);
         s.wob.triggerAttackRelease(hzNote, dur, time, v);

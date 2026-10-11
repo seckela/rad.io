@@ -23,6 +23,7 @@ const WOBS = {
   riff:    [[[0, 4, 0, 'e'], [4, 4, 3, 'e'], [8, 4, 0, 'e'], [12, 4, 4, 't']], [[0, 4, 0, 'e'], [4, 4, 3, 'e'], [8, 8, -1, 'q']]],
 };
 const FILL = [[0, 2, 0, 's'], [2, 2, 0, 's'], [4, 2, 0, 's'], [6, 2, 0, 's'], [8, 4, 0, 'e'], [12, 2, 0, 's'], [14, 2, 0, 's']];   // the last bar of every four
+const ZAPS = [[6, 14], [3, 11], [4, 12, 15], [10], [2, 7, 13]];   // where the sharp high tones go in a bar
 const STABS = [[3, 6, 11], [6, 14], [0, 10], [3, 7, 10, 14]];
 // Kick patterns for the drop, two bars each (the snare is always on beat 3).
 const KICKS = [[[0], [0, 10]], [[0, 6], [0, 10, 14]], [[0], [0, 6, 10]], [[0, 3], [0, 10]], [[0, 11], [0, 6]]];
@@ -44,12 +45,14 @@ export function layout(T) {
 
 export function dubstepify(r, v = variant(), len = r.t) {
   const T = layout(len).T, { cycles } = layout(T), tr = (r.events.find(e => e.tr !== undefined) || {}).tr || 0;
-  const loop = v.of('loop', LOOPS), fam1 = v.of('wob1', Object.keys(WOBS)), fam2 = v.of('wob2', Object.keys(WOBS));
-  const bright = v.of('bright', [900, 1200, 1500]), stab = v.of('stab', STABS), motif = v.of('motif', MOTIFS), motif2 = MOTIFS[(MOTIFS.indexOf(motif) + 1) % MOTIFS.length];
+  const names = Object.keys(WOBS), loop0 = v.pick('loop', LOOPS.length), w1 = v.pick('wob1', names.length), w2 = v.pick('wob2', names.length);
+  const stab0 = v.pick('stab', STABS.length), zap0 = v.pick('zap', ZAPS.length);
+  const bright0 = v.of('bright', [900, 1200, 1500]), motif = v.of('motif', MOTIFS), motif2 = MOTIFS[(MOTIFS.indexOf(motif) + 1) % MOTIFS.length];
   const out = [];
   for (const e of r.events) {                       // the text's own events become rests, which keeps the highlight moving
     if (e.i !== undefined) out.push({ t: e.t, i: e.i, tr: e.tr, k: 'rest' });
   }
+  let loop = LOOPS[0];
   const chordAt = (c, t) => loop[Math.floor((t - c.t0) / 64) % loop.length];
   const fold = m => m - 12 * Math.round((m - 34) / 12);                    // the bass octave: about E1 to E2
   const LO = 60, HI = 84, MID = 70;
@@ -63,7 +66,12 @@ export function dubstepify(r, v = variant(), len = r.t) {
     return best;
   };
   let prev = -1;
-  cycles.forEach(c => {
+  cycles.forEach((c, ci) => {
+    // Every drop is a step on from the one before: other chords, other wobble rhythms and stabs, a brighter wobble, and (after the
+    // first) more of the sharp high tones, so a long track keeps developing.
+    loop = LOOPS[(loop0 + ci) % LOOPS.length];
+    const fam1 = names[(w1 + ci) % names.length], fam2 = names[(w2 + 2 * ci + 1) % names.length];
+    const stab = STABS[(stab0 + ci) % STABS.length], zaps = ZAPS[(zap0 + ci) % ZAPS.length], bright = Math.round(bright0 * (1 + 0.12 * Math.min(ci, 4)));
     const last = c.drop - GAP;                      // everything but the drop stops here
     // Intro and build: a pad on each chord, and the intro's lead phrase.
     for (let b = c.t0; b < c.drop; b += 64) {
@@ -103,6 +111,15 @@ export function dubstepify(r, v = variant(), len = r.t) {
       for (const [off, len, move, rate] of (outro ? [[0, 16, 0, 'q']] : fill ? FILL : fam[bar % fam.length])) {
         out.push({ t: b + off, tr, k: 'wob', m: fold(r.lead(a + move)), d: Math.min(len, end - b - off), r: RATE[rate], b: bright, v: outro ? 0.6 : 0.9 });
       }
+      if (!outro && (half || ci > 0 || bar >= 2)) for (const off of zaps) {   // sharp high tones that sit between the wobble notes
+        if (fill && off < 8) continue;
+        const step = [0, 2, 4, 7][(off + bar) % 4];
+        let m = r.lead(a + step);
+        while (m < 74) m += 12;
+        while (m > 88) m -= 12;
+        out.push({ t: b + off, tr, k: 'zap', m, d: 1, v: half || ci > 0 ? 0.8 : 0.6 });
+      }
+      if (fill && end - b > 16) out.push({ t: b + 12, tr, k: 'zap', m: 84, d: 4, v: 0.9 });   // and a rising scream into the next four bars
       if (!outro && (half || bar >= 2)) for (const off of stab) {
         if (b + off < end) out.push({ t: b + off, tr, k: 'stab', m: [r.pad(a) + 12, r.pad(a + 2) + 12, r.pad(a + 4) + 12], d: 1, v: half ? 0.5 : 0.35 });
       }
@@ -114,9 +131,10 @@ export function dubstepify(r, v = variant(), len = r.t) {
 // The drums, risers and impacts: `T` is the length the track's own layout was made from (so they line up with the arrangement).
 export function dubstepDrums(total, v = variant(), T = total) {
   const { cycles } = layout(T), ev = [];
-  const kicks = v.of('kicks', KICKS), hats = v.of('hats', HATS), introKick = v.chance('intro-kick', 0.5);
+  const kick0 = v.pick('kicks', KICKS.length), hat0 = v.pick('hats', HATS.length), introKick = v.chance('intro-kick', 0.5);
   const hit = (t, k, vel) => { if (t < total) ev.push({ t, k, v: vel, tr: 0 }); };
-  cycles.forEach(c => {
+  cycles.forEach((c, ci) => {
+    const kicks = KICKS[(kick0 + ci) % KICKS.length], hats = HATS[(hat0 + ci) % HATS.length];
     // Intro: a kick on the bar line every other bar and quiet offbeat hats.
     for (let b = c.t0; b < c.build; b += 16) {
       if (c.t0 > 0) {                               // the breakdown keeps a half-time beat going under the tune
