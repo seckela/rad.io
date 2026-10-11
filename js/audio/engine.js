@@ -14,6 +14,7 @@ export function setAudio(a) { audio = a; }
 // style: 'default' | 'chill' | 'lofi' | 'metal' | 'chiptune' | 'ambient' | 'synthwave' | 'house' | 'trance'. bufs: the decoded samples for that style (guitar and bass for
 // metal, bass for chill and lofi), or undefined to use the synth fallbacks.
 export function buildAudio(style, piano, bufs) {
+  try { Tone.getContext().lookAhead = 0.2; } catch (e) { /* a longer scheduling window rides out brief main-thread stalls (the default is 0.1 s) */ }
   const limiter = new Tone.Limiter(-3).toDestination();   // safety net against pile-ups
   if (style === 'metal') {
     const reverb = new Tone.Reverb({ decay: 1.6, wet: 0.12 }).connect(limiter);

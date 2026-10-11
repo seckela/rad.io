@@ -23,8 +23,8 @@ export function buildTranceTrack(reverb, bg, dryOut) {
 
   const s = {
     pad: new Tone.PolySynth(Tone.Synth, {
-      oscillator: { type: 'fatsawtooth', count: 5, spread: 40 },
-      envelope: { attack: 0.15, decay: 0.4, sustain: 0.75, release: 1.2 },
+      oscillator: { type: 'fatsawtooth', count: 3, spread: 40 },
+      envelope: { attack: 0.15, decay: 0.4, sustain: 0.75, release: 0.9 },
     }),
     pluck: new Tone.PolySynth(Tone.Synth, {
       oscillator: { type: 'sawtooth' },
@@ -37,7 +37,7 @@ export function buildTranceTrack(reverb, bg, dryOut) {
       filterEnvelope: { attack: 0.003, decay: 0.1, sustain: 0.3, release: 0.08, baseFrequency: 90, octaves: 2.8 },
     }),
     lead: new Tone.PolySynth(Tone.Synth, {
-      oscillator: { type: 'fatsawtooth', count: 4, spread: 30 },
+      oscillator: { type: 'fatsawtooth', count: 3, spread: 30 },
       envelope: { attack: 0.014, decay: 0.28, sustain: 0.75, release: 0.8 },
     }),
     digit: new Tone.PolySynth(Tone.Synth, {
@@ -49,6 +49,8 @@ export function buildTranceTrack(reverb, bg, dryOut) {
       modulationEnvelope: { attack: 0.001, decay: 0.5, sustain: 0, release: 0.3 },
     }),
   };
+  // Caps on how many notes ring at once (the oldest is cut), so a busy stretch can't pile up and overload the CPU.
+  s.pad.maxPolyphony = 9; s.pluck.maxPolyphony = 6; s.lead.maxPolyphony = 5;
   s.pad.volume.value = -19;     s.pad.connect(fx.padLp);
   s.pluck.volume.value = -22;   s.pluck.connect(fx.pluckLp);
   s.bass.volume.value = -9;     s.bass.connect(duckBass);
