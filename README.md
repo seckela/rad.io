@@ -119,3 +119,13 @@ The musical tuning is easy to change. The lookup tables at the top of `js/compos
 - Syntax-highlighted code box: [CodeJar](https://medv.io/codejar/) (MIT) and [Prism](https://prismjs.com/) (MIT).
 
 The samples are loaded from their public hosts when you play and aren't bundled in this repository.
+
+## Deploying
+
+Browsers cache each script on its own, so after an upload one can keep an old copy of a file next to new copies of the rest (the page then fails with "does not provide an export named ..."). `index.html` therefore lists every module with a short hash of its contents in its URL (an import map), so a file's URL changes exactly when the file does. After changing anything under `js/` or `css/`, run
+
+```
+python3 tools/stamp.py
+```
+
+before uploading (`python3 tools/stamp.py --check` reports whether `index.html` is up to date without changing it). Browsers without import map support just load the plain URLs, as before.
