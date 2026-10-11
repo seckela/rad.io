@@ -81,11 +81,16 @@ export function sound(e, time) {
         s.zap.triggerAttackRelease(hz(e.m), long ? (e.d || 1) * unit : unit * 0.8, time, v);
         break;
       }
-      case 'climb': {       // the reverse of the dive in miniature: a soft, round tone swells up an octave and a fourth over three 16ths, finishing just above the next note
+      case 'climb': {       // the tail of the dive, like a record scratch: from the low note (the BOOO) the pitch curves up, slow at first, then fast (the wee-eee), and cuts off at the top (the P)
+        const L = 4 * unit;
         s.climb.detune.cancelScheduledValues(time);
-        s.climb.detune.setValueAtTime(-1200, time);
-        s.climb.detune.linearRampToValueAtTime(500, time + 3 * unit);   // ends a fourth above the note, so the tail finishes higher
-        s.climb.triggerAttackRelease(hz(e.m + 12), 3 * unit, time, v);
+        s.climb.detune.setValueAtTime(0, time);
+        s.climb.detune.linearRampToValueAtTime(500, time + L * 0.55);
+        s.climb.detune.linearRampToValueAtTime(2100, time + L);
+        s.climbLp.frequency.cancelScheduledValues(time);
+        s.climbLp.frequency.setValueAtTime(500, time);
+        s.climbLp.frequency.exponentialRampToValueAtTime(2600, time + L);   // brighter as it rises, but never harsh
+        s.climb.triggerAttackRelease(hz(e.m + 12), L, time, v);
         break;
       }
       case 'wob': {         // the growl: a quick pitch dive into the note, and two LFOs locked to the tempo sweeping the formant filters
