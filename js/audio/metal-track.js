@@ -9,7 +9,7 @@ export function buildMetalTrack(reverb, bg, bufs, punk = false) {
   group.pad.volume.value = -3;       // rhythm guitar: distortion flattens the level, so set it after the amp
   group.lead.volume.value = -6;      // lead: same reason, and its heavier amp runs hotter
 
-  const amp = new Tone.Gain(2);
+  const amp = new Tone.Gain(punk ? 1.1 : 2);       // (a lighter drive for pop punk: eighth-note power chords overlap and pile up, and the amp and limiter crackled)
   amp.chain(
     new Tone.Filter(90, 'highpass'),
     new Tone.Distortion({ distortion: punk ? 0.4 : 0.7, oversample: '4x' }),
@@ -19,7 +19,7 @@ export function buildMetalTrack(reverb, bg, bufs, punk = false) {
   );
   const s = {
     chug: new Tone.Sampler({ urls: bufs.guitar, release: 0.06 }),
-    power: new Tone.Sampler({ urls: bufs.guitar, release: 0.7 }),
+    power: new Tone.Sampler({ urls: bufs.guitar, release: punk ? 0.2 : 0.7 }),
     lead: new Tone.Sampler({ urls: bufs.guitar, release: 0.6 }),
     run: new Tone.Sampler({ urls: bufs.guitar, release: 0.1 }),      // short-release lead for fast runs
     bass: new Tone.Sampler({ urls: bufs.bass, release: 0.12 }),
@@ -47,7 +47,7 @@ export function buildMetalTrack(reverb, bg, bufs, punk = false) {
     s.clean.volume.value = -7;
   }
   s.bass.chain(new Tone.Filter(1200, 'lowpass'), group.bass);
-  s.chug.volume.value = -11; s.power.volume.value = -11; s.lead.volume.value = -5; s.run.volume.value = -5; s.bass.volume.value = -7;
+  s.chug.volume.value = punk ? -13 : -11; s.power.volume.value = punk ? -15 : -11; s.lead.volume.value = -5; s.run.volume.value = -5; s.bass.volume.value = -7;
   if (!bg) {
     // Drums are layered so they read as a kit rather than a drum machine: a body tone plus a noise or
     // click layer for kick and snare, noise-based hats and crash, a bus compressor, and a short room.

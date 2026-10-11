@@ -91,7 +91,7 @@ export function emoify(r, key, scale, base, v = variant()) {
       } else if (fill) {
         for (const p of FILL_PAT) out.push({ t: b + p, tr: 0, k: 'chug', m, d: 1, v: 0.7 + 0.25 * p / 15 });
       } else if (x.role === 'C') {
-        chorusPat.forEach((p, j) => out.push({ t: b + p, tr: 0, k: 'power', m, d: Math.max(1.5, (chorusPat[j + 1] === undefined ? 16 : chorusPat[j + 1]) - p) * 0.95, v: first && p === 0 ? 1 : p % 8 === 0 ? 0.92 : 0.8 }));
+        chorusPat.forEach((p, j) => out.push({ t: b + p, tr: 0, k: 'power', m, d: Math.max(1.5, (chorusPat[j + 1] === undefined ? 16 : chorusPat[j + 1]) - p) * 0.8, v: first && p === 0 ? 1 : p % 8 === 0 ? 0.92 : 0.8 }));
       } else if (x.role === 'B') {
         out.push({ t: b, tr: 0, k: 'power', m, d: 8, v: 0.85 }, { t: b + 8, tr: 0, k: 'power', m, d: 7, v: 0.7 });
       } else if (x.role === 'P') {
