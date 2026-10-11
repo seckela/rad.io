@@ -7,18 +7,19 @@ import { ambientify } from './ambient.js';
 import { synthwaveify, synthwaveDrums } from './synthwave.js';
 import { houseify, houseDrums } from './house.js';
 import { tranceify, tranceDrums } from './trance.js';
+import { dubstepify, dubstepDrums } from './dubstep.js';
 import { seedOf, variant } from './seed.js';
 import { defaultify, defaultDrums } from './default.js';
 
 // o.mode: 'off' | 'canon' | 'split'
 //  canon: the background repeats the melody `o.delay` units late, an octave up (lead voice only)
 //  split: code lines alternate between foreground and background tracks, each on its own clock
-// o.vary: evolving harmony; o.chill: chillstep feel; o.lofi: lo-fi feel; o.metal: rock/metal feel; o.chip: chiptune feel; o.ambient: ambient feel; o.synthwave: synthwave feel; o.house: techno / house feel; o.trance: trance feel; o.gap: melody pace
+// o.vary: evolving harmony; o.chill: chillstep feel; o.lofi: lo-fi feel; o.metal: rock/metal feel; o.chip: chiptune feel; o.ambient: ambient feel; o.synthwave: synthwave feel; o.house: techno / house feel; o.trance: trance feel; o.dubstep: dubstep feel; o.gap: melody pace
 export function compose(text, key, scale, o) {
-  const { mode, delay, vary, chill, lofi, metal, chip, ambient, synthwave, house, trance } = o;
+  const { mode, delay, vary, chill, lofi, metal, chip, ambient, synthwave, house, trance, dubstep } = o;
   const sd = o.seed != null ? o.seed : seedOf(text);   // a seed typed in by the user, or the text's own
   // Each style makes its seeded choices through its own variant (see seed.js); the default composition has one too.
-  const style = trance ? 'trance' : house ? 'house' : synthwave ? 'synthwave' : ambient ? 'ambient' : chip ? 'chip' : metal ? 'metal' : lofi ? 'lofi' : chill ? 'chill' : 'default';
+  const style = dubstep ? 'dubstep' : trance ? 'trance' : house ? 'house' : synthwave ? 'synthwave' : ambient ? 'ambient' : chip ? 'chip' : metal ? 'metal' : lofi ? 'lofi' : chill ? 'chill' : 'default';
   const v = variant(sd, style), base = variant(sd, 'melody');
   const warm = chill || lofi || ambient;      // Lo-fi is composed on top of the Chillstep layout
   const fix = r => trance ? tranceify(r, v) : house ? houseify(r, v) : synthwave ? synthwaveify(r, v) : ambient ? ambientify(r, key, scale, o.gap, v) : chip ? chipify(r, v) : metal ? metalify(r, key, scale, o.gap / 2, v) : lofi ? lofiify(r, key, scale, o.gap, v) : chill ? chillify(r, o.gap, v) : defaultify(r, v);
@@ -31,10 +32,14 @@ export function compose(text, key, scale, o) {
     tracks[tr].push({ line, idx, more: li < lines.length - 1 });
     idx += line.length + 1;
   });
-  const fg = fix(composeTrack(tracks[0], key, scale, false, vary, warm, base));
+  const raw0 = composeTrack(tracks[0], key, scale, false, vary, warm, base);
+  const raw1 = mode === 'split' ? composeTrack(tracks[1], key, scale, true, vary, warm, base) : null;
+  // Dubstep arranges the whole track in cycles, so both halves of a split must agree on its length; the second half only moves the highlight.
+  const dubLen = Math.max(raw0.t, raw1 ? raw1.t : 0);
+  const fg = dubstep ? dubstepify(raw0, v, dubLen) : fix(raw0);
   let events = fg.events, t = fg.t;
   if (mode === 'split') {
-    const bg = fix(composeTrack(tracks[1], key, scale, true, vary, warm, base));
+    const bg = dubstep ? { events: raw1.events.filter(e => e.i !== undefined).map(e => ({ t: e.t, i: e.i, tr: e.tr, k: 'rest' })), t: dubLen } : fix(raw1);
     events = events.concat(bg.events);
     t = Math.max(t, bg.t);
   } else if (mode === 'canon') {
@@ -53,6 +58,7 @@ export function compose(text, key, scale, o) {
   if (synthwave) events = events.concat(synthwaveDrums(total, v));
   if (house) events = events.concat(houseDrums(total, v));
   if (trance) events = events.concat(tranceDrums(total, v));
+  if (dubstep) events = events.concat(dubstepDrums(total, v, fg.t));
   if (metal) {
     const grid = metalDrums(total, fg.sections, v);
     const taken = new Set(grid.map(e => e.k + '@' + Math.round(e.t)));

@@ -8,7 +8,7 @@
 import { $ } from './dom.js';
 
 const BAR = 6, GAP = 6, MAX_H = 44, REST_MIN = 4, REST_PEAK = 12;
-const FFT = 256;                         // 128 bins
+const FFT = 1024;                        // 512 bins (about 43 Hz each), fine enough that the middle bars read different low frequencies
 const PAD = 8;                           // space between a brace and the title / outermost bar (css px)
 // The icon's curly brace (viewBox 512; spans x 66..134, y 118..394), reused so the two match.
 const BRACE = new Path2D('M 134 118 C 104 118 100 138 100 168 L 100 218 C 100 240 90 256 66 256 C 90 256 100 272 100 294 L 100 344 C 100 374 104 394 134 394');
@@ -29,6 +29,16 @@ let Kw = 1, Kh = 1;                      // size factors: 1 for the 52px masthea
 let forced = false;                      // minimal view: show the bars even if the Visualizer box is off
 let dpr = 1, wCss = 0, hCss = 0, braceScale = 1, braceW = 0, idleRight = 0;
 
+// Dubstep pulse (see vizCue): the bars put low pitches in the middle and high ones at the edges, so the drop's pitch dive is a bright pulse
+// that falls from the edges to the middle, and the rise after it a pulse that climbs back out and stops dead.
+let pulse = null;                        // { kind: 'dive' | 'rise', t0, ms }
+// The pulse leaves the bars it has passed coloured: the dive paints a cool gradient (magenta at the edges to cyan in the middle) as it falls
+// and holds it; the rise then repaints them warm (orange to magenta) as it climbs out; when the rise is over everything fades back to the
+// style's colour.
+let hold = false, holdT = 0, fade = 0;   // hold: the dive's colours are still on the bars; fade: when the colours began fading out
+const diveHue = u => Math.round(180 + 120 * u), riseHue = u => Math.round((390 - 90 * u) % 360);
+let rgb = null;                          // the bar colour as [r, g, b] if it is a #rrggbb value
+const parse = c => { const m = /^#([0-9a-f]{6})$/i.exec(c); return m ? [0, 2, 4].map(i => parseInt(m[1].substr(i, 2), 16)) : null; };
 const clamp01 = x => Math.min(1, Math.max(0, x));
 const ease = x => x * x * (3 - 2 * x);
 
@@ -48,11 +58,13 @@ function size() {
   const cs = getComputedStyle(document.documentElement);
   color = cs.getPropertyValue('--bars').trim() || cs.getPropertyValue('--accent').trim() || color;
   braceColor = cs.getPropertyValue('--text').trim() || braceColor;
+  rgb = parse(color);
 }
 
 // Low frequencies sit in the middle and the highs spread outward, so it reads like the icon.
 // Each bar keeps its frequency as the strip widens, so expanding reveals the higher bands.
-function binFor(d, half, bins) { return 1 + Math.floor(Math.pow(d / half, 1.7) * (bins * 0.8)); }
+// The middle bars are kept on different bins (at least one apart), or the first few all read the same constant bass and sit still.
+function binFor(d, half, bins) { return Math.max(1 + d, 1 + Math.floor(Math.pow(d / half, 1.7) * (bins * 0.8))); }
 
 function drawBraces(c, leftX, rightX) {
   const k = braceScale * dpr, h = canvas.height;
@@ -70,6 +82,19 @@ function draw() {
   const c = ctx2d, W = canvas.width, H = canvas.height, mid = H / 2;
   c.clearRect(0, 0, W, H);
   const e = ease(p);
+  // Where the pulse is now (0 = the middle bar, 1 = the outermost), or -1 when there isn't one.
+  let at = -1, tkind = null, tfade = 1;    // tkind: which pulse is moving; tfade: how much of the leftover colour remains (1 = all)
+  const nowMs = performance.now();
+  if (reduced || !playing) { pulse = null; hold = false; fade = 0; }
+  if (pulse) {
+    const f = (nowMs - pulse.t0) / pulse.ms;
+    if (f >= 1) {
+      if (pulse.kind === 'dive') { hold = true; holdT = nowMs; } else { hold = false; fade = nowMs; }
+      pulse = null;
+    } else { tkind = pulse.kind; at = tkind === 'dive' ? Math.pow(1 - f, 1.8) : 0.15 + 0.85 * Math.pow(f, 1.4); }
+  }
+  if (hold && !pulse && nowMs - holdT > 3500) hold = false;      // never leave the colours stuck on if the rise doesn't come
+  if (fade) { tfade = 1 - (nowMs - fade) / 400; if (tfade <= 0) { fade = 0; tfade = 1; } }
   const rightX = idleRight + (wCss - idleRight) * e;                   // right edge of the right brace
   drawBraces(c, 0, rightX);
   if (title) title.style.opacity = String(1 - clamp01(p / 0.35));
@@ -97,16 +122,35 @@ function draw() {
           const lo = binFor(d, fullHalf, bins), hi = Math.max(lo + 1, binFor(d + 1, fullHalf, bins));
           let m = -140;
           for (let b = lo; b < hi && b < bins; b++) if (vals[b] > m) m = vals[b];
-          t = clamp01((m + 90) / 55);                                   // -90 dB .. -35 dB  ->  0 .. 1
+          t = clamp01((m + 93) / 55);                                   // -90 dB .. -35 dB  ->  0 .. 1
         }
         const idx = Math.min(nMax - 1, Math.round(d));
         levels[idx] = t > levels[idx] ? t : levels[idx] * 0.85;         // fast attack, slow decay
         energy += levels[idx];
-        const h = Math.max(rest, levels[idx] * (MAX_H * Kh)) * dpr * (0.4 + 0.6 * alpha);
+        let boost = 0;
+        if (at >= 0) { const u = (d / Math.max(1, centre)) - at; boost = Math.exp(-(u * u) / 0.012); }   // a soft bump around the pulse
+        const h = Math.min(H * 0.96, Math.max(rest, levels[idx] * (MAX_H * Kh) + boost * 0.7 * MAX_H * Kh) * dpr * (0.4 + 0.6 * alpha));
+        // Colour left behind by the pulse: what it has already passed (or all of it once it is done, while it holds or fades).
+        const u0 = d / Math.max(1, centre);
+        let trail = null, amt = 1;
+        if (tkind === 'dive') { if (u0 > at) trail = diveHue(u0); }
+        else if (tkind === 'rise') trail = u0 < at ? riseHue(u0) : hold ? diveHue(u0) : null;
+        else if (hold) trail = diveHue(u0);
+        else if (fade) { trail = riseHue(u0); amt = tfade; }
+        if (boost > 0.12) {                // the pulse is a spread of neon colours: magenta on the outer side, white-hot in the middle, cyan on the inner side
+          const u = (d / Math.max(1, centre)) - at, dir = pulse && pulse.kind === 'rise' ? -1 : 1;
+          const hue = 160 + 120 * clamp01(0.5 + dir * u / 0.3) + 20;            // 180 (cyan) .. 300 (magenta)
+          c.fillStyle = `hsl(${Math.round(hue)} 100% ${Math.round(58 + 34 * boost * boost)}%)`;
+        } else if (trail !== null) {
+          c.fillStyle = color;
+          if (amt < 1) { c.beginPath(); c.roundRect ? c.roundRect(x0 + i * step, mid - h / 2, bw, h, bw / 2) : c.rect(x0 + i * step, mid - h / 2, bw, h); c.fill(); c.globalAlpha = alpha * amt; }
+          c.fillStyle = `hsl(${trail} 100% 60%)`;
+        } else c.fillStyle = color;
         const x = x0 + i * step, y = mid - h / 2;
         c.beginPath();
         c.roundRect ? c.roundRect(x, y, bw, h, bw / 2) : c.rect(x, y, bw, h);
         c.fill();
+        c.globalAlpha = alpha;
       }
       c.globalAlpha = 1;
     }
@@ -138,6 +182,7 @@ export function vizRetint() {
   if (!wCss) return;                    // not laid out yet; initViz will read it
   const cs = getComputedStyle(document.documentElement);
   color = cs.getPropertyValue('--bars').trim() || cs.getPropertyValue('--accent').trim() || color;
+  rgb = parse(color);
   if (!raf) draw();
 }
 
@@ -149,7 +194,16 @@ export function vizAttach() {
     Tone.getDestination().connect(analyser);
   } catch (e) { analyser = null; }
 }
+// Cues from the music (dubstep only): 'dive' is the drop's pitch dive (it lasts `secs`), 'rise' the rise after it.
+export function vizCue(kind, secs = 0.5) {
+  if (reduced) return;
+  pulse = { kind, t0: performance.now(), ms: Math.max(100, secs * 1000) };
+  if (kind === 'dive') { hold = false; fade = 0; }
+  if (playing && enabled()) loop();
+}
+
 export function vizStart() {
+  pulse = null; hold = false; fade = 0;
   playing = true;
   if (!enabled()) return;
   target = 1;
@@ -158,10 +212,12 @@ export function vizStart() {
 }
 // Paused: the audio is frozen, so the bars settle to rest but the strip stays expanded.
 export function vizPause() {
+  pulse = null; hold = false; fade = 0;
   playing = false;
   if (enabled() && !reduced) loop();
 }
 export function vizStop() {
+  pulse = null; hold = false; fade = 0;
   playing = false;
   target = 0;
   if (reduced || !enabled()) { jump(); return; }

@@ -50,7 +50,7 @@ export function syncPicker() {
   detail.style.setProperty('--tint', cur.tint);
   head.replaceChildren(el('span', 'title', cur.name), el('span', 'tag', cur.tagline), el('span', 'chev'));
   const chips = el('ul', 'chips');
-  cur.chips.forEach(c => chips.appendChild(el('li', null, c)));
+  cur.chips.forEach(c => chips.appendChild(el('li', c === 'Wobble bass' ? 'wob' : null, c)));   // the Wobble bass chip wobbles (style.css)
   const parts = [el('p', 'blurb', cur.blurb), chips];
   if (cur.download) parts.push(el('p', 'dl', 'Downloads: ' + cur.download));
   if (cur.note) parts.push(el('p', 'dl', cur.note));

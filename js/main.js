@@ -13,7 +13,7 @@ import { initTips } from './ui/tips.js';
 import { initDebug } from './audio/unlock.js';
 import { initViz } from './ui/viz.js';
 import { initMinimal } from './ui/minimal.js';
-import { playing, paused, lastTotal, applyMix, updateStats, rebuild, applyStyleDefaults, applyFeel, loadAudio, start, stop, pause, resume, seekTo } from './ui/playback.js';
+import { playing, paused, lastTotal, applyMix, updateStats, rebuild, applyStyleDefaults, applyFeel, tooShort, loadAudio, start, stop, pause, resume, seekTo } from './ui/playback.js';
 
 KEYS.forEach((k, i) => $('key').add(new Option(k, i)));
 Object.keys(SCALES).forEach(k => $('scale').add(new Option(k, k)));
@@ -62,6 +62,13 @@ $('gap').onchange = () => { if (playing) rebuild(); else if (isChill() || isLofi
 const showSeed = () => { $('seed').placeholder = formatSeed(seedOf(getText())); };
 const seedChanged = () => { if (playing) rebuild(); else updateStats(getText().length, compose(getText(), getKey(), getScale(), getOpts()).total); };
 onTextChange(showSeed);
+// A style that needs a minimum amount of text (Dubstep) says so as you type, and clears the message once there's enough.
+onTextChange(() => {
+  if (playing) return;
+  const short = tooShort();
+  if (short) $('stats').textContent = short;
+  else if ($('stats').textContent.includes('needs at least')) updateStats(getText().length, compose(getText(), getKey(), getScale(), getOpts()).total);
+});
 showSeed();
 // A new seed (typed, random or back to Auto) also moves the tempo, scale and key to where it puts this style; Pin keeps the same seed.
 const newSeed = () => { applyFeel(); seedChanged(); };

@@ -13,6 +13,7 @@ export const FEEL = {
   ambient:   { tempo: [60, 70],   scales: ['Natural minor', 'Lydian', 'Dorian', 'Major pentatonic'], key: true },
   synthwave: { tempo: [92, 112],  scales: ['Natural minor', 'Natural minor', 'Dorian', 'Major'], key: true },
   house:     { tempo: [120, 128], scales: ['Dorian', 'Natural minor', 'Dorian'], key: true },
+  dubstep:   { tempo: [138, 144], scales: ['Natural minor', 'Phrygian', 'Natural minor', 'Dorian'], key: true },
   trance:    { tempo: [136, 142], scales: ['Natural minor', 'Natural minor', 'Dorian'], key: false },    // the chord loops are written in C minor
 };
 

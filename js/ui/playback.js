@@ -1,16 +1,17 @@
 import { unlockAudio, releaseAudio } from '../audio/unlock.js';
-import { vizAttach, vizStart, vizStop, vizPause } from './viz.js';
+import { vizAttach, vizStart, vizStop, vizPause, vizCue } from './viz.js';
 import { syncPicker } from './picker.js';
 import { $, view, playBtn } from './dom.js';
 import { getText, setEditorHidden } from './editor.js';
 import { renderView, highlight } from './view.js';
-import { getKey, getScale, getStyle, isChill, isLofi, isMetal, isChip, isAmbient, isSynthwave, isHouse, isTrance, getOpts } from './settings.js';
+import { getKey, getScale, getStyle, isChill, isLofi, isMetal, isChip, isAmbient, isSynthwave, isHouse, isTrance, isDubstep, getOpts } from './settings.js';
 import { compose } from '../compose/index.js';
 import { feelOf } from '../compose/feel.js';
 import { seedOf, parseSeed, variant } from '../compose/seed.js';
 import { audio, setAudio, buildAudio, disposeAudio } from '../audio/engine.js';
 import { sound } from '../audio/play.js';
 import { loadMetalBuffers, loadBassBuffers } from '../audio/samples.js';
+import { STYLES } from '../styles.js';
 
 export let playing = false, paused = false, lastTotal = 0;   // playing is true while paused too (a session is open)
 let endToken = 0, lastEvents = [], endReached = false;
@@ -44,6 +45,15 @@ export function applyMix() {
   audio.bg.out.volume.value = +$('bgvol').value;
 }
 
+// Dubstep easter egg: the style card glows from the drop's pitch dive until the drop falls away (see .neon in style.css).
+let neonTimer = 0;
+const card = () => $('style-detail').classList;
+const neon = on => { clearTimeout(neonTimer); card().remove('neon-out'); card().toggle('neon', on); };   // on / off at once (Stop)
+const neonOff = secs => {   // glow until the drop has fallen away, then fade out
+  clearTimeout(neonTimer);
+  neonTimer = setTimeout(() => { card().remove('neon'); card().add('neon-out'); neonTimer = setTimeout(() => card().remove('neon-out'), 1500); }, secs * 1000);
+};
+
 function schedule(events, total) {
   const T = Tone.Transport, U = T.PPQ / 4;
   T.cancel(0);
@@ -54,6 +64,9 @@ function schedule(events, total) {
     T.schedule(time => {
       sound(e, time);
       if (e.i !== undefined) Tone.Draw.schedule(() => highlight(e.i, e.tr), time);
+      else if (e.k === 'wob' && e.dv) Tone.Draw.schedule(() => { vizCue('dive', 8 * Tone.Time('16n').toSeconds()); neon(true); }, time);   // dubstep: a pulse follows the drop's pitch dive down the bars,
+      else if (e.k === 'fall') Tone.Draw.schedule(() => neonOff(e.d * Tone.Time('16n').toSeconds()), time);   // the card's glow lasts through the drop and goes out as it falls away
+      else if (e.k === 'climb') Tone.Draw.schedule(() => vizCue('rise', e.d * Tone.Time('16n').toSeconds()), time);      // and back up for the rise (the bars map low pitch to the middle, high to the edges)
     }, Math.round(e.t * U) + 'i');
   }
   lastEvents = events;
@@ -66,9 +79,15 @@ function schedule(events, total) {
   }
 }
 
+// Some styles need a minimum amount of text to make sense (Dubstep's build-up and drop): a message saying how much more, or ''.
+export function tooShort(chars = getText().length) {
+  const st = STYLES.find(x => x.id === getStyle());
+  return st && st.minChars && chars < st.minChars ? `${st.name} needs at least ${st.minChars} characters (${st.minChars - chars} more) for a build-up and a drop.` : '';
+}
+
 export function updateStats(chars, total) {
   const secs = total * 60 / Tone.Transport.bpm.value / 4;
-  $('stats').textContent = `${chars} characters · ${total / 16} bars · ${secs.toFixed(1)}s`;
+  $('stats').textContent = tooShort(chars) || `${chars} characters · ${total / 16} bars · ${secs.toFixed(1)}s`;
 }
 
 export function rebuild() {
@@ -97,12 +116,12 @@ export function applyFeel() {
 // Sets the tempo and scale that go with the selected style (both can be changed afterwards).
 export function applyStyleDefaults() {
   const st = $('style').value;
-  $('tempo').value = { chill: 70, lofi: 80, metal: 150, chiptune: 140, ambient: 60, synthwave: 100, house: 124, trance: 140 }[st] || 130;
+  $('tempo').value = { chill: 70, lofi: 80, metal: 150, chiptune: 140, ambient: 60, synthwave: 100, house: 124, trance: 140, dubstep: 140 }[st] || 130;
   $('tempoVal').textContent = $('tempo').value;
   Tone.Transport.bpm.value = +$('tempo').value;
-  $('scale').value = { chill: 'Natural minor', lofi: 'Natural minor', metal: 'Phrygian', chiptune: 'Major', ambient: 'Natural minor', synthwave: 'Natural minor', house: 'Dorian', trance: 'Natural minor' }[st] || 'Dorian';
+  $('scale').value = { chill: 'Natural minor', lofi: 'Natural minor', metal: 'Phrygian', chiptune: 'Major', ambient: 'Natural minor', synthwave: 'Natural minor', house: 'Dorian', trance: 'Natural minor', dubstep: 'Natural minor' }[st] || 'Dorian';
   applyFeel();                  // the seed then moves them within the style's range
-  $('leadsound').disabled = st === 'metal' || st === 'chiptune' || st === 'ambient' || st === 'synthwave' || st === 'house' || st === 'trance';   // each of these has its own fixed lead voice
+  $('leadsound').disabled = st === 'metal' || st === 'chiptune' || st === 'ambient' || st === 'synthwave' || st === 'house' || st === 'trance' || st === 'dubstep';   // each of these has its own fixed lead voice
   syncPicker();
 }
 
@@ -110,7 +129,7 @@ export function applyStyleDefaults() {
 // they can't be fetched (offline, blocked), falls back to something that needs no downloads.
 export async function loadAudio() {
   if (audio) disposeAudio();
-  const metal = isMetal(), piano = !metal && !isChip() && !isAmbient() && !isSynthwave() && !isHouse() && !isTrance() && $('leadsound').value === 'piano';
+  const metal = isMetal(), piano = !metal && !isChip() && !isAmbient() && !isSynthwave() && !isHouse() && !isTrance() && !isDubstep() && $('leadsound').value === 'piano';
   const label = playBtn.innerHTML;
   if (metal) {
     playBtn.textContent = 'Loading guitars…';
@@ -169,6 +188,8 @@ function releaseVoices() {
 
 // Starts from the beginning, or from the note at character `fromIdx` if one is given.
 export async function start(fromIdx = null) {
+  const short = tooShort();
+  if (short) { $('stats').textContent = short; return; }   // too little text for this style
   unlockAudio();             // must run inside the tap, before any await (iOS silent-switch workaround)
   await Tone.start();
   vizAttach();
@@ -226,6 +247,7 @@ export function seekTo(idx) {
 
 export function stop() {
   endToken++;
+  neon(false);
   releaseAudio();
   vizStop();
   if (paused) { try { Tone.getContext().rawContext.resume().catch(() => {}); } catch (e) {} }

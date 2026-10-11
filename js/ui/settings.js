@@ -21,7 +21,8 @@ export const isSynthwave = () => $('style').value === 'synthwave';
 export const isHouse = () => $('style').value === 'house';
 
 export const isTrance = () => $('style').value === 'trance';
+export const isDubstep = () => $('style').value === 'dubstep';
 
 export const getStyle = () => $('style').value;
 
-export const getOpts = () => ({ mode: $('bgmode').value, delay: +$('delay').value, vary: $('vary').checked, chill: isChill(), lofi: isLofi(), metal: isMetal(), chip: isChip(), ambient: isAmbient(), synthwave: isSynthwave(), house: isHouse(), trance: isTrance(), gap: +$('gap').value, seed: parseSeed($('seed').value) });
+export const getOpts = () => ({ mode: $('bgmode').value, delay: +$('delay').value, vary: $('vary').checked, chill: isChill(), lofi: isLofi(), metal: isMetal(), chip: isChip(), ambient: isAmbient(), synthwave: isSynthwave(), house: isHouse(), trance: isTrance(), dubstep: isDubstep(), gap: +$('gap').value, seed: parseSeed($('seed').value) });
