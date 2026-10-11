@@ -11,12 +11,17 @@
 //  - When a chord lasts two bars or more, the last half bar before the next chord is a snare roll that builds in volume.
 //  - The character-driven drum hits go quiet and a four-on-the-floor beat takes over (see tranceDrums).
 // The kick dips the pad, the arpeggio and the bass on every beat (see audio/play.js), which gives the pumping feel.
+import { pick } from './seed.js';
+
 const PATS = [[0, 1, 2, 3, 2, 1, 0, 1], [0, 2, 1, 3, 2, 1, 3, 2], [2, 3, 2, 1, 2, 3, 2, 1]];   // arpeggio shapes per half bar; index 3 is the root an octave up
 const LO = 55, HI = 79, MID = 67;                // the lead's range (MIDI) and the middle it leans toward
-const LOOP = [0, 4, 5, 6, 2];                    // the chord loop as scale degrees: i  v  VI  VII  III (Cm Gm Ab Bb Eb in C minor), one chord per line
+// The chord loop as scale degrees, one chord per line; the text's seed picks one. The first is i  v  VI  VII  III (Cm Gm Ab Bb Eb in C minor).
+const LOOPS = [[0, 4, 5, 6, 2], [0, 5, 2, 6], [0, 6, 5, 4], [0, 2, 5, 6, 4], [0, 5, 6, 4, 2]];
 const RISE = [[8, 0.3], [6, 0.4], [4, 0.5], [3, 0.6], [2, 0.75], [1, 0.95]];   // [sixteenths before the next chord, snare velocity]
 
-export function tranceify(r) {
+export function tranceify(r, seed = 0) {
+  const loop = LOOPS[pick(seed, 'trance-loop', LOOPS.length)], arp = pick(seed, 'trance-arp', PATS.length);
+  shift = pick(seed, 'trance-chorus', 3);
   const out = [];
   for (const e of r.events) {
     if (['kick', 'hat', 'snare'].includes(e.k)) { out.push({ ...e, k: 'rest' }); continue; }
@@ -32,16 +37,16 @@ export function tranceify(r) {
   // The chords follow a fixed minor loop whatever the text, so every line leads naturally into the next. The bass note is the
   // chord root folded into the bass octave (a copy, so the source events are untouched).
   const roots = r.events.filter(e => e.k === 'bass' && e.s !== undefined).sort((a, b) => a.t - b.t).map((c, j) => {
-    const a = LOOP[j % LOOP.length], m = r.lead(a);
+    const a = loop[j % loop.length], m = r.lead(a);
     return { ...c, a, m: m - 24 - (m >= 72 ? 12 : 0) + (m < 60 ? 12 : 0) };
   });
-  shapeLead(out, r, roots);
+  shapeLead(out, r, roots, seed);
   roots.forEach((c, j) => {
     const stop = roots[j + 1] ? roots[j + 1].t : r.t, span = stop - c.t;
     const tri = [r.pad(c.a), r.pad(c.a + 2), r.pad(c.a + 4)].sort((x, y) => x - y);
     out.push({ t: c.t, i: c.i, tr: c.tr, k: 'pad', m: tri, d: span + 2, v: 0.4 });
     for (let t = c.t, n = 0; t < stop; t++, n++) {
-      const pat = PATS[(Math.floor(t / 16) + Math.floor((t % 16) / 8)) % PATS.length], x = pat[t % 8];
+      const pat = PATS[(Math.floor(t / 16) + Math.floor((t % 16) / 8) + arp) % PATS.length], x = pat[t % 8];
       out.push({ t, tr: c.tr, k: 'pluck', m: (x === 3 ? tri[0] + 12 : tri[x]) + 12, d: 1, v: (n % 4 === 0 ? 0.5 : 0.32) * (onAt(t) ? 0.85 : 1.3) });
     }
     for (let b = Math.floor(c.t / 4) * 4; b < stop; b += 4) {
@@ -73,10 +78,12 @@ const PHRASES = [
   [[0, 4, 2], [4, 4, 3], [8, 6, 4], [14, 2, 5], [16, 4, 4], [20, 6, 3]],
   [[0, 2, 4], [2, 2, 5], [4, 6, 6], [10, 2, 5], [12, 4, 4], [16, 2, 5], [18, 2, 6], [20, 6, 7]],   // the lift
 ];
-const ORDER = [0, 1, 0, 2];
-const onAt = t => Math.floor(t / 32) % 5 >= 2;      // the chorus: the lead plays on 3 of every 5 two-bar phrases and sits out the other 2
+const ORDERS = [[0, 1, 0, 2], [1, 0, 2, 0], [0, 0, 1, 2], [1, 2, 0, 2]];   // which phrase plays when; the seed picks one
+let shift = 0;                                  // where the chorus pattern starts (0-2 phrases in), set per piece
+const onAt = t => (Math.floor(t / 32) + shift) % 5 >= 2;      // the chorus: the lead plays on 3 of every 5 two-bar phrases and sits out the other 2
 
-function shapeLead(out, r, roots) {
+function shapeLead(out, r, roots, seed) {
+  const ORDER = ORDERS[pick(seed, 'trance-order', ORDERS.length)];
   for (const e of out) if (e.k === 'lead') { e.k = 'rest'; delete e.m; delete e.v; delete e.d; }
   const place = (d, prev) => {
     let m = r.lead(d);
@@ -88,14 +95,17 @@ function shapeLead(out, r, roots) {
     for (let c = m - 24; c <= m + 24; c += 12) if (c >= LO && c <= HI && cost(c) < cost(best)) best = c;
     return best;
   };
-  let prev = -1;
+  let prev = -1, pg = 0;
   roots.forEach((c, j) => {
     const stop = roots[j + 1] ? roots[j + 1].t : r.t;
     let first = true;
     for (let b = c.t, p = 0; b < stop; b += 32, p++) {
       const pi = ORDER[p % ORDER.length];
       if (!onAt(b)) { first = true; continue; }   // sitting out; the next entry starts on a chord tone again
-      PHRASES[pi].forEach(([off, len, step], n) => {
+      const tail = pick(seed, 'tail' + pg, 3) - 1, mid = pick(seed, 'mid' + pg, 3) - 1;   // small changes to the phrase's middle and ending, different every time round
+      pg++;
+      PHRASES[pi].forEach(([off, len, step0], n, all) => {
+        const step = step0 + (n >= all.length - 2 ? tail : 0) + (n === 3 ? mid : 0);
         const t = b + off;
         if (t + 2 > stop) return;
         let m = place(c.a + step, prev);

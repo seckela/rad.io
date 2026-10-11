@@ -7,6 +7,7 @@ import { ambientify } from './ambient.js';
 import { synthwaveify, synthwaveDrums } from './synthwave.js';
 import { houseify, houseDrums } from './house.js';
 import { tranceify, tranceDrums } from './trance.js';
+import { seedOf } from './seed.js';
 
 // o.mode: 'off' | 'canon' | 'split'
 //  canon: the background repeats the melody `o.delay` units late, an octave up (lead voice only)
@@ -14,8 +15,9 @@ import { tranceify, tranceDrums } from './trance.js';
 // o.vary: evolving harmony; o.chill: chillstep feel; o.lofi: lo-fi feel; o.metal: rock/metal feel; o.chip: chiptune feel; o.ambient: ambient feel; o.synthwave: synthwave feel; o.house: techno / house feel; o.trance: trance feel; o.gap: melody pace
 export function compose(text, key, scale, o) {
   const { mode, delay, vary, chill, lofi, metal, chip, ambient, synthwave, house, trance } = o;
+  const sd = seedOf(text);
   const warm = chill || lofi || ambient;      // Lo-fi is composed on top of the Chillstep layout
-  const fix = r => trance ? tranceify(r) : house ? houseify(r) : synthwave ? synthwaveify(r) : ambient ? ambientify(r, key, scale, o.gap) : chip ? chipify(r) : metal ? metalify(r, key, scale, o.gap / 2) : lofi ? lofiify(r, key, scale, o.gap) : chill ? chillify(r, o.gap) : r;
+  const fix = r => trance ? tranceify(r, sd) : house ? houseify(r) : synthwave ? synthwaveify(r) : ambient ? ambientify(r, key, scale, o.gap) : chip ? chipify(r) : metal ? metalify(r, key, scale, o.gap / 2) : lofi ? lofiify(r, key, scale, o.gap) : chill ? chillify(r, o.gap) : r;
   const lines = text.split('\n');
   const tracks = [[], []];
   let idx = 0, k = -1;
@@ -25,10 +27,10 @@ export function compose(text, key, scale, o) {
     tracks[tr].push({ line, idx, more: li < lines.length - 1 });
     idx += line.length + 1;
   });
-  const fg = fix(composeTrack(tracks[0], key, scale, false, vary, warm));
+  const fg = fix(composeTrack(tracks[0], key, scale, false, vary, warm, sd));
   let events = fg.events, t = fg.t;
   if (mode === 'split') {
-    const bg = fix(composeTrack(tracks[1], key, scale, true, vary, warm));
+    const bg = fix(composeTrack(tracks[1], key, scale, true, vary, warm, sd));
     events = events.concat(bg.events);
     t = Math.max(t, bg.t);
   } else if (mode === 'canon') {
