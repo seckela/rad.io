@@ -29,6 +29,12 @@ let Kw = 1, Kh = 1;                      // size factors: 1 for the 52px masthea
 let forced = false;                      // minimal view: show the bars even if the Visualizer box is off
 let dpr = 1, wCss = 0, hCss = 0, braceScale = 1, braceW = 0, idleRight = 0;
 
+// Dubstep cues (see vizCue): during a build-up the bars tighten, grow and brighten toward white; the drop's impact flashes the strip and
+// kicks the bars up, then it settles. One decaying flash per drop, never a strobe, and nothing at all with reduced motion.
+let buildT0 = 0, buildLen = 0, burstT0 = 0;
+let rgb = null;                          // the bar colour as [r, g, b] if it is a #rrggbb value
+const parse = c => { const m = /^#([0-9a-f]{6})$/i.exec(c); return m ? [0, 2, 4].map(i => parseInt(m[1].substr(i, 2), 16)) : null; };
+const toWhite = (t) => rgb ? `rgb(${rgb.map(v => Math.round(v + (255 - v) * t)).join(',')})` : color;
 const clamp01 = x => Math.min(1, Math.max(0, x));
 const ease = x => x * x * (3 - 2 * x);
 
@@ -48,6 +54,7 @@ function size() {
   const cs = getComputedStyle(document.documentElement);
   color = cs.getPropertyValue('--bars').trim() || cs.getPropertyValue('--accent').trim() || color;
   braceColor = cs.getPropertyValue('--text').trim() || braceColor;
+  rgb = parse(color);
 }
 
 // Low frequencies sit in the middle and the highs spread outward, so it reads like the icon.
@@ -70,6 +77,10 @@ function draw() {
   const c = ctx2d, W = canvas.width, H = canvas.height, mid = H / 2;
   c.clearRect(0, 0, W, H);
   const e = ease(p);
+  const now = performance.now();
+  const tension = !reduced && buildLen ? Math.pow(clamp01((now - buildT0) / buildLen), 2) : 0;   // 0 .. 1 over a build-up
+  const burst = !reduced && burstT0 ? Math.exp(-(now - burstT0) / 260) : 0;                        // 1 at the drop, then fades
+  const fx = tension + burst;
   const rightX = idleRight + (wCss - idleRight) * e;                   // right edge of the right brace
   drawBraces(c, 0, rightX);
   if (title) title.style.opacity = String(1 - clamp01(p / 0.35));
@@ -84,11 +95,17 @@ function draw() {
     if (n % 2 === 0) n--;
     n = Math.min(n, nMax);
     if (n >= 1) {
-      const used = n * ((BAR * Kw) + (GAP * Kw)) - (GAP * Kw), x0 = (innerL + (avail - used) / 2) * dpr;
-      const bw = (BAR * Kw) * dpr, step = ((BAR * Kw) + (GAP * Kw)) * dpr, centre = (n - 1) / 2, fullHalf = (nMax - 1) / 2;
+      const stepCss = ((BAR * Kw) + (GAP * Kw)) * (1 - 0.3 * tension);     // the bars tighten toward the middle during a build-up
+      const used = n * stepCss - (stepCss - BAR * Kw), x0 = (innerL + (avail - used) / 2) * dpr;
+      const bw = (BAR * Kw) * dpr, step = stepCss * dpr, centre = (n - 1) / 2, fullHalf = (nMax - 1) / 2;
       let vals = null, bins = 0;
       if (playing && analyser) { vals = analyser.getValue(); bins = vals.length; }
-      c.globalAlpha = alpha; c.fillStyle = color;
+      if (burst > 0.02) {                  // the drop: one soft flash over the whole strip
+        c.globalAlpha = 0.16 * burst * alpha; c.fillStyle = toWhite(0.5);
+        c.fillRect(0, 0, W, H);
+      }
+      const fill = fx > 0.01 ? toWhite(Math.min(0.85, 0.4 * tension + 0.6 * burst)) : color;
+      c.fillStyle = fill;
       for (let i = 0; i < n; i++) {
         const d = Math.abs(i - centre);
         const rest = (REST_MIN * Kh) + ((REST_PEAK * Kh) - (REST_MIN * Kh)) * (1 - d / Math.max(1, centre));
@@ -102,8 +119,15 @@ function draw() {
         const idx = Math.min(nMax - 1, Math.round(d));
         levels[idx] = t > levels[idx] ? t : levels[idx] * 0.85;         // fast attack, slow decay
         energy += levels[idx];
-        const h = Math.max(rest, levels[idx] * (MAX_H * Kh)) * dpr * (0.4 + 0.6 * alpha);
+        const h = Math.min(H * 0.96, Math.max(rest, levels[idx] * (MAX_H * Kh)) * dpr * (0.4 + 0.6 * alpha) * (1 + 0.45 * tension + 0.6 * burst));
         const x = x0 + i * step, y = mid - h / 2;
+        if (fx > 0.05) {                    // a wider, fainter copy behind each bar reads as a glow without any blur
+          c.globalAlpha = alpha * Math.min(0.5, 0.1 + 0.25 * fx);
+          c.beginPath();
+          c.roundRect ? c.roundRect(x - bw * 0.7, y - h * 0.04, bw * 2.4, h * 1.08, bw * 1.2) : c.rect(x - bw * 0.7, y - h * 0.04, bw * 2.4, h * 1.08);
+          c.fill();
+          c.globalAlpha = alpha;
+        }
         c.beginPath();
         c.roundRect ? c.roundRect(x, y, bw, h, bw / 2) : c.rect(x, y, bw, h);
         c.fill();
@@ -138,6 +162,7 @@ export function vizRetint() {
   if (!wCss) return;                    // not laid out yet; initViz will read it
   const cs = getComputedStyle(document.documentElement);
   color = cs.getPropertyValue('--bars').trim() || cs.getPropertyValue('--accent').trim() || color;
+  rgb = parse(color);
   if (!raf) draw();
 }
 
@@ -149,7 +174,17 @@ export function vizAttach() {
     Tone.getDestination().connect(analyser);
   } catch (e) { analyser = null; }
 }
+// Cues from the music (dubstep only): 'build' starts a build-up that lasts `secs`, 'drop' is the impact.
+export function vizCue(kind, secs = 0) {
+  if (reduced) return;
+  if (kind === 'build') { buildT0 = performance.now(); buildLen = Math.max(200, secs * 1000); burstT0 = 0; }
+  else if (kind === 'drop') { buildLen = 0; burstT0 = performance.now(); }
+  if (playing && enabled()) loop();
+}
+const clearCues = () => { buildLen = 0; burstT0 = 0; };
+
 export function vizStart() {
+  clearCues();
   playing = true;
   if (!enabled()) return;
   target = 1;
@@ -158,10 +193,12 @@ export function vizStart() {
 }
 // Paused: the audio is frozen, so the bars settle to rest but the strip stays expanded.
 export function vizPause() {
+  clearCues();
   playing = false;
   if (enabled() && !reduced) loop();
 }
 export function vizStop() {
+  clearCues();
   playing = false;
   target = 0;
   if (reduced || !enabled()) { jump(); return; }

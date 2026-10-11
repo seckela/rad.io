@@ -1,5 +1,5 @@
 import { unlockAudio, releaseAudio } from '../audio/unlock.js';
-import { vizAttach, vizStart, vizStop, vizPause } from './viz.js';
+import { vizAttach, vizStart, vizStop, vizPause, vizCue } from './viz.js';
 import { syncPicker } from './picker.js';
 import { $, view, playBtn } from './dom.js';
 import { getText, setEditorHidden } from './editor.js';
@@ -55,6 +55,8 @@ function schedule(events, total) {
     T.schedule(time => {
       sound(e, time);
       if (e.i !== undefined) Tone.Draw.schedule(() => highlight(e.i, e.tr), time);
+      else if (e.k === 'riser') Tone.Draw.schedule(() => vizCue('build', e.d * Tone.Time('16n').toSeconds()), time);   // dubstep: the visualizer follows the build-up and the drop
+      else if (e.k === 'impact' && e.v >= 0.9) Tone.Draw.schedule(() => vizCue('drop'), time);
     }, Math.round(e.t * U) + 'i');
   }
   lastEvents = events;
