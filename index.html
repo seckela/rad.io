@@ -24,31 +24,33 @@
     "./js/compose/chill.js": "./js/compose/chill.js?v=95ddda00",
     "./js/compose/chip.js": "./js/compose/chip.js?v=097c60e3",
     "./js/compose/house.js": "./js/compose/house.js?v=017786bb",
-    "./js/compose/index.js": "./js/compose/index.js?v=81927528",
+    "./js/compose/index.js": "./js/compose/index.js?v=6b0bccba",
     "./js/compose/lofi.js": "./js/compose/lofi.js?v=b3db2699",
     "./js/compose/melody.js": "./js/compose/melody.js?v=2c192c3a",
     "./js/compose/metal.js": "./js/compose/metal.js?v=ea8e6ab2",
+    "./js/compose/seed.js": "./js/compose/seed.js?v=0a81dbde",
     "./js/compose/synthwave.js": "./js/compose/synthwave.js?v=dc80f2ae",
-    "./js/compose/track.js": "./js/compose/track.js?v=beaf256a",
-    "./js/compose/trance.js": "./js/compose/trance.js?v=10aa1771",
-    "./js/main.js": "./js/main.js?v=45c70e04",
-    "./js/sample.js": "./js/sample.js?v=9bebafc9",
+    "./js/compose/track.js": "./js/compose/track.js?v=03329277",
+    "./js/compose/trance.js": "./js/compose/trance.js?v=0563d55f",
+    "./js/main.js": "./js/main.js?v=4ab7062a",
+    "./js/sample.js": "./js/sample.js?v=1442eba0",
     "./js/scales.js": "./js/scales.js?v=0d3598c0",
     "./js/styles.js": "./js/styles.js?v=822a728a",
     "./js/ui/dom.js": "./js/ui/dom.js?v=365dd800",
-    "./js/ui/editor.js": "./js/ui/editor.js?v=9cd9e29d",
+    "./js/ui/editor.js": "./js/ui/editor.js?v=02449985",
     "./js/ui/minimal.js": "./js/ui/minimal.js?v=84b48614",
     "./js/ui/picker.js": "./js/ui/picker.js?v=4e1300ad",
     "./js/ui/playback.js": "./js/ui/playback.js?v=35834643",
-    "./js/ui/settings.js": "./js/ui/settings.js?v=28317277",
-    "./js/ui/tips.js": "./js/ui/tips.js?v=72af3205",
+    "./js/ui/settings.js": "./js/ui/settings.js?v=4cc0ae57",
+    "./js/ui/share.js": "./js/ui/share.js?v=1533d88c",
+    "./js/ui/tips.js": "./js/ui/tips.js?v=db04fbf7",
     "./js/ui/view.js": "./js/ui/view.js?v=0386df12",
     "./js/ui/viz.js": "./js/ui/viz.js?v=18e57076"
   }
 }
 </script>
 <!-- /stamp:importmap -->
-<link rel="stylesheet" href="css/style.css?v=76f68e32">
+<link rel="stylesheet" href="css/style.css?v=44581619">
 <link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="icons/favicon-32.png" type="image/png" sizes="32x32">
 <link rel="icon" href="icons/favicon.ico" sizes="48x48">
@@ -149,7 +151,22 @@
     <div id="editor" class="code" role="textbox" aria-multiline="true" aria-label="Source code" hidden></div>
     <textarea id="src" class="code" spellcheck="false" aria-label="Source code"></textarea>
     <div id="view" class="code" hidden></div>
-    <div class="code-actions"><select id="sample" aria-label="Load an example"><option value="" selected disabled>Load an example…</option></select></div>
+    <div class="code-actions">
+      <span class="actions-left">
+        <select id="sample" aria-label="Load an example"><option value="" selected disabled>Load an example…</option></select>
+        <button id="export" type="button" title="Save the text, seed and settings as a file you can share">Export</button>
+        <button id="import" type="button" title="Open a session file made with Export">Import</button>
+        <input id="import-file" type="file" accept=".json,application/json" hidden>
+      </span>
+      <label>Seed
+        <span class="seedrow">
+          <input id="seed" type="text" maxlength="40" spellcheck="false" autocomplete="off" placeholder="from the text" aria-label="Seed">
+          <button id="seed-pin" type="button" title="Pin: keep this text's seed, whatever the text">Pin</button>
+          <button id="seed-dice" type="button" title="Random: try a new seed">Random</button>
+          <button id="seed-auto" type="button" title="Auto: back to the text's own seed">Auto</button>
+        </span>
+      </label>
+    </div>
     <div class="meta"><span id="stats"></span><span>Drop a file onto the code area to load it</span></div>
   </section>
 
@@ -175,7 +192,9 @@
         <tr><td>Ambient style</td><td>About 60 BPM, built on the Chillstep layout (the same slow, sparse melody and i–VI–III–VII chord loop with one change per new line) but with nothing struck. Each chord change becomes one long, soft drone that lasts until the next change, with a low root and fifth underneath; the melody is thinned to a note every few beats and the notes ring long; bell chimes still mark quotes and semicolons, and every few bars a soft gust of wind chimes (two to four high notes close together, usually falling, ringing together for seconds) drifts through. The voices are slow-fading and synthesized (detuned triangle chords through a dark filter and a slow chorus, a soft sine lead with a long echo, sine bass) in a very large reverb. There are no drums, and nothing downloads.</td></tr>
         <tr><td>Synthwave style</td><td>About 100 BPM in Natural minor, built on the default composition and played like an 80s night-drive track. A bright, detuned saw lead with a dotted echo and chorus plays the melody over a wide detuned saw pad (chords are held at least a beat and a half), the bass is a relentless 16th-note filtered saw on each line's root with the beats accented, and the character-driven drum hits give way to a steady four-on-the-floor beat (kick on every beat, snare on 2 and 4, offbeat hats with quiet 16th ghosts). Digits and quotes keep their blips and plinks. Everything is synthesized, so nothing downloads.</td></tr>
         <tr><td>Techno / House style</td><td>About 124 BPM in Dorian, built on the default composition and played like a club track. The bass is an offbeat pump (short filtered saw notes on the "and" of every beat, with an occasional 16th pickup) on each line's root; the chords become minor-7th stabs (3rd, 5th and 7th of the line's chord) in a syncopated house rhythm that alternates between two bars; the melody is thinned to at most an 8th note's density and played as short plucks with a dotted echo. The character-driven drum hits give way to a four-on-the-floor beat (kick on every beat, clap on 2 and 4, open hats on the offbeats, 16th closed hats), and the kick ducks the bass and stabs on every beat for the pumping feel. Everything is synthesized, so nothing downloads.</td></tr>
-        <tr><td>Trance style</td><td>About 140 BPM in Natural minor, built on the default composition and played like an uplifting trance track. Each line's chord is held as a big detuned supersaw pad with a fast 16th-note pluck arpeggio over it (up the triad and into the octave, then back down); the bass rolls, three 16ths between every kick, on the line's root; the melody becomes a tune: a lead that comes in like a chorus (in for three two-bar phrases, out for two while the arpeggio swells to carry the track) playing two-bar syncopated phrases (long and short notes, ending early so the last note rings out into a pause, with a higher lift phrase every fourth) are played on each section's chord, and the chords follow a fixed minor loop (i, v, VI, VII, III, like Cm, Gm, A♭, B♭, E♭ in C minor) whatever the text, the notes join up and lean on the 8th-note grid, and each is placed in the octave nearest the previous note so the line glides across chord changes, played by a supersaw lead with a long dotted echo, and the arpeggio changes shape from bar to bar. When a chord lasts two bars or more, its last half bar is a snare roll that builds in volume. The character-driven drum hits give way to a four-on-the-floor beat (kick on every beat, clap on 2 and 4, open hats on the offbeats), and the kick dips the pad, arpeggio and bass on every beat for the pump. Everything is synthesized, so nothing downloads.</td></tr>
+        <tr><td>Export / Import</td><td>Export saves the text, seed and settings as a <code>session.radio.json</code> file; Import (or dropping the file on the code area) restores them, so a track can be shared and sounds the same for whoever opens it.</td></tr>
+        <tr><td>Seed</td><td>Each text gets a seed from its overall shape (length, lines, punctuation, capitals, digits, indentation, line length, most common letters), which changes the chords, rhythms and melody the music uses; small edits keep the same seed. The Seed box shows its code. Pin keeps it for any other text, Random tries another, Auto returns to the text's own, and you can type a code or any word to use that seed.</td></tr>
+        <tr><td>Trance style</td><td>About 140 BPM in Natural minor, built on the default composition and played like an uplifting trance track. Each line's chord is held as a big detuned supersaw pad with a fast 16th-note pluck arpeggio over it (up the triad and into the octave, then back down); the bass rolls, three 16ths between every kick, on the line's root; the melody becomes a tune: a lead that comes in like a chorus (in for three two-bar phrases, out for two while the arpeggio swells to carry the track) playing two-bar syncopated phrases (long and short notes, ending early so the last note rings out into a pause, with a higher lift phrase every fourth) are played on each section's chord, and the chords follow one of a few minor loops picked by the text (such as i, v, VI, VII, III, like Cm, Gm, A♭, B♭, E♭ in C minor), the notes join up and lean on the 8th-note grid, and each is placed in the octave nearest the previous note so the line glides across chord changes, played by a supersaw lead with a long dotted echo, and the arpeggio changes shape from bar to bar. When a chord lasts two bars or more, its last half bar is a snare roll that builds in volume. The character-driven drum hits give way to a four-on-the-floor beat (kick on every beat, clap on 2 and 4, open hats on the offbeats), and the kick dips the pad, arpeggio and bass on every beat for the pump. Everything is synthesized, so nothing downloads.</td></tr>
         <tr><td>Minimal view</td><td>The button next to Play hides everything except the {rad.io} strip, which fills the page and turns into the equalizer while music plays. Moving the mouse (or tapping) fades in Play / Pause, Stop and a Full view button, and they fade out again after a couple of seconds. Esc goes back to the full view and Space plays or pauses. The equalizer runs in this view even if the Visualizer box is off.</td></tr>
         <tr><td>Evolving harmony</td><td>Each line's text picks its own chord root and register; every fourth line returns to the tonic. The melody lands on a chord tone on each beat, the step size depends on the letter pair (not just the letter), word-ending notes are longer, word starts are accented, and each line swells in pitch and volume. Turn it off for the plain mapping.</td></tr>
         <tr><td>Background track</td><td>Canon: the melody is echoed an octave up, a beat or a bar or two later, as a soft sine tone panned slightly right (just the melody, no bass, chords or drums). Alternating lines: odd lines play in the foreground while even lines play at the same time as a lower background voice, each on its own clock. The background cursor is blue.</td></tr>
@@ -198,6 +217,6 @@
 </footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-<script type="module" src="js/main.js?v=45c70e04"></script>
+<script type="module" src="js/main.js?v=4ab7062a"></script>
 </body>
 </html>

@@ -23,9 +23,15 @@ export function getStartIndex() {
 
 export const getText = () => (jar ? jar.toString() : src.value).replace(/\r\n?/g, '\n');
 
+// One listener for "the text changed" (typing, pasting, loading an example or a file), used to show the text's seed.
+let changed = () => {};
+export const onTextChange = cb => { changed = cb; };
+src.addEventListener('input', () => changed());
+
 // plain: show the text without syntax colours (prose and poems look odd as JavaScript).
 let plain = false;
-export function setCode(text, isPlain = false) { plain = isPlain; src.value = text; if (jar) jar.updateCode(text); }
+export const isPlain = () => plain;
+export function setCode(text, isPlain = false) { plain = isPlain; src.value = text; if (jar) jar.updateCode(text); changed(); }
 const esc = t => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 export const setEditorHidden = h => { (editorEl || src).hidden = h; };
@@ -40,7 +46,7 @@ export async function initEditor(onFile) {
     jar = CodeJar(editorEl, el => {
       el.innerHTML = plain ? esc(el.textContent) : Prism.highlight(el.textContent, Prism.languages.javascript, 'javascript');
     }, { tab: '  ', addClosing: false });
-    jar.onUpdate(code => { src.value = code; });
+    jar.onUpdate(code => { src.value = code; changed(); });
     jar.updateCode(src.value);
     trackCaret(editorEl);
     src.hidden = true; editorEl.hidden = false;

@@ -1,5 +1,7 @@
 // Turns lines of text into timed events (no audio code). The lookup tables here set the melody and harmony.
 
+import { pick } from './seed.js';
+
 const FREQ = 'etaoinshrdlcumwfgypbvkjxqz';        // letters, most to least common
 
 const DUR  = [1, 1, 1, 2, 1, 1, 2, 3];            // note lengths in 16ths, picked by letter pair
@@ -21,8 +23,12 @@ export function degToMidi(root, scale, d) {
 
 // Plays one track's lines in order; times are in 16th-note units. The background track
 // sits an octave lower and drops the percussion (those characters become rests).
-export function composeTrack(items, key, scale, bg, vary, chill) {
+export function composeTrack(items, key, scale, bg, vary, chill, seed = 0) {
   const n = scale.length, ev = [];
+  // What the seed (see seed.js) changes: where in the table of melodic steps and note lengths each letter pair lands, the bass
+  // degrees, how often the harmony returns to the tonic, and where the melody starts.
+  const stepSh = pick(seed, 'steps', STEPS.length), durSh = pick(seed, 'dur', DUR.length), bassSh = pick(seed, 'bass', BASS.length);
+  const tonicEvery = 3 + pick(seed, 'tonic', 3), regSh = pick(seed, 'reg', 5), start = n + pick(seed, 'start', 5) - 2;
   const sh = bg ? -12 : 0;
   const push = o => ev.push({ tr: bg ? 1 : 0, ...o });
   const lead = d => degToMidi((chill ? 48 : 60) + key + sh, scale, d);   // same tonic as pad/bass (C + key)
@@ -33,7 +39,7 @@ export function composeTrack(items, key, scale, bg, vary, chill) {
   const bass = d => { const m = degToMidi(36 + key, scale, d); return chill ? 31 + (((m - 31) % 12) + 12) % 12 : m; };
   const top  = d => degToMidi(72 + key + sh, scale, d);
 
-  let t = 0, pos = n, depth = 0, prev = '';
+  let t = 0, pos = start, depth = 0, prev = '';
   const lo = 0, hi = 2 * n;
   const isWord = ch => /[a-z_$]/i.test(ch);
   let lineNo = -1, seg = -1;
@@ -52,13 +58,13 @@ export function composeTrack(items, key, scale, bg, vary, chill) {
     if (!blank) for (const ch of line.trim()) h = (h * 31 + ch.charCodeAt(0)) % 9973;
     if (vary && !blank) {
       lineNo++;
-      root = chill ? CHILL_ROOTS[lineNo % 4] % n : lineNo % 4 === 0 ? 0 : h % n;
-      reg = [0, 1, -1, 2, 1][(h >> 3) % 5];
+      root = chill ? CHILL_ROOTS[lineNo % 4] % n : lineNo % tonicEvery === 0 ? 0 : (h + pick(seed, 'root', n)) % n;
+      reg = [0, 1, -1, 2, 1][((h >> 3) + regSh) % 5];
     }
     const tones = [root, root + 2, root + 4].map(d => d % n);
 
     if (!blank) {
-      push({ t, i: idx + ws.length, k: 'bass', m: bass(chill ? root : (root + BASS[indent % BASS.length]) % n), d: chill ? 16 : 4, v: chill ? 0.34 : 0.6, s: seg, a: root });
+      push({ t, i: idx + ws.length, k: 'bass', m: bass(chill ? root : (root + BASS[(indent + bassSh) % BASS.length]) % n), d: chill ? 16 : 4, v: chill ? 0.34 : 0.6, s: seg, a: root });
       if (vary) push({ t, i: idx + ws.length, k: 'pad', m: [pad(root), pad(root + 2), pad(root + 4)], rd: root, d: 8, v: chill ? 0.22 : 0.3, s: seg });
     }
 
@@ -72,13 +78,13 @@ export function composeTrack(items, key, scale, bg, vary, chill) {
         let step = (rank % 2 ? -1 : 1) * (1 + Math.floor(rank / 6));
         if (vary) {
           const pr = isWord(prev) ? (/[_$]/.test(prev) ? 12 : FREQ.indexOf(prev.toLowerCase())) : 13;
-          step = STEPS[(pr * 5 + rank * 3) % STEPS.length];
+          step = STEPS[(pr * 5 + rank * 3 + stepSh) % STEPS.length];
         }
         if (prev === c) step = 0;
         let next = pos + step;
         if (next < lo || next > hi) next = pos - step;
         pos = Math.max(lo, Math.min(hi, next));
-        let d = DUR[(prev.charCodeAt(0) * 3 + c.charCodeAt(0)) % DUR.length || 0] || 1;
+        let d = DUR[(prev.charCodeAt(0) * 3 + c.charCodeAt(0) + durSh) % DUR.length || 0] || 1;
         const upper = c !== lc;
         let off = Math.min(depth, 3) * 2, v = upper ? 0.95 : 0.55;
         if (vary) {
