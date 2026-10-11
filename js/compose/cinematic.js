@@ -84,16 +84,40 @@ export function cinematicify(r, key, scale, base, v = variant()) {
     }
   });
 
-  // The melody: the Chillstep notes, up in the violin's lively range, held a few beats at most and swelling with the track.
-  for (const e of ev) {
-    if (e.k !== 'lead') continue;
-    let m = e.m;
-    while (m > 84) m -= 12;
-    while (m < 60) m += 12;
-    e.m = m;
-    e.d = Math.min(6, Math.max(e.d || 2, 2));   // a few beats at most: longer ones drone
-    e.v = Math.min(1, (e.v || 0.5) * (0.5 + 0.7 * lvl(e.t)));
+  // The melody: the Chillstep notes, up in the violin's lively range. It is made sparser and smoother than the notes the layout gives: notes
+  // closer than a beat and a bit are dropped, each note runs on into the next (so a phrase is one bowed line, not separate strikes), a big
+  // leap inside a phrase gets a soft passing note from the key on the way, and every note has the same even weight (no accents) that only
+  // swells with the track.
+  const scaleNotes = [];
+  for (let m = 48; m <= 96; m++) if (scale.includes((((m - key) % 12) + 12) % 12)) scaleNotes.push(m);
+  const kept = [];
+  for (const tr of [0, 1]) {
+    let last = -99;
+    for (const e of ev.filter(x => x.k === 'lead' && x.tr === tr).sort((x, y) => x.t - y.t)) {
+      if (e.t - last < 5) { e.k = 'rest'; delete e.m; delete e.v; delete e.d; continue; }
+      last = e.t;
+      let m = e.m;
+      while (m > 84) m -= 12;
+      while (m < 60) m += 12;
+      e.m = m;
+      kept.push(e);
+    }
   }
+  const passing = [];
+  kept.sort((x, y) => x.tr - y.tr || x.t - y.t).forEach((e, j) => {
+    const nx = kept[j + 1], gap = nx && nx.tr === e.tr ? nx.t - e.t : 99;
+    e.v = 0.5 * (0.5 + 0.7 * lvl(e.t));
+    if (gap <= 12) {
+      let end = e.t + gap + 1.5;                                  // runs on into the next note, which bows in over its tail
+      if (Math.abs(nx.m - e.m) >= 4) {
+        const mid = (e.m + nx.m) / 2;
+        const pm = scaleNotes.filter(q => q !== e.m && q !== nx.m && q > Math.min(e.m, nx.m) && q < Math.max(e.m, nx.m)).sort((x, y) => Math.abs(x - mid) - Math.abs(y - mid))[0];
+        if (pm !== undefined && gap >= 5) { passing.push({ t: nx.t - 2, tr: e.tr, k: 'lead', m: pm, d: 3, v: e.v * 0.75 }); end = nx.t - 2 + 1; }
+      }
+      e.d = Math.min(10, Math.max(2, end - e.t));
+    } else e.d = 4;                                               // the last note of a phrase
+  });
+  ev.push(...passing);
 
   // The percussion (on the foreground track only), per act: the taiko pulse from partway to the climax, the riser and snare roll into it, the
   // climax itself, a boom on every bar after it, and a last impact on the act's final chord.
