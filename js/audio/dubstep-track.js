@@ -83,6 +83,8 @@ export function buildDubstepTrack(reverb, bg, dryOut) {
         oscillator: { type: 'fatsawtooth', count: 3, spread: 30 },
         envelope: { attack: 0.005, decay: 0.1, sustain: 0.5, release: 0.04 },
       }),
+      climbNoise: new Tone.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.03, decay: 0.1, sustain: 1, release: 0.005 } }),
+      climbTone: new Tone.Synth({ oscillator: { type: 'sawtooth' }, envelope: { attack: 0.03, decay: 0.1, sustain: 1, release: 0.005 } }),
       riserNoise: new Tone.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.05, decay: 0.1, sustain: 1, release: 0.1 } }),
       riserTone: new Tone.Synth({ oscillator: { type: 'sawtooth' }, envelope: { attack: 0.1, decay: 0.1, sustain: 1, release: 0.1 } }),
       impact: new Tone.MembraneSynth({ pitchDecay: 0.25, octaves: 5, envelope: { attack: 0.001, decay: 1.2, sustain: 0, release: 0.4 } }),
@@ -105,6 +107,12 @@ export function buildDubstepTrack(reverb, bg, dryOut) {
     s.dive.volume.value = -9;        s.dive.connect(fx.diveHp);
     fx.runLp = new Tone.Filter(3400, 'lowpass').connect(group.lead);
     s.run.maxPolyphony = 4; s.run.volume.value = -12;   s.run.connect(fx.runLp);
+    fx.climbGate = new Tone.Gain(1).connect(group.accent);
+    fx.climbBp = new Tone.Filter(600, 'bandpass', -12);
+    fx.climbBp.Q.value = 2;
+    fx.climbBp.connect(fx.climbGate);
+    s.climbNoise.volume.value = -13; s.climbNoise.connect(fx.climbBp);
+    s.climbTone.volume.value = -22;  s.climbTone.connect(fx.climbGate);
     s.sub.volume.value = -7;         s.sub.connect(duckBass);
     s.wob.volume.value = -15;           s.wob.connect(fx.wobHp);
     s.riserNoise.volume.value = -20; s.riserNoise.connect(fx.riserBp);

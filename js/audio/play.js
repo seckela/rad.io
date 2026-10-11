@@ -86,6 +86,62 @@ export function sound(e, time) {
         s.zap.triggerAttackRelease(hz(e.m), long ? (e.d || 1) * unit : unit * 0.8, time, v);
         break;
       }
+      case 'climb': {       // the rise after the dive: swept noise and a rising tone on their own voices (nothing shared with the build-up's riser), cut dead by a gain gate at the end: the "eeep"
+        const L = (e.d || 5) * unit - 0.02;
+        s.climbGate.gain.cancelScheduledValues(time);
+        s.climbGate.gain.setValueAtTime(1, time);
+        s.climbGate.gain.setValueAtTime(0, time + L);
+        s.climbBp.frequency.cancelScheduledValues(time);
+        s.climbBp.frequency.setValueAtTime(600, time);
+        s.climbBp.frequency.exponentialRampToValueAtTime(5500, time + L);
+        s.climbNoise.triggerAttackRelease(L, time, 1);
+        s.climbTone.frequency.cancelScheduledValues(time);
+        s.climbTone.frequency.setValueAtTime(330, time);
+        s.climbTone.frequency.exponentialRampToValueAtTime(1500, time + L);
+        s.climbTone.triggerAttackRelease(L, time, 1);
+        break;
+      }
+      case 'run':
+        if (audio.metal) s.vibrato.depth.setValueAtTime(0, time);
+        s.run.triggerAttackRelease(hz(e.m), dur * 0.7, time, v);
+        break;
+      case 'crash':
+        s.crash.triggerAttackRelease(1.4, time, v);
+        if (s.crashM) s.crashM.triggerAttackRelease('4n', time, v * 0.6);
+        break;
+      case 'arp':   s.pad.triggerAttackRelease(hz(e.m), dur * 0.8, time, v); break;
+      case 'bass':  s.bass.triggerAttackRelease(hz(e.m), dur, time, v); break;
+      case 'digit': s.digit.triggerAttackRelease(hz(e.m), dur, time, v); break;
+      case 'chime': s.chime.triggerAttackRelease(hz(e.m), dur, time, v); break;
+      case 'bell':  s.bell.triggerAttackRelease(hz(e.m), dur, time, v); break;
+      case 'crackle': s.crackle.triggerAttackRelease('64n', time, v); break;
+      case 'pad':
+        if (audio.chill && audio.piano) e.m.forEach((m, i) => s.pad.triggerAttackRelease(hz(m), dur, time + i * 0.035, v));   // a gently rolled chord
+        else s.pad.triggerAttackRelease(e.m.map(hz), dur, time, v);
+        break;
+      case 'kick':
+        if ((audio.house || audio.trance || audio.dubstep) && !e.tr && s.duckPad) for (const [g, dip] of [[s.duckPad, 0.3], [s.duckBass, 0.35]]) {   // the pump: a deep, quick dip
+          g.gain.cancelScheduledValues(time);
+          g.gain.setValueAtTime(dip, time);
+          g.gain.linearRampToValueAtTime(1, time + 0.2);
+        } else if (audio.chill && !audio.lofi && !e.tr) for (const [g, dip] of [[s.duckPad, 0.55], [s.duckBass, 0.85]]) {   // dip the sustained tones under the kick
+          g.gain.cancelScheduledValues(time);
+          g.gain.setValueAtTime(dip, time);
+          g.gain.linearRampToValueAtTime(1, time + 0.35);
+        }
+        s.kick.triggerAttackRelease(audio.metal ? 'F1' : 'C1', '16n', time, v ?? 0.9);
+        if (s.kickClick) s.kickClick.triggerAttackRelease('64n', time, v ?? 0.9);
+        break;
+      case 'sub':   s.sub.triggerAttackRelease(hz(e.m), dur, time, v); break;
+      case 'stab':  s.stab.triggerAttackRelease(e.m.map(hz), unit * 1.2, time, v); break;
+      case 'zap': {         // a sharp high tone: a quick pitch dive into the note, or a rising scream if it is held
+        const long = (e.d || 1) > 2;
+        s.zap.detune.cancelScheduledValues(time);
+        s.zap.detune.setValueAtTime(long ? -300 : 600, time);
+        s.zap.detune.linearRampToValueAtTime(long ? 1200 : 0, time + (long ? (e.d || 1) * unit : 0.06));
+        s.zap.triggerAttackRelease(hz(e.m), long ? (e.d || 1) * unit : unit * 0.8, time, v);
+        break;
+      }
       case 'climb': {       // the build-up's riser in miniature: swept noise and a rising tone that pull up and stop dead as the melody lands
         const L = (e.d || 5) * unit - 0.02;   // it stops a 16th before the next bar, with a hard mute (no release tail): the "eeep"
         s.riserBp.frequency.cancelScheduledValues(time);
