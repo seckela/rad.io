@@ -13,6 +13,7 @@ const TIPS = {
   seed: 'Every text gets its own seed, built from its overall shape, which changes the chords, rhythms and melody the music uses. The placeholder shows this text\'s seed. Type a code or any word to use that seed instead, whatever the text, and use Pin to keep the current one. The same seed and text always sound the same.',
   bgmode: 'A second, quieter voice. Canon echoes the melody a little later. Alternating lines plays odd and even lines at the same time as two voices. Off plays a single voice.',
   delay: 'How far behind the echo comes. Only used by Canon.',
+  strobe: 'Dubstep only: a short white flash of the bars on the snare fills (two a bar, never more than about 2.5 a second). Off by default; people sensitive to flashing should leave it off. It does nothing if your device asks for reduced motion.',
   'viz-on': 'While music plays, the title {rad.io} expands into moving bars. Turn it off on a slow phone to save battery.',
   bgvol: 'Volume of the background voice. Further left is quieter.',
   file: 'Load a file from your computer instead of pasting. You can also drop a file onto the code area.',

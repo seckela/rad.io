@@ -204,6 +204,7 @@ export function dubstepDrums(total, v = variant(), T = total) {
       hit(b + 8, 'snare', 1);
       for (const o of hats) if ((!fill || o < 8) && b !== c.drop) hit(b + o, o % 4 === 2 ? 'ohat' : 'hat', o % 4 === 0 ? 0.45 : 0.3);
       if (fill) for (const o of [8.5, 12, 13, 14, 14.5, 15]) hit(b + o, 'snare', o >= 14 ? 0.9 : 0.6);
+      if (fill) { hit(b + 8, 'flash', 1); hit(b + 12, 'flash', 1); }   // silent cues for the visualizer's strobe (an option)
     }
   });
   return ev;
