@@ -120,6 +120,7 @@ function draw() {
           for (let b = lo; b < hi && b < bins; b++) if (vals[b] > m) m = vals[b];
           t = clamp01((m + 90) / 55);                                   // -90 dB .. -35 dB  ->  0 .. 1
         }
+        if (tension > 0) t = Math.max(t, tension * (0.6 - 0.35 * d / Math.max(1, centre)));   // the build-up holds the bars up, even through the silence just before the drop
         const idx = Math.min(nMax - 1, Math.round(d));
         levels[idx] = t > levels[idx] ? t : levels[idx] * 0.85;         // fast attack, slow decay
         energy += levels[idx];
