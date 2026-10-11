@@ -41,6 +41,7 @@ export function sound(e, time) {
           if (dur > 0.4) depth.linearRampToValueAtTime(0.22, time + Math.min(dur * 0.8, 0.6));
         }
         // A held-pedal feel for piano: notes ring on past their slot so they blend into the next one.
+        if (audio.neo) { s.lead.triggerAttackRelease(hz(e.m), dur * (audio.piano ? 1.6 : 1.2), time, audio.piano ? v * 0.85 : v); break; }   // neo-classical: the melody rings on over the figure
         s.lead.triggerAttackRelease(hz(e.m), audio.piano ? dur * (audio.chill ? 1.3 : 2) : dur, time, audio.piano ? v * (audio.chill ? 0.7 : 0.85) : v);
         break;
       case 'chug':  s.chug.triggerAttackRelease((e.n === 1 ? [e.m] : [e.m, e.m + 7, e.m + 12]).map(hz), dur * 0.6, time, v); break;
@@ -53,7 +54,8 @@ export function sound(e, time) {
         s.crash.triggerAttackRelease(1.4, time, v);
         if (s.crashM) s.crashM.triggerAttackRelease('4n', time, v * 0.6);
         break;
-      case 'arp':   s.pad.triggerAttackRelease(hz(e.m), dur * 0.8, time, v); break;
+      case 'arp':   (audio.neo ? s.arp : s.pad).triggerAttackRelease(hz(e.m), audio.neo ? dur * 1.4 : dur * 0.8, time, audio.neo && audio.piano ? v * 0.8 : v); break;   // (neo-classical: the piano figure)
+      case 'strings': s.strings.triggerAttackRelease(e.m.map(hz), dur, time, v); break;
       case 'bass':  s.bass.triggerAttackRelease(hz(e.m), dur, time, v); break;
       case 'digit': s.digit.triggerAttackRelease(hz(e.m), dur, time, v); break;
       case 'chime': s.chime.triggerAttackRelease(hz(e.m), dur, time, v); break;

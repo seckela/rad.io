@@ -7,12 +7,13 @@ import { buildHouseTrack } from './house-track.js';
 import { buildTranceTrack } from './trance-track.js';
 import { buildDubstepTrack } from './dubstep-track.js';
 import { buildAmbientTrack } from './ambient-track.js';
+import { buildNeoTrack } from './neoclassical-track.js';
 
 // The current set of voices (null until the first Play). Importers see the live value.
 export let audio = null;
 export function setAudio(a) { audio = a; }
 
-// style: 'default' | 'chill' | 'lofi' | 'metal' | 'chiptune' | 'ambient' | 'synthwave' | 'house' | 'trance' | 'dubstep'. bufs: the decoded samples for that style (guitar and bass for
+// style: 'default' | 'chill' | 'lofi' | 'metal' | 'chiptune' | 'ambient' | 'synthwave' | 'house' | 'trance' | 'dubstep' | 'neoclassical'. bufs: the decoded samples for that style (guitar and bass for
 // metal, bass for chill and lofi), or undefined to use the synth fallbacks.
 export function buildAudio(style, piano, bufs) {
   try { Tone.getContext().lookAhead = 0.2; } catch (e) { /* a longer scheduling window rides out brief main-thread stalls (the default is 0.1 s) */ }
@@ -41,6 +42,11 @@ export function buildAudio(style, piano, bufs) {
     const reverb = new Tone.Reverb({ decay: 2.5, wet: 0.22 }).connect(limiter);
     return { reverb, limiter, piano: false, chill: false, synthwave: true,
       fg: buildSynthwaveTrack(reverb, false), bg: buildSynthwaveTrack(reverb, true) };
+  }
+  if (style === 'neoclassical') {        // a warm concert hall around the piano and strings
+    const reverb = new Tone.Reverb({ decay: 4.5, wet: 0.3 }).connect(limiter);
+    return { reverb, limiter, piano, chill: false, neo: true,
+      fg: buildNeoTrack(reverb, false, piano), bg: buildNeoTrack(reverb, true, piano) };
   }
   if (style === 'ambient') {             // a huge, soft space
     const reverb = new Tone.Reverb({ decay: 9, wet: 0.55 }).connect(limiter);
