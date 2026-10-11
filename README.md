@@ -8,7 +8,7 @@ Turn any JavaScript file into music. Paste or drop in code, press play, and ever
 
 It's a static page (plain ES modules, no bundler) built on [Tone.js](https://tonejs.github.io/), with [CodeJar](https://medv.io/codejar/) and [Prism](https://prismjs.com/) for the syntax-highlighted code box. There's no build step and nothing to install.
 
-Six styles are included: an upbeat **Default**, a calm **Chillstep** for background listening, a dusty **Lo-fi** beat for studying, a **Rock / Metal** style with sampled electric guitar and bass, a bright **Chiptune** style with console-style synth voices, and a slow, drumless **Ambient** style. Pick one from the Style menu; a card underneath says what it offers.
+Seven styles are included: an upbeat **Default**, a calm **Chillstep** for background listening, a dusty **Lo-fi** beat for studying, a **Rock / Metal** style with sampled electric guitar and bass, a bright **Chiptune** style with console-style synth voices, a slow, drumless **Ambient** style, and a neon **Synthwave** style. Pick one from the Style menu; a card underneath says what it offers.
 
 ## Getting started
 
@@ -36,8 +36,9 @@ Any static server works if you'd rather not use Python, for example `npx serve`.
 - **Lo-fi:** about 80 BPM in a minor scale, built on the same melody and chord loop as Chillstep but played like a lo-fi beat. The chords gain a 9th and are played as short stabs that follow a boom-bap kick, the bass plays short round notes on the kick pattern, the snare lands on 2 and 4 a touch late with swung hats, and the timing and volumes are slightly loose. The piano and chords go through a gentle tape wobble, a little saturation and a dark lowpass, in a small room, with quiet vinyl crackle on top. Like Chillstep it needs the piano and bass samples and falls back to synths without them.
 - **Chiptune:** about 140 BPM in a major scale, built on the default composition and played on simple console-style voices: a pulse-wave lead, chords turned into fast arpeggios, a triangle-wave bass that bounces between octaves on every 8th note, and a tight kick / snare / hat beat in place of the character-driven drum hits. Everything is synthesized, so there is nothing to download.
 - **Ambient:** about 60 BPM, built on the Chillstep layout but with nothing struck: each chord change becomes one long, soft drone (chord, low root and fifth) that lasts until the next change, the melody is thinned to a note every few beats and rings long, every few bars a soft gust of wind chimes drifts through, and there are no drums. Soft synthesized voices in a very large reverb; nothing to download.
+- **Synthwave:** about 100 BPM in Natural minor, built on the default composition: a bright detuned saw lead with a dotted echo over a wide saw pad, a pulsing 16th-note saw bass on each line's root, and a four-on-the-floor beat in place of the character-driven drum hits. Everything is synthesized; nothing to download.
 *Rock / Metal* sets about 150 BPM and the Phrygian scale. Each line is a riff section with palm-muted guitar chugs (straight 8ths, a gallop, or a syncopated half-time rhythm) on a root note. The riff never stops between lines, and it changes bar to bar (rhythm variants, a root move every second bar, chord stabs, and a turnaround) so it doesn't loop. Only one part speeds up at a time: some sections have the lead guitar run up and down the scale in 8ths over a steady rhythm, and others end in a half-bar burst of 16th chugs and double kick while the lead rests. Brackets add power chords, the bass is its own part (several bar shapes that rotate, walking notes that follow the words in the line, and a walk up into the next section's root), the drums pick up accents from the code, and a lead guitar (with vibrato that fades in on held notes) plays over the other sections, mostly a note per beat or per 8th with stepwise pickup notes, and each section centers on a different scale step so the lead keeps moving. The guitar and bass are recorded samples; the drums are synthesized in layers (body tone plus noise or click, a room, and bus compression), and timing and velocity drift slightly, the same way every time, so it feels played rather than sequenced. The first Play in this style downloads about 3 MB of guitar and bass samples.
-- **Lead:** a sampled grand piano (default), or a plain synth if you're offline. (Rock / Metal always uses a guitar lead and Chiptune a pulse wave and Ambient a soft sine.)
+- **Lead:** a sampled grand piano (default), or a plain synth if you're offline. (Rock / Metal always uses a guitar lead and Chiptune a pulse wave and Ambient a soft sine and Synthwave a saw synth.)
 - **Key, Scale, Tempo, Loop:** these work while playing.
 - **Melody pace:** Chillstep, Lo-fi, Ambient and Rock / Metal. Busy, Medium, or Relaxed sets how far apart the lead melody's notes are.
 - **Evolving harmony:** gives each line its own chord and register so the music changes more over a file.
@@ -78,6 +79,7 @@ js/
     chill.js           Chillstep transform and drums
     lofi.js            Lo-fi transform (built on Chillstep) and drums
     ambient.js         Ambient transform (held drones, no drums)
+    synthwave.js       Synthwave transform (pulsing bass, held chords) and drums
     chip.js            Chiptune transform (arpeggios, bouncing bass) and drums
     metal.js           Rock / Metal transform, riff tables and drums
     index.js           compose(): splits lines across tracks and applies a style
@@ -87,6 +89,7 @@ js/
     lofi-track.js      Lo-fi voices and tape effects
     chip-track.js      Chiptune voices
     ambient-track.js   Ambient voices
+    synthwave-track.js Synthwave voices
     metal-track.js     Rock / Metal voices
     samples.js         Sample URLs and loaders
     play.js            Plays one event
