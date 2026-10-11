@@ -7,6 +7,7 @@ import { ambientify } from './ambient.js';
 import { synthwaveify, synthwaveDrums } from './synthwave.js';
 import { houseify, houseDrums } from './house.js';
 import { tranceify, tranceDrums } from './trance.js';
+import { cinematicify } from './cinematic.js';
 import { neoclassicalify } from './neoclassical.js';
 import { dubstepify, dubstepDrums } from './dubstep.js';
 import { seedOf, variant } from './seed.js';
@@ -15,15 +16,15 @@ import { defaultify, defaultDrums } from './default.js';
 // o.mode: 'off' | 'canon' | 'split'
 //  canon: the background repeats the melody `o.delay` units late, an octave up (lead voice only)
 //  split: code lines alternate between foreground and background tracks, each on its own clock
-// o.vary: evolving harmony; o.chill: chillstep feel; o.lofi: lo-fi feel; o.metal: rock/metal feel; o.chip: chiptune feel; o.ambient: ambient feel; o.synthwave: synthwave feel; o.house: techno / house feel; o.trance: trance feel; o.dubstep: dubstep feel; o.neo: neo-classical feel; o.gap: melody pace
+// o.vary: evolving harmony; o.chill: chillstep feel; o.lofi: lo-fi feel; o.metal: rock/metal feel; o.chip: chiptune feel; o.ambient: ambient feel; o.synthwave: synthwave feel; o.house: techno / house feel; o.trance: trance feel; o.dubstep: dubstep feel; o.neo: neo-classical feel; o.cine: cinematic feel; o.gap: melody pace
 export function compose(text, key, scale, o) {
-  const { mode, delay, vary, chill, lofi, metal, chip, ambient, synthwave, house, trance, dubstep, neo } = o;
+  const { mode, delay, vary, chill, lofi, metal, chip, ambient, synthwave, house, trance, dubstep, neo, cine } = o;
   const sd = o.seed != null ? o.seed : seedOf(text);   // a seed typed in by the user, or the text's own
   // Each style makes its seeded choices through its own variant (see seed.js); the default composition has one too.
-  const style = neo ? 'neoclassical' : dubstep ? 'dubstep' : trance ? 'trance' : house ? 'house' : synthwave ? 'synthwave' : ambient ? 'ambient' : chip ? 'chip' : metal ? 'metal' : lofi ? 'lofi' : chill ? 'chill' : 'default';
+  const style = cine ? 'cinematic' : neo ? 'neoclassical' : dubstep ? 'dubstep' : trance ? 'trance' : house ? 'house' : synthwave ? 'synthwave' : ambient ? 'ambient' : chip ? 'chip' : metal ? 'metal' : lofi ? 'lofi' : chill ? 'chill' : 'default';
   const v = variant(sd, style), base = variant(sd, 'melody');
-  const warm = chill || lofi || ambient || neo;      // Lo-fi is composed on top of the Chillstep layout
-  const fix = r => neo ? neoclassicalify(r, key, scale, o.gap, v) : trance ? tranceify(r, v) : house ? houseify(r, v) : synthwave ? synthwaveify(r, v) : ambient ? ambientify(r, key, scale, o.gap, v) : chip ? chipify(r, v) : metal ? metalify(r, key, scale, o.gap / 2, v) : lofi ? lofiify(r, key, scale, o.gap, v) : chill ? chillify(r, o.gap, v) : defaultify(r, v);
+  const warm = chill || lofi || ambient || neo || cine;      // Lo-fi is composed on top of the Chillstep layout
+  const fix = r => cine ? cinematicify(r, key, scale, o.gap, v) : neo ? neoclassicalify(r, key, scale, o.gap, v) : trance ? tranceify(r, v) : house ? houseify(r, v) : synthwave ? synthwaveify(r, v) : ambient ? ambientify(r, key, scale, o.gap, v) : chip ? chipify(r, v) : metal ? metalify(r, key, scale, o.gap / 2, v) : lofi ? lofiify(r, key, scale, o.gap, v) : chill ? chillify(r, o.gap, v) : defaultify(r, v);
   const lines = text.split('\n');
   const tracks = [[], []];
   let idx = 0, k = -1;

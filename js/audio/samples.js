@@ -29,6 +29,16 @@ export async function loadCelloBuffers() {
   return Object.fromEntries(Object.entries(wrapped).map(([note, b]) => [note, b.get()]));
 }
 
+// Violin samples (also tonejs-instruments), for Cinematic: eight notes from G3 to C6 (about 2.6 MB).
+const VIOLIN_FILES = { G3: 'G3', C4: 'C4', E4: 'E4', G4: 'G4', C5: 'C5', E5: 'E5', G5: 'G5', C6: 'C6' };
+
+export async function loadViolinBuffers() {
+  const wrapped = Object.fromEntries(Object.entries(VIOLIN_FILES)
+    .map(([note, f]) => [note, new Tone.ToneAudioBuffer(INSTR_BASE + 'violin/' + f + '.mp3')]));
+  await Tone.loaded();
+  return Object.fromEntries(Object.entries(wrapped).map(([note, b]) => [note, b.get()]));
+}
+
 // Downloads and decodes the rock/metal guitar and bass samples once. Samplers are given the raw
 // AudioBuffers (they can't take already-wrapped Tone buffers), so every track shares one copy.
 export async function loadMetalBuffers() {

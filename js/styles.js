@@ -88,4 +88,12 @@ export const STYLES = [
     download: 'Piano samples (about 1 MB) and cello samples (about 1 MB). The string swells are synthesized.',
     note: 'If the samples cannot be loaded, the piano and cello fall back to synths. The Lead control switches the piano for a plain synth.',
   },
+  {
+    id: 'cinematic', name: 'Cinematic', tint: '#d1495b',
+    tagline: 'A long build to a huge climax',
+    blurb: "A film-trailer build. A cello drone and a driving ostinato underneath, the melody beginning on the cello, then a lively violin taking it for the powerful stretch with string swells and a low charging cello line, and giving way to the cello now and then after the climax, then a taiko pulse, a riser and a snare roll, a beat of silence, and the climax: a huge impact and a boom on every bar. It holds at full power, then falls away to a last chord. A long text is a run of acts, each with its own build.",
+    chips: ['78 BPM', 'Natural minor', 'Lively violin', 'Cello ostinato', 'Taiko and riser', 'One big climax'],
+    download: 'Violin and cello samples (about 3.6 MB). The strings and drums are synthesized.',
+    note: 'The lead is always a violin, so the Lead control is disabled. If the samples cannot be loaded, synth voices play instead.',
+  },
 ];
