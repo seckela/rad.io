@@ -41,7 +41,11 @@ export function sound(e, time) {
           if (dur > 0.4) depth.linearRampToValueAtTime(0.22, time + Math.min(dur * 0.8, 0.6));
         }
         // A held-pedal feel for piano: notes ring on past their slot so they blend into the next one.
-        if (audio.cine) { s.lead.triggerAttackRelease(hz(e.m), dur * 1.1, time, v); break; }   // cinematic: the violin
+        if (audio.cine) {                         // cinematic: the violin, or the cello where it takes the melody
+          if (e.cello && !e.tr) s.cello.triggerAttackRelease(hz(e.m), dur * 1.1, time, v);
+          else s.lead.triggerAttackRelease(hz(e.m), dur * 1.1, time, v);
+          break;
+        }
         if (audio.neo) {          // neo-classical: the melody rings on over the figure; in some sections the cello carries it
           if (e.cello && !e.tr) s.cello.triggerAttackRelease(hz(e.m), dur * 1.15, time, v);
           else s.lead.triggerAttackRelease(hz(e.m), dur * (audio.piano ? 1.6 : 1.2), time, audio.piano ? v * 0.85 : v);

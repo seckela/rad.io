@@ -34,6 +34,7 @@ function armEnd(wait) {
   const my = ++endToken;
   setTimeout(() => { if (playing && !paused && my === endToken) stop(); }, wait);
 }
+let sampleNote = '';   // set when a style had to fall back to synth voices, and shown with the stats
 let metalBufs = null, chillBass = null, celloBufs = null, violinBufs = null;   // downloaded sample sets, kept for the rest of the session
 
 // Pushes the layer checkboxes and background controls onto the audio graph.
@@ -87,7 +88,7 @@ export function tooShort(chars = getText().length) {
 
 export function updateStats(chars, total) {
   const secs = total * 60 / Tone.Transport.bpm.value / 4;
-  $('stats').textContent = tooShort(chars) || `${chars} characters · ${total / 16} bars · ${secs.toFixed(1)}s`;
+  $('stats').textContent = tooShort(chars) || `${chars} characters · ${total / 16} bars · ${secs.toFixed(1)}s${sampleNote ? ' · ' + sampleNote : ''}`;
 }
 
 export function rebuild() {
@@ -129,6 +130,7 @@ export function applyStyleDefaults() {
 // they can't be fetched (offline, blocked), falls back to something that needs no downloads.
 export async function loadAudio() {
   if (audio) disposeAudio();
+  sampleNote = '';
   const metal = isMetal(), piano = !metal && !isChip() && !isAmbient() && !isSynthwave() && !isHouse() && !isTrance() && !isDubstep() && !isCine() && $('leadsound').value === 'piano';
   const label = playBtn.innerHTML;
   if (metal) {
@@ -156,11 +158,11 @@ export async function loadAudio() {
   }
   if (isCine() && !(celloBufs && violinBufs)) {
     playBtn.textContent = 'Loading violin and cello…';
-    try { celloBufs = celloBufs || await loadCelloBuffers(); violinBufs = violinBufs || await loadViolinBuffers(); } catch (err) { celloBufs = violinBufs = null; }   // falls back to the synth voices
+    try { celloBufs = celloBufs || await loadCelloBuffers(); violinBufs = violinBufs || await loadViolinBuffers(); sampleNote = ''; } catch (err) { celloBufs = violinBufs = null; sampleNote = 'violin and cello samples could not be loaded, so synth voices are playing'; }   // falls back to the synth voices
   }
   if (isNeo() && !celloBufs) {
     playBtn.textContent = 'Loading cello…';
-    try { celloBufs = await loadCelloBuffers(); } catch (err) { celloBufs = null; }   // falls back to the synth strings
+    try { celloBufs = await loadCelloBuffers(); sampleNote = ''; } catch (err) { celloBufs = null; sampleNote = 'cello samples could not be loaded, so a synth is playing'; }   // falls back to the synth strings
   }
   const bufs = warm && chillBass ? { bass: chillBass } : isNeo() && celloBufs ? { cello: celloBufs } : isCine() && celloBufs && violinBufs ? { cello: celloBufs, violin: violinBufs } : undefined;
   setAudio(buildAudio(getStyle(), piano, bufs));

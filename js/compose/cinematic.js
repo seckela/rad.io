@@ -6,7 +6,9 @@ import { chordLayout } from './pieces.js';
 // through other chords, see pieces.js) and arranged like a film trailer, as one long build to a single climax:
 //  - A low drone under everything: a cello on each chord's root, with a sine sub beneath it.
 //  - A driving cello ostinato (a pulse, a rising figure, a gallop or a dotted rhythm, seeded) that comes in after the opening and grows.
-//  - A lively violin carries the melody, and a low, driving cello line (short, punchy hits on the chord, never held) and synthesized string
+//  - The melody starts on the cello, quiet and low. As the build gets under way the violin takes it, with string swells under it, for the
+//    powerful stretch up to the climax; after the climax the violin carries it in blocks of eight bars and gives way to the cello in between,
+//    so the strings are a peak rather than a constant. A lively violin carries the melody, and a low, driving cello line (short, punchy hits on the chord, never held) and synthesized string
 //    swells join as the piece builds.
 //  - A taiko-like pulse starts partway to the climax. Two bars before it a riser sweeps up and a snare roll speeds up, then a beat of
 //    silence, then the climax: a huge impact, and from there a boom on every bar (and every fourth bar a bigger one).
@@ -46,6 +48,9 @@ export function cinematicify(r, key, scale, base, v = variant()) {
   // The level of the track: it grows from the opening of an act to its climax, holds, and falls away at the end of the act.
   const lvl = t => { const x = actOf(t); return t < x.c ? 0.25 + 0.6 * Math.pow((t - x.s) / (x.c - x.s), 1.3) : t < x.e - 24 ? 1 : 0.45 + 0.55 * Math.max(0, (x.e - t) / 24); };
 
+  // Who carries the melody: the cello at the start of an act, the violin from partway up the build to the climax, and after the climax the
+  // violin and cello in turn, eight bars each.
+  const celloLeads = t => { const x = actOf(t); return t < x.c ? (t - x.s) / (x.c - x.s) < 0.35 : Math.floor((t - x.c) / 128) % 2 === 1; };
   const extra = [];
   pieces.forEach(c => {
     const { start, stop, tones } = c, a = lvl(start);
@@ -67,7 +72,7 @@ export function cinematicify(r, key, scale, base, v = variant()) {
     }
     // Strings swell in under the chords once the build is under way.
     const x0 = actOf(start), into = (start - x0.s) / (x0.c - x0.s);
-    if (into >= 0.3 && start < x0.e - 16 && stop - start >= 8) extra.push({ t: start, tr: c.tr, k: 'strings', m: tones.map((m, q) => m + 12 + (q === 2 ? stringsAbove - 12 : 0)), d: stop - start + 6, v: 0.25 + 0.4 * a });
+    if (into >= 0.3 && start < x0.e - 16 && stop - start >= 8 && !celloLeads(start)) extra.push({ t: start, tr: c.tr, k: 'strings', m: tones.map((m, q) => m + 12 + (q === 2 ? stringsAbove - 12 : 0)), d: stop - start + 6, v: 0.25 + 0.4 * a });
     // The cello's charging line, once the build is well under way: short hits on the chord's tones, bar after bar, low in the cello's range.
     if (into >= 0.55 && start < x0.e - 16) {
       const fit = m => { while (m < 45) m += 12; while (m > 59) m -= 12; return m; };
@@ -99,6 +104,7 @@ export function cinematicify(r, key, scale, base, v = variant()) {
       let m = e.m;
       while (m > 84) m -= 12;
       while (m < 60) m += 12;
+      if (!tr && celloLeads(e.t)) { m -= 12; while (m > 69) m -= 12; e.cello = true; }   // an octave down, in the cello's range
       e.m = m;
       kept.push(e);
     }
