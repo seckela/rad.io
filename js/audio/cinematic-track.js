@@ -1,4 +1,4 @@
-// The cinematic voices: a French horn (sampled; bowed synth saws if the samples can't be loaded) for the melody and the horn chords, a
+// The cinematic voices: a French horn (sampled; bowed synth saws if the samples can't be loaded) for the melody and the charging horn line, a
 // cello (sampled, with the same fallback) for the drone and the driving ostinato, a sine sub under the drone, a synthesized string section for the
 // swells, and synthesized percussion: a deep taiko-like boom, a snare for the roll, a riser (swept noise and a rising tone) and a huge
 // impact for the climax. A big hall reverb (see engine.js) holds it together. The background track (the canon echo) has only the melody.
@@ -10,7 +10,7 @@ export function buildCineTrack(reverb, bg, samples) {
   const fx = {};
 
   fx.hornLp = new Tone.Filter(horn ? 2600 : 1800, 'lowpass').connect(group.lead);
-  fx.brassLp = new Tone.Filter(horn ? 1500 : 1200, 'lowpass').connect(group.pad);
+  fx.brassLp = new Tone.Filter(horn ? 2600 : 1800, 'lowpass').connect(group.pad);
   fx.arpLp = new Tone.Filter(cello ? 2600 : 1400, 'lowpass').connect(group.pad);
   fx.stringLp = new Tone.Filter(1300, 'lowpass').connect(group.pad);
   fx.vibrato = new Tone.Vibrato({ frequency: 5, depth: 0.1 }).connect(fx.stringLp);
@@ -22,14 +22,14 @@ export function buildCineTrack(reverb, bg, samples) {
     bass: cello ? new Tone.Sampler({ urls: cello, attack: 0.3, release: 1.0 }) : soft('fatsawtooth', { attack: 0.4, decay: 0.4, sustain: 0.85, release: 1.8 }, { count: 2, spread: 10 }),
     strings: soft('fatsawtooth', { attack: 1.2, decay: 0.5, sustain: 0.85, release: 2.4 }, { count: 3, spread: 18 }),
     sub: soft('sine', { attack: 0.4, decay: 0.3, sustain: 0.9, release: 1.5 }),
-    brass: horn ? new Tone.Sampler({ urls: horn, attack: 0.6, release: 1.0 }) : soft('fatsawtooth', { attack: 0.5, decay: 0.4, sustain: 0.85, release: 1.8 }, { count: 2, spread: 12 }),
+    brass: horn ? new Tone.Sampler({ urls: horn, attack: 0.025, release: 0.3 }) : soft('sawtooth', { attack: 0.02, decay: 0.15, sustain: 0.5, release: 0.2 }),
     arp: cello ? new Tone.Sampler({ urls: cello, attack: 0.01, release: 0.35 }) : soft('sawtooth', { attack: 0.01, decay: 0.2, sustain: 0.3, release: 0.3 }),
   };
   s.lead.volume.value = bg ? -10 : -6;   s.lead.connect(fx.hornLp);
   s.bass.volume.value = cello ? -11 : -17; s.bass.connect(fx.celloLp);
   s.strings.volume.value = -25;          s.strings.connect(fx.vibrato);
   s.sub.volume.value = -19;              s.sub.connect(group.bass);
-  s.brass.volume.value = horn ? -14 : -21; s.brass.connect(fx.brassLp);
+  s.brass.volume.value = horn ? -8 : -17; s.brass.connect(fx.brassLp);
   s.arp.volume.value = cello ? -9 : -18;   s.arp.connect(fx.arpLp);
   if (!bg) {
     fx.riserBp = new Tone.Filter(400, 'bandpass', -12);

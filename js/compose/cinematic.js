@@ -6,7 +6,8 @@ import { chordLayout } from './pieces.js';
 // through other chords, see pieces.js) and arranged like a film trailer, as one long build to a single climax:
 //  - A low drone under everything: a cello on each chord's root, with a sine sub beneath it.
 //  - A driving cello ostinato (a pulse, a rising figure, a gallop or a dotted rhythm, seeded) that comes in after the opening and grows.
-//  - A French horn carries the melody, and horn chords and synthesized string swells join as the piece builds.
+//  - A French horn carries the melody, and a charging horn line (short, punchy hits on the chord, never held) and synthesized string swells
+//    join as the piece builds.
 //  - A taiko-like pulse starts partway to the climax. Two bars before it a riser sweeps up and a snare roll speeds up, then a beat of
 //    silence, then the climax: a huge impact, and from there a boom on every bar (and every fourth bar a bigger one).
 //  - After the climax it holds at full power, then falls away to a last chord with a final impact.
@@ -19,12 +20,18 @@ const OSTINATI = [
   { name: 'gallop', hits: [[0, 0], [2, 0], [3, 0], [4, 0], [6, 0], [7, 0], [8, 0], [10, 0], [11, 0], [12, 0], [14, 0], [15, 0]] },
   { name: 'dotted', hits: [[0, 0], [3, 1], [6, 0], [8, 0], [11, 1], [14, 0]] },                                      // 3 + 3 + 2, rooted on the fifth
 ];
+// The horns' charging line, as [offset in a bar (sixteenths), chord tone (0 low to 2 high), length] hits: short and punchy, never held.
+const CHARGE = [
+  [[0, 0, 1.5], [2, 0, 1], [3, 0, 1], [4, 1, 1.5], [6, 1, 1], [7, 1, 1], [8, 2, 1.5], [10, 2, 1], [11, 2, 1], [12, 1, 2]],     // long-short-short, climbing
+  [[0, 0, 2], [3, 1, 1], [4, 2, 2], [8, 0, 2], [11, 1, 1], [12, 2, 2], [14, 1, 1]],                                          // a fanfare
+  [[0, 0, 1.5], [2, 1, 1.5], [4, 2, 1.5], [6, 1, 1.5], [8, 0, 1.5], [10, 1, 1.5], [12, 2, 1.5], [14, 1, 1.5]],               // driving eighths
+];
 const TAIKO = [[0], [0, 8], [0, 6, 8], [0, 10]];                                                                    // hits per bar, in sixteenths
 const arpPitch = [0, 7, 12];                                                                                       // root, fifth, octave
 
 export function cinematicify(r, key, scale, base, v = variant()) {
   const ost = v.of('ostinato', OSTINATI), taiko = v.of('taiko', TAIKO), climaxAt = v.of('climax', [0.58, 0.64, 0.7]);
-  const stringsAbove = v.of('strings', [12, 12, 7]);
+  const stringsAbove = v.of('strings', [12, 12, 7]), charge = v.of('charge', CHARGE);
   const res = chillify(r, base, v);
   const total = res.t + 16;
   const { ev, pieces } = chordLayout(r, res, total, v);
@@ -61,7 +68,20 @@ export function cinematicify(r, key, scale, base, v = variant()) {
     // Strings swell in under the chords once the build is under way, and horns join them further on.
     const x0 = actOf(start), into = (start - x0.s) / (x0.c - x0.s);
     if (into >= 0.3 && start < x0.e - 16 && stop - start >= 8) extra.push({ t: start, tr: c.tr, k: 'strings', m: tones.map((m, q) => m + 12 + (q === 2 ? stringsAbove - 12 : 0)), d: stop - start + 6, v: 0.25 + 0.4 * a });
-    if (into >= 0.55 && start < x0.e - 16 && stop - start >= 8) extra.push({ t: start, tr: c.tr, k: 'brass', m: tones, d: Math.min(stop - start, 32) + 2, v: 0.2 + 0.35 * a });   // a swell of a couple of bars, not a held drone
+    // The horns' charging line, once the build is well under way: short hits on the chord's tones, bar after bar, in the horn's range.
+    if (into >= 0.55 && start < x0.e - 16) {
+      const fit = m => { while (m < 52) m += 12; while (m > 66) m -= 12; return m; };
+      const pool = tones.map(fit).sort((p, q) => p - q);
+      for (let b = start; b < stop - 1; b += 16) {
+        if (b >= x0.e - 16) break;
+        for (const [off, ti, d] of charge) {
+          const t = b + off;
+          if (t >= stop - 0.5) break;
+          if (t >= x0.c - 4 && t < x0.c) continue;                     // (and silent for the last beat before the climax)
+          extra.push({ t, tr: c.tr, k: 'brass', m: [pool[ti]], d, v: Math.min(1, 0.3 + 0.45 * lvl(t)) * (off === 0 ? 1 : 0.8) });
+        }
+      }
+    }
   });
 
   // The melody: the Chillstep notes, in the horn's range, each held longer and swelling with the track.
