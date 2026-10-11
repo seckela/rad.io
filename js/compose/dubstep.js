@@ -28,8 +28,8 @@ const HIGH = [[[0, 0], [3, 2], [6, 4], [8, 7], [11, 4], [14, 2]], [[0, 4], [2, 2
 const ZAPS = [[6, 14], [3, 11], [4, 12, 15], [10], [2, 7, 13]];   // where the sharp high tones go in a bar
 const STABS = [[3, 6, 11], [6, 14], [0, 10], [3, 7, 10, 14]];
 // Kick patterns for the drop, two bars each (the snare is always on beat 3).
-const KICKS = [[[0], [0, 10]], [[0, 6], [0, 10, 14]], [[0], [0, 6, 10]], [[0, 3], [0, 10]], [[0, 11], [0, 6]]];
-const HATS = [[0, 2, 4, 6, 8, 10, 12, 14], [2, 6, 10, 14], [0, 4, 8, 12, 14], [0, 2, 3, 4, 6, 8, 10, 11, 12, 14]];
+const KICKS = [[[0], [0, 7]], [[0], [0, 6]], [[0], [0, 10]], [[0, 3], [0, 10]], [[0], [0, 11]]];   // sparse, like the reference: a kick on the 1 and one extra hit every other bar
+const HATS = [[0, 2, 4, 6, 10], [2, 6, 10, 14], [0, 4, 8, 12, 14], [0, 2, 4, 6, 8, 10]];
 const MOTIFS = [[[0, 6, 4], [6, 2, 5], [8, 8, 4]], [[0, 4, 2], [4, 4, 4], [8, 6, 5], [14, 2, 4]], [[0, 8, 4], [8, 4, 3], [12, 4, 2]]];   // the intro lead: [position, length, step above the chord root], one per two bars
 
 // The cycles of a track `T` sixteenths long (at least 8 bars): for each, where it starts and where its build and drop begin and end.
@@ -124,7 +124,8 @@ export function dubstepify(r, v = variant(), len = r.t) {
         });
       }
       for (const [off, len, move, rate] of (hi ? [] : fill ? FILL : fam[bar % fam.length])) {
-        out.push({ t: b + off, tr, k: 'wob', m: fold(r.lead(a + move)), d: Math.min(len, end - b - off), r: RATE[rate], b: bright, v: 0.9 });
+        // The first drop keeps the bass on the chord root (the rhythm and the sound carry it); later drops start moving it.
+        out.push({ t: b + off, tr, k: 'wob', m: fold(r.lead(a + (ci === 0 ? 0 : move))), d: Math.min(len, end - b - off), r: RATE[rate], b: bright, v: 0.9, dv: b === c.drop && off === 0 ? 1 : 0 });   // dv: the drop opens with a long pitch dive
       }
       if (!hi && (half || ci > 0 || bar >= 2)) for (const off of zaps) {   // sharp high tones that sit between the wobble notes
         if (fill && off < 8) continue;

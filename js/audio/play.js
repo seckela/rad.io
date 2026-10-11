@@ -84,9 +84,14 @@ export function sound(e, time) {
         const hzNote = hz(e.m);
         s.wob.triggerAttackRelease(hzNote, dur, time, v);
         s.wob.detune.cancelScheduledValues(time);
-        s.wob.detune.setValueAtTime(500, time);
-        s.wob.detune.exponentialRampToValueAtTime(1, time + 0.07);
-        s.wob.detune.setValueAtTime(0, time + 0.08);
+        if (e.dv) {         // the first note of a drop falls two octaves into place over six 16ths
+          s.wob.detune.setValueAtTime(2400, time);
+          s.wob.detune.linearRampToValueAtTime(0, time + 6 * unit);
+        } else {
+          s.wob.detune.setValueAtTime(500, time);
+          s.wob.detune.exponentialRampToValueAtTime(1, time + 0.07);
+          s.wob.detune.setValueAtTime(0, time + 0.08);
+        }
         const rate = Tone.Transport.bpm.value / 60 * e.r;
         for (const [filt, lo, hi, ph] of [[s.wobBpA, 250, e.b, 270], [s.wobBpB, 900, e.b * 2.6, 90]]) {   // the second sweeps the opposite way
           const lfo = new Tone.LFO({ frequency: rate, min: lo, max: hi, type: 'sine', phase: ph });

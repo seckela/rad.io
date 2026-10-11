@@ -33,7 +33,7 @@ export function buildDubstepTrack(reverb, bg, dryOut) {
     // two resonant band-pass filters that audio/play.js sweeps against each other with LFOs, which makes the vowel-like "yoi" of a
     // dubstep bass, mixed with some of the unfiltered distortion for bite, and squashed by a compressor.
     fx.wobHp = new Tone.Filter(120, 'highpass');
-    fx.wobDist = new Tone.Distortion({ distortion: 0.6, wet: 1 });
+    fx.wobDist = new Tone.Distortion({ distortion: 0.45, wet: 1 });
     fx.wobBpA = new Tone.Filter({ frequency: 400, type: 'lowpass', rolloff: -24, Q: 4 });   // a classic resonant wub sweep
     fx.wobBpB = new Tone.Filter({ frequency: 1500, type: 'bandpass', Q: 3 });
     fx.wobBody = new Tone.Gain(0.08);
@@ -90,16 +90,16 @@ export function buildDubstepTrack(reverb, bg, dryOut) {
     s.pad.volume.value = -22;        s.pad.connect(fx.padLp);
     s.stab.volume.value = -22;       s.stab.connect(fx.stabLp);
     s.zap.volume.value = -21;        s.zap.connect(fx.zapHp);
-    s.sub.volume.value = -5;         s.sub.connect(duckBass);
-    s.wob.volume.value = -12;        s.wob.connect(fx.wobHp);
+    s.sub.volume.value = -7;         s.sub.connect(duckBass);
+    s.wob.volume.value = -15;        s.wob.connect(fx.wobHp);
     s.riserNoise.volume.value = -20; s.riserNoise.connect(fx.riserBp);
     s.riserTone.volume.value = -26;  s.riserTone.connect(group.accent);
     s.impact.volume.value = -3;      s.impact.connect(group.accent);
     s.impactNoise.volume.value = -14; s.impactNoise.connect(fx.impactLp);
-    s.kick.volume.value = 1;         s.kick.connect(group.perc);
+    s.kick.volume.value = -1;        s.kick.connect(group.perc);
     s.kickClick.volume.value = -12;  s.kickClick.connect(fx.clickHp);
     s.clap.volume.value = -8;        s.clap.connect(fx.clapBp);
-    s.snare.volume.value = -3;       s.snare.connect(fx.snareBp);
+    s.snare.volume.value = -5;       s.snare.connect(fx.snareBp);
     s.snareBody.volume.value = -5;   s.snareBody.connect(group.perc);
     s.hat.volume.value = -26;        s.hat.connect(fx.hatHp);
     s.ohat.volume.value = -26;       s.ohat.connect(fx.hatHp);
