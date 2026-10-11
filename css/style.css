@@ -103,12 +103,17 @@ h1 { position:absolute; top:50%; transform:translateY(-50%); margin:0; font-size
 .detail.neon .chips li:nth-child(3n) { animation-delay:-1.1s; }
 @keyframes neon-glow { from { box-shadow:0 0 5px var(--tint), inset 0 0 4px rgba(198,255,61,.06); } to { box-shadow:0 0 18px var(--tint), inset 0 0 12px rgba(198,255,61,.16); } }
 @keyframes neon-flick { 0%,100% { opacity:1; } 8% { opacity:.35; } 12% { opacity:1; } 55% { opacity:1; } 58% { opacity:.5; } 61% { opacity:1; } }
+/* The Wobble bass chip wobbles when hovered, and keeps wobbling in time while a drop plays. */
+.chips li.wob { display:inline-block; }
+.chips li.wob:hover { animation:wub .26s ease-in-out infinite; color:var(--tint); border-color:var(--tint); }
+.detail.neon .chips li.wob { animation:neon-flick 1.7s steps(1,end) infinite, wub .43s ease-in-out infinite; }
+@keyframes wub { 0%,100% { transform:rotate(-3deg) scale(1.08,.9); } 50% { transform:rotate(3deg) scale(.94,1.1); } }
 /* ...and eases out over a second and a half when the drop ends instead of cutting off. */
 .detail.neon-out { animation:neon-fade 1.5s ease-out forwards; }
 .detail.neon-out .chips li { animation:neon-fade-chip 1.5s ease-out forwards; }
 @keyframes neon-fade { from { box-shadow:0 0 14px var(--tint); border-top-color:var(--tint); border-right-color:var(--tint); border-bottom-color:var(--tint); } to { box-shadow:0 0 0 transparent; border-top-color:var(--line); border-right-color:var(--line); border-bottom-color:var(--line); } }
 @keyframes neon-fade-chip { from { border-color:var(--tint); color:var(--tint); text-shadow:0 0 6px var(--tint); } to { border-color:var(--line); color:var(--dim); text-shadow:0 0 0 transparent; } }
-@media (prefers-reduced-motion: reduce) { .detail.neon, .detail.neon .chips li, .detail.neon-out, .detail.neon-out .chips li { animation:none; } }
+@media (prefers-reduced-motion: reduce) { .chips li.wob:hover, .detail.neon .chips li.wob, .detail.neon, .detail.neon .chips li, .detail.neon-out, .detail.neon-out .chips li { animation:none; } }
 .detail .dl { font-size:12px; margin-bottom:4px; }
 
 /* Minimal view: only the masthead / equalizer, centred and large. The controls come back on mouse movement. */
