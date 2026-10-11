@@ -118,7 +118,7 @@ But we've wander'd mony a weary fit,
 sin' auld lang syne.
 `;
 
-const WANNA_BE = `Ha ha ha ha ha
+const WANNABE = `Ha ha ha ha ha
 Yo, I'll tell you what I want, what I really, really want
 So tell me what you want, what you really, really want
 I'll tell you what I want, what I really, really want
@@ -178,6 +178,8 @@ Slam your body down and wind it all around
 Slam your body down and zigazig ah
 If you wanna be my lover`
 
+const SLC_PUNK=`And so there I was. I was gonna go to Harvard. It was obvious. I was gonna be a lawyer and play in the God-damned system, and that was that. I was my old man. He knew, so what else could I do? I mean, there's no future in anarchy; I mean let's face it. But when I was into it, there was never a thought of the future. I mean we were certain the world was gonna end, but when it didn't, I had to do something, so fuck it. I could always be a litigator in New York and piss the shit out of the judges. I mean that was me: a trouble maker of the future. The guy that was one of those guys that my parents so arrogantly saved the world for, so we could fuck it up. We can do a hell of a lot more damage in the system than outside of it. That was the final irony, I think. That, and well, this. And "fuck you" for all of you who were thinking it: I guess when all was said and done, I was nothing more than a God-damned, trendy-ass poser.`
+
 export const EXAMPLES = [
   { group: 'Code', items: [
     { id: 'fizzbuzz', name: 'FizzBuzz (JavaScript)', text: FIZZBUZZ, code: true },
@@ -189,11 +191,12 @@ export const EXAMPLES = [
   ] },
   { group: 'Prose', items: [
     { id: 'darcy', name: 'Mr. Darcy\'s proposal – Pride and Prejudice', text: DARCY },
+    { id: 'slcpunk', name: 'SLC Punk - Stevo\'s Monologue'},
   ] },
   { group: 'Songs', items: [
     { id: 'grace', name: 'Amazing Grace', text: GRACE },
     { id: 'auld', name: 'Auld Lang Syne', text: AULD_LANG_SYNE },
-    { id: 'wannabe', name: 'Wanna Be', text: WANNA_BE },
+    { id: 'wannabe', name: 'Wannabe', text: WANNABE },
   ] },
 ];
 
