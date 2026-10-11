@@ -2,7 +2,9 @@
 //  - Each line's chord is held as a big pad, with a fast 16th-note pluck arpeggio running over it (up the triad and into the
 //    octave, then back down).
 //  - The bass rolls: three 16ths between every kick, on the line's root.
-//  - The melody becomes a tune written in two-bar phrases (see shapeLead): syncopated long and short notes on each line's chord,
+//  - The melody sits in the background most of the time and comes in like a chorus: it plays for three two-bar phrases, then falls
+//    away for two so the beat, the bass and the arpeggio (which gets louder while the lead is out) carry the track.
+//  - When it plays, the melody is a tune written in two-bar phrases (see shapeLead): syncopated long and short notes on each line's chord,
 //    ending early so there is a real pause with the last note ringing into it. The chords follow a fixed loop (i v VI VII III, as in
 //    much uplifting trance) and the phrases alternate (with a higher "lift" phrase every fourth), so the sections tie together while
 //    the line keeps moving. Each note is placed in the octave nearest the previous one, so it glides across chord changes.
@@ -40,7 +42,7 @@ export function tranceify(r) {
     out.push({ t: c.t, i: c.i, tr: c.tr, k: 'pad', m: tri, d: span + 2, v: 0.4 });
     for (let t = c.t, n = 0; t < stop; t++, n++) {
       const pat = PATS[(Math.floor(t / 16) + Math.floor((t % 16) / 8)) % PATS.length], x = pat[t % 8];
-      out.push({ t, tr: c.tr, k: 'pluck', m: (x === 3 ? tri[0] + 12 : tri[x]) + 12, d: 1, v: n % 4 === 0 ? 0.5 : 0.32 });
+      out.push({ t, tr: c.tr, k: 'pluck', m: (x === 3 ? tri[0] + 12 : tri[x]) + 12, d: 1, v: (n % 4 === 0 ? 0.5 : 0.32) * (onAt(t) ? 0.85 : 1.3) });
     }
     for (let b = Math.floor(c.t / 4) * 4; b < stop; b += 4) {
       for (const off of [1, 2, 3]) {
@@ -72,6 +74,8 @@ const PHRASES = [
   [[0, 2, 4], [2, 2, 5], [4, 6, 6], [10, 2, 5], [12, 4, 4], [16, 2, 5], [18, 2, 6], [20, 6, 7]],   // the lift
 ];
 const ORDER = [0, 1, 0, 2];
+const onAt = t => Math.floor(t / 32) % 5 >= 2;      // the chorus: the lead plays on 3 of every 5 two-bar phrases and sits out the other 2
+
 function shapeLead(out, r, roots) {
   for (const e of out) if (e.k === 'lead') { e.k = 'rest'; delete e.m; delete e.v; delete e.d; }
   const place = (d, prev) => {
@@ -90,6 +94,7 @@ function shapeLead(out, r, roots) {
     let first = true;
     for (let b = c.t, p = 0; b < stop; b += 32, p++) {
       const pi = ORDER[p % ORDER.length];
+      if (!onAt(b)) { first = true; continue; }   // sitting out; the next entry starts on a chord tone again
       PHRASES[pi].forEach(([off, len, step], n) => {
         const t = b + off;
         if (t + 2 > stop) return;
@@ -100,7 +105,7 @@ function shapeLead(out, r, roots) {
         }
         if (m === prev) m = place(c.a + step + 1, prev);
         prev = m;
-        out.push({ t, tr: c.tr, k: 'lead', m, d: Math.min(len, stop - t), v: (n === 0 ? 0.9 : [0, 2, 4].includes(off % 8) ? 0.8 : 0.68) + (pi === 2 ? 0.05 : 0) });
+        out.push({ t, tr: c.tr, k: 'lead', m, d: Math.min(len, stop - t), v: Math.min(1, (n === 0 ? 0.95 : [0, 2, 4].includes(off % 8) ? 0.85 : 0.72) + (pi === 2 ? 0.05 : 0)) });
       });
     }
   });
