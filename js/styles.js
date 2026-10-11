@@ -71,4 +71,13 @@ export const STYLES = [
     download: 'Nothing: every sound is synthesized.',
     note: 'The lead is always a supersaw, so the Lead control is disabled.',
   },
+  {
+    id: 'dubstep', name: 'Dubstep', tint: '#c6ff3d',
+    tagline: 'Build-ups and heavy drops',
+    blurb: 'The track runs in cycles: an intro with a soft pad and a sparse lead, a build-up where a lead climbs, a riser sweeps up and a snare roll speeds up, then a beat of silence and the drop. The drop is half-time: a sub, a wobble bass (a distorted FM saw through two sweeping band-pass filters, in rhythms that change half-way and fill at the end of every four bars), a hard kick and snare, hats and chord stabs. Sharp high tones sit between the wobble notes, and every drop develops from the one before. The seed picks where this starts: the chords, wobble rhythms, kick pattern and brightness.',
+    minChars: 200,       // a build-up and a drop need enough text to carry them
+    chips: ['140 BPM', 'Natural minor', 'Wobble bass', 'Build-ups', 'Drops', 'Half-time'],
+    download: 'Nothing: every sound is synthesized.',
+    note: 'The lead is always a saw synth, so the Lead control is disabled. It needs at least 200 characters of text, enough for an intro, a build-up and a drop; shorter text shows how many more to add.',
+  },
 ];

@@ -4,13 +4,14 @@ import { syncPicker } from './picker.js';
 import { $, view, playBtn } from './dom.js';
 import { getText, setEditorHidden } from './editor.js';
 import { renderView, highlight } from './view.js';
-import { getKey, getScale, getStyle, isChill, isLofi, isMetal, isChip, isAmbient, isSynthwave, isHouse, isTrance, getOpts } from './settings.js';
+import { getKey, getScale, getStyle, isChill, isLofi, isMetal, isChip, isAmbient, isSynthwave, isHouse, isTrance, isDubstep, getOpts } from './settings.js';
 import { compose } from '../compose/index.js';
 import { feelOf } from '../compose/feel.js';
 import { seedOf, parseSeed, variant } from '../compose/seed.js';
 import { audio, setAudio, buildAudio, disposeAudio } from '../audio/engine.js';
 import { sound } from '../audio/play.js';
 import { loadMetalBuffers, loadBassBuffers } from '../audio/samples.js';
+import { STYLES } from '../styles.js';
 
 export let playing = false, paused = false, lastTotal = 0;   // playing is true while paused too (a session is open)
 let endToken = 0, lastEvents = [], endReached = false;
@@ -66,9 +67,15 @@ function schedule(events, total) {
   }
 }
 
+// Some styles need a minimum amount of text to make sense (Dubstep's build-up and drop): a message saying how much more, or ''.
+export function tooShort(chars = getText().length) {
+  const st = STYLES.find(x => x.id === getStyle());
+  return st && st.minChars && chars < st.minChars ? `${st.name} needs at least ${st.minChars} characters (${st.minChars - chars} more) for a build-up and a drop.` : '';
+}
+
 export function updateStats(chars, total) {
   const secs = total * 60 / Tone.Transport.bpm.value / 4;
-  $('stats').textContent = `${chars} characters · ${total / 16} bars · ${secs.toFixed(1)}s`;
+  $('stats').textContent = tooShort(chars) || `${chars} characters · ${total / 16} bars · ${secs.toFixed(1)}s`;
 }
 
 export function rebuild() {
@@ -97,12 +104,12 @@ export function applyFeel() {
 // Sets the tempo and scale that go with the selected style (both can be changed afterwards).
 export function applyStyleDefaults() {
   const st = $('style').value;
-  $('tempo').value = { chill: 70, lofi: 80, metal: 150, chiptune: 140, ambient: 60, synthwave: 100, house: 124, trance: 140 }[st] || 130;
+  $('tempo').value = { chill: 70, lofi: 80, metal: 150, chiptune: 140, ambient: 60, synthwave: 100, house: 124, trance: 140, dubstep: 140 }[st] || 130;
   $('tempoVal').textContent = $('tempo').value;
   Tone.Transport.bpm.value = +$('tempo').value;
-  $('scale').value = { chill: 'Natural minor', lofi: 'Natural minor', metal: 'Phrygian', chiptune: 'Major', ambient: 'Natural minor', synthwave: 'Natural minor', house: 'Dorian', trance: 'Natural minor' }[st] || 'Dorian';
+  $('scale').value = { chill: 'Natural minor', lofi: 'Natural minor', metal: 'Phrygian', chiptune: 'Major', ambient: 'Natural minor', synthwave: 'Natural minor', house: 'Dorian', trance: 'Natural minor', dubstep: 'Natural minor' }[st] || 'Dorian';
   applyFeel();                  // the seed then moves them within the style's range
-  $('leadsound').disabled = st === 'metal' || st === 'chiptune' || st === 'ambient' || st === 'synthwave' || st === 'house' || st === 'trance';   // each of these has its own fixed lead voice
+  $('leadsound').disabled = st === 'metal' || st === 'chiptune' || st === 'ambient' || st === 'synthwave' || st === 'house' || st === 'trance' || st === 'dubstep';   // each of these has its own fixed lead voice
   syncPicker();
 }
 
@@ -110,7 +117,7 @@ export function applyStyleDefaults() {
 // they can't be fetched (offline, blocked), falls back to something that needs no downloads.
 export async function loadAudio() {
   if (audio) disposeAudio();
-  const metal = isMetal(), piano = !metal && !isChip() && !isAmbient() && !isSynthwave() && !isHouse() && !isTrance() && $('leadsound').value === 'piano';
+  const metal = isMetal(), piano = !metal && !isChip() && !isAmbient() && !isSynthwave() && !isHouse() && !isTrance() && !isDubstep() && $('leadsound').value === 'piano';
   const label = playBtn.innerHTML;
   if (metal) {
     playBtn.textContent = 'Loading guitars…';
@@ -169,6 +176,8 @@ function releaseVoices() {
 
 // Starts from the beginning, or from the note at character `fromIdx` if one is given.
 export async function start(fromIdx = null) {
+  const short = tooShort();
+  if (short) { $('stats').textContent = short; return; }   // too little text for this style
   unlockAudio();             // must run inside the tap, before any await (iOS silent-switch workaround)
   await Tone.start();
   vizAttach();

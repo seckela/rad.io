@@ -2,6 +2,7 @@ import { audio } from './engine.js';
 
 // Deterministic pseudo-random value in [0, 1), so the "human" variation is the same every time the
 // same code is played.
+const WOB_DB = -15;   // the dubstep wobble's level (set in audio/dubstep-track.js)
 const rnd = x => { const y = Math.sin(x * 12.9898) * 43758.5453; return y - Math.floor(y); };
 
 export function sound(e, time) {
@@ -58,7 +59,7 @@ export function sound(e, time) {
         else s.pad.triggerAttackRelease(e.m.map(hz), dur, time, v);
         break;
       case 'kick':
-        if ((audio.house || audio.trance) && !e.tr) for (const [g, dip] of [[s.duckPad, 0.3], [s.duckBass, 0.35]]) {   // the pump: a deep, quick dip
+        if ((audio.house || audio.trance || audio.dubstep) && !e.tr && s.duckPad) for (const [g, dip] of [[s.duckPad, 0.3], [s.duckBass, 0.35]]) {   // the pump: a deep, quick dip
           g.gain.cancelScheduledValues(time);
           g.gain.setValueAtTime(dip, time);
           g.gain.linearRampToValueAtTime(1, time + 0.2);
@@ -70,12 +71,112 @@ export function sound(e, time) {
         s.kick.triggerAttackRelease(audio.metal ? 'F1' : 'C1', '16n', time, v ?? 0.9);
         if (s.kickClick) s.kickClick.triggerAttackRelease('64n', time, v ?? 0.9);
         break;
+      case 'sub':   s.sub.triggerAttackRelease(hz(e.m), dur, time, v); break;
+      case 'stab':  s.stab.triggerAttackRelease(e.m.map(hz), unit * 1.2, time, v); break;
+      case 'zap': {         // a sharp high tone: a quick pitch dive into the note, or a rising scream if it is held
+        const long = (e.d || 1) > 2;
+        s.zap.detune.cancelScheduledValues(time);
+        s.zap.detune.setValueAtTime(long ? -300 : 600, time);
+        s.zap.detune.linearRampToValueAtTime(long ? 1200 : 0, time + (long ? (e.d || 1) * unit : 0.06));
+        s.zap.triggerAttackRelease(hz(e.m), long ? (e.d || 1) * unit : unit * 0.8, time, v);
+        break;
+      }
+      case 'climb': {       // the build-up's riser in miniature: swept noise and a rising tone that pull up and stop dead as the melody lands
+        const L = (e.d || 5) * unit - 0.02;   // it stops a 16th before the next bar, with a hard mute (no release tail): the "eeep"
+        s.riserBp.frequency.cancelScheduledValues(time);
+        s.riserBp.frequency.setValueAtTime(600, time);
+        s.riserBp.frequency.exponentialRampToValueAtTime(5500, time + L);
+        s.riserNoise.volume.setValueAtTime(-13, time);
+        s.riserNoise.volume.setValueAtTime(-90, time + L);
+        s.riserNoise.volume.setValueAtTime(-20, time + L + 0.3);   // louder than the build's own riser, hard-muted at the end, then back to normal
+        s.riserNoise.triggerAttackRelease(L, time, 1);
+        s.riserTone.frequency.cancelScheduledValues(time);
+        s.riserTone.frequency.setValueAtTime(330, time);
+        s.riserTone.frequency.exponentialRampToValueAtTime(1500, time + L);
+        s.riserTone.volume.setValueAtTime(-18, time);
+        s.riserTone.volume.setValueAtTime(-90, time + L);
+        s.riserTone.volume.setValueAtTime(-26, time + L + 0.3);
+        s.riserTone.triggerAttackRelease(L, time, 1);
+        break;
+      }
+      case 'run':   s.run.triggerAttackRelease(hz(e.m), unit * 0.7, time, v); break;   // the climbing notes of the mini build-up (no echo, so nothing trails after the stop)
+      case 'wob': {         // the growl: a quick pitch dive into the note, and two LFOs locked to the tempo sweeping the formant filters
+        const hzNote = hz(e.m);
+        s.wob.triggerAttackRelease(hzNote, e.dv ? (e.d || 1) * unit + 0.03 : dur, time, v);   // the dive's note runs right up to the next one
+        s.wob.detune.cancelScheduledValues(time);
+        s.wob.volume.cancelScheduledValues(time);
+        if (e.dv) {         // the drop's opening: a separate bright, metallic FM voice falls three octaves onto the wobble's pitch, while the wobble itself swells in underneath, so the two meet on the same note
+          const fall = 8 * unit, hzD = hzNote;
+          s.dive.detune.cancelScheduledValues(time);
+          s.dive.detune.setValueAtTime(3600, time);
+          s.dive.detune.exponentialRampToValueAtTime(1, time + fall * 0.9);
+          s.dive.detune.setValueAtTime(0, time + fall * 0.9 + 0.001);
+          s.dive.modulationIndex.cancelScheduledValues(time);
+          s.dive.modulationIndex.setValueAtTime(40, time);
+          s.dive.modulationIndex.linearRampToValueAtTime(12, time + fall);
+          s.dive.volume.cancelScheduledValues(time);
+          s.dive.volume.setValueAtTime(-7, time);
+          s.dive.volume.setValueAtTime(-7, time + fall * 0.45);
+          s.dive.volume.linearRampToValueAtTime(-40, time + fall * 1.05);
+          s.dive.triggerAttackRelease(hzD, fall * 1.05, time, 1);
+          s.wob.volume.setValueAtTime(WOB_DB - 18, time);
+          s.wob.volume.setValueAtTime(WOB_DB - 18, time + fall * 0.25);
+          s.wob.volume.linearRampToValueAtTime(WOB_DB, time + fall * 0.8);
+          s.wob.detune.setValueAtTime(0, time);
+        } else if (e.fl) {  // the note right after the dive: no extra dive of its own, so the voice carries straight on
+          s.wob.volume.setValueAtTime(WOB_DB, time);
+          s.wob.detune.setValueAtTime(0, time);
+        } else {
+          s.wob.volume.setValueAtTime(WOB_DB, time);
+          s.wob.detune.setValueAtTime(500, time);
+          s.wob.detune.exponentialRampToValueAtTime(1, time + 0.07);
+          s.wob.detune.setValueAtTime(0, time + 0.08);
+        }
+        const rate = Tone.Transport.bpm.value / 60 * e.r;
+        for (const [filt, lo, hi, ph] of [[s.wobBpA, 200, e.b, 270], [s.wobBpB, 600, e.b * 2.4, 90]]) {
+          // (the second sweeps the opposite way) The sweeps start at their lowest point, except for the dive and the note after it, where they start half-open so the tone doesn't close up at the join
+          const lfo = new Tone.LFO({ frequency: rate, min: lo, max: hi, type: 'sine', phase: e.fl || e.dv ? (ph === 270 ? 0 : 180) : ph });
+          lfo.connect(filt.frequency);
+          lfo.start(time).stop(time + dur + 0.05);
+          setTimeout(() => { try { lfo.dispose(); } catch (err) { /* already gone */ } }, (time - Tone.now() + dur + 0.5) * 1000);
+        }
+        break;
+      }
+      case 'riser': {       // swept noise and a rising tone over the build-up
+        const len = (e.d || 16) * unit;
+        s.riserBp.frequency.cancelScheduledValues(time);
+        s.riserBp.frequency.setValueAtTime(300, time);
+        s.riserBp.frequency.exponentialRampToValueAtTime(7000, time + len);
+        s.riserNoise.triggerAttackRelease(len, time, 0.9);
+        s.riserTone.frequency.cancelScheduledValues(time);
+        s.riserTone.frequency.setValueAtTime(220, time);
+        s.riserTone.frequency.exponentialRampToValueAtTime(1760, time + len);
+        s.riserTone.triggerAttackRelease(len, time, 0.7);
+        break;
+      }
+      case 'fall': {        // the opposite of a riser, over the last bar of a drop: a noise sweep and a tone falling away
+        const len = (e.d || 16) * unit;
+        s.riserBp.frequency.cancelScheduledValues(time);
+        s.riserBp.frequency.setValueAtTime(6000, time);
+        s.riserBp.frequency.exponentialRampToValueAtTime(200, time + len);
+        s.riserNoise.triggerAttackRelease(len, time, 0.8);
+        s.riserTone.frequency.cancelScheduledValues(time);
+        s.riserTone.frequency.setValueAtTime(1200, time);
+        s.riserTone.frequency.exponentialRampToValueAtTime(110, time + len);
+        s.riserTone.triggerAttackRelease(len, time, 0.6);
+        break;
+      }
+      case 'impact':
+        s.impact.triggerAttackRelease('A0', 1.2, time, v ?? 1);
+        s.impactNoise.triggerAttackRelease(0.9, time, (v ?? 1) * 0.9);
+        break;
       case 'pluck': s.pluck.triggerAttackRelease(hz(e.m), dur * 0.8, time, v); break;
       case 'ohat':  s.ohat.triggerAttackRelease('16n', time, v ?? 0.6); break;
       case 'hat':   s.hat.triggerAttackRelease('32n', time, v ?? 0.6); break;
       case 'snare':
         s.snare.triggerAttackRelease('16n', time, v ?? 0.7);
         if (s.snareBody) s.snareBody.triggerAttackRelease('G3', '32n', time, (v ?? 0.7) * 0.9);
+        if (s.clap) s.clap.triggerAttackRelease('16n', time, v ?? 0.7);
         break;
     }
   } catch (err) { /* monophonic voices can reject a duplicate start time; skip it */ }
