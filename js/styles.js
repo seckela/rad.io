@@ -47,4 +47,12 @@ export const STYLES = [
     download: 'Nothing: every sound is synthesized.',
     note: 'The lead is always a soft sine, so the Lead control is disabled.',
   },
+  {
+    id: 'synthwave', name: 'Synthwave', tint: '#f06bd0',
+    tagline: 'Neon night-drive',
+    blurb: 'The default melody on a bright, echoing saw lead over a wide detuned pad, with a relentless 16th-note saw bass on each line\'s root and a four-on-the-floor beat with a big snare.',
+    chips: ['100 BPM', 'Natural minor', 'Saw lead', 'Wide pad', 'Pulsing bass', 'Four-on-the-floor'],
+    download: 'Nothing: every sound is synthesized.',
+    note: 'The lead is always a saw synth, so the Lead control is disabled.',
+  },
 ];

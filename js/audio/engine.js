@@ -2,13 +2,14 @@ import { buildTrack } from './track.js';
 import { buildMetalTrack } from './metal-track.js';
 import { buildLofiTrack } from './lofi-track.js';
 import { buildChipTrack } from './chip-track.js';
+import { buildSynthwaveTrack } from './synthwave-track.js';
 import { buildAmbientTrack } from './ambient-track.js';
 
 // The current set of voices (null until the first Play). Importers see the live value.
 export let audio = null;
 export function setAudio(a) { audio = a; }
 
-// style: 'default' | 'chill' | 'lofi' | 'metal' | 'chiptune' | 'ambient'. bufs: the decoded samples for that style (guitar and bass for
+// style: 'default' | 'chill' | 'lofi' | 'metal' | 'chiptune' | 'ambient' | 'synthwave'. bufs: the decoded samples for that style (guitar and bass for
 // metal, bass for chill and lofi), or undefined to use the synth fallbacks.
 export function buildAudio(style, piano, bufs) {
   const limiter = new Tone.Limiter(-3).toDestination();   // safety net against pile-ups
@@ -16,6 +17,11 @@ export function buildAudio(style, piano, bufs) {
     const reverb = new Tone.Reverb({ decay: 1.6, wet: 0.12 }).connect(limiter);
     return { reverb, limiter, piano: false, chill: false, metal: true,
       fg: buildMetalTrack(reverb, false, bufs), bg: buildMetalTrack(reverb, true, bufs) };
+  }
+  if (style === 'synthwave') {           // a medium, bright hall
+    const reverb = new Tone.Reverb({ decay: 2.5, wet: 0.22 }).connect(limiter);
+    return { reverb, limiter, piano: false, chill: false, synthwave: true,
+      fg: buildSynthwaveTrack(reverb, false), bg: buildSynthwaveTrack(reverb, true) };
   }
   if (style === 'ambient') {             // a huge, soft space
     const reverb = new Tone.Reverb({ decay: 9, wet: 0.55 }).connect(limiter);
