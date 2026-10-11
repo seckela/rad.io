@@ -29,12 +29,9 @@ let Kw = 1, Kh = 1;                      // size factors: 1 for the 52px masthea
 let forced = false;                      // minimal view: show the bars even if the Visualizer box is off
 let dpr = 1, wCss = 0, hCss = 0, braceScale = 1, braceW = 0, idleRight = 0;
 
-// Dubstep cues (see vizCue): during a build-up the bars tighten, grow and brighten toward white; the drop's impact flashes the strip and
-// kicks the bars up, then it settles. One decaying flash per drop, never a strobe, and nothing at all with reduced motion.
-let buildT0 = 0, buildLen = 0, burstT0 = 0;
-let rgb = null;                          // the bar colour as [r, g, b] if it is a #rrggbb value
-const parse = c => { const m = /^#([0-9a-f]{6})$/i.exec(c); return m ? [0, 2, 4].map(i => parseInt(m[1].substr(i, 2), 16)) : null; };
-const toWhite = (t) => rgb ? `rgb(${rgb.map(v => Math.round(v + (255 - v) * t)).join(',')})` : color;
+// Dubstep lasers (see vizCue): thin beams fan out from the braces and sweep with each wobble note. Flat lines only, a few per brace, never
+// a strobe, and nothing with reduced motion.
+let laserT0 = 0, laserEnd = 0, laserHz = 0, laserLevel = 0;
 const clamp01 = x => Math.min(1, Math.max(0, x));
 const ease = x => x * x * (3 - 2 * x);
 
@@ -54,7 +51,6 @@ function size() {
   const cs = getComputedStyle(document.documentElement);
   color = cs.getPropertyValue('--bars').trim() || cs.getPropertyValue('--accent').trim() || color;
   braceColor = cs.getPropertyValue('--text').trim() || braceColor;
-  rgb = parse(color);
 }
 
 // Low frequencies sit in the middle and the highs spread outward, so it reads like the icon.
@@ -73,21 +69,33 @@ function drawBraces(c, leftX, rightX) {
   c.setTransform(1, 0, 0, 1, 0, 0);
 }
 
+function drawLasers(c, W, H, mid, rightX, alpha) {
+  const now = performance.now();
+  const want = !reduced && playing && alpha > 0 ? clamp01(1 - Math.max(0, now - laserEnd) / 200) : 0;
+  laserLevel += (want - laserLevel) * 0.35;
+  if (laserLevel < 0.02) return;
+  const phase = 2 * Math.PI * laserHz * (now - laserT0) / 1000, reach = (rightX - 2 * braceW) * dpr * 0.46;
+  c.lineWidth = Math.max(1, 1.4 * dpr * Kh); c.lineCap = 'round';
+  for (const side of [-1, 1]) {
+    const ox = side < 0 ? braceW * dpr * 0.92 : (rightX - braceW * 0.92) * dpr;
+    for (let k = 0; k < 3; k++) {
+      const a = Math.sin(side * phase + k * 2.1) * 0.5 * H;       // where this beam's far end is, above or below the middle
+      c.globalAlpha = 0.5 * laserLevel * alpha * (k === 1 ? 1 : 0.6);
+      c.strokeStyle = k === 1 ? '#ffffff' : color;
+      c.beginPath(); c.moveTo(ox, mid); c.lineTo(ox - side * reach, mid + a); c.stroke();
+    }
+  }
+  c.globalAlpha = 1;
+}
+
 function draw() {
   const c = ctx2d, W = canvas.width, H = canvas.height, mid = H / 2;
   c.clearRect(0, 0, W, H);
   const e = ease(p);
-  const now = performance.now();
-  // The tension only starts once the snare roll speeds up (about 40% into the build-up), reaches 1 at the drop, and lets go by itself a
-  // moment after the build-up should have ended, even if the drop's cue never arrives.
-  const bp = buildLen ? (now - buildT0) / buildLen : 0;
-  if (buildLen && bp > 1.6) buildLen = 0;
-  const tension = !reduced && playing && buildLen ? Math.pow(clamp01((bp - 0.4) / 0.6), 1.5) : 0;   // 0 .. 1
-  const burst = !reduced && burstT0 ? Math.exp(-(now - burstT0) / 260) : 0;                        // 1 at the drop, then fades
-  const fx = tension + burst;
   const rightX = idleRight + (wCss - idleRight) * e;                   // right edge of the right brace
   drawBraces(c, 0, rightX);
   if (title) title.style.opacity = String(1 - clamp01(p / 0.35));
+  drawLasers(c, W, H, mid, rightX, clamp01((p - 0.3) / 0.5));
 
   // Bars live between the braces, centred in that gap, and appear once the title has mostly faded.
   const alpha = clamp01((p - 0.3) / 0.5);
@@ -99,20 +107,14 @@ function draw() {
     if (n % 2 === 0) n--;
     n = Math.min(n, nMax);
     if (n >= 1) {
-      const stepCss = ((BAR * Kw) + (GAP * Kw)) * (1 - 0.22 * tension);     // the bars tighten toward the middle during a build-up
-      const used = n * stepCss - (stepCss - BAR * Kw), x0 = (innerL + (avail - used) / 2) * dpr;
-      const bw = (BAR * Kw) * dpr, step = stepCss * dpr, centre = (n - 1) / 2, fullHalf = (nMax - 1) / 2;
+      const used = n * ((BAR * Kw) + (GAP * Kw)) - (GAP * Kw), x0 = (innerL + (avail - used) / 2) * dpr;
+      const bw = (BAR * Kw) * dpr, step = ((BAR * Kw) + (GAP * Kw)) * dpr, centre = (n - 1) / 2, fullHalf = (nMax - 1) / 2;
       let vals = null, bins = 0;
       if (playing && analyser) { vals = analyser.getValue(); bins = vals.length; }
-      if (burst > 0.02) {                  // the drop: one soft flash over the whole strip
-        c.globalAlpha = 0.16 * burst * alpha; c.fillStyle = toWhite(0.5);
-        c.fillRect(0, 0, W, H);
-      }
-      const fill = fx > 0.01 ? toWhite(Math.min(0.85, 0.4 * tension + 0.6 * burst)) : color;
-      c.fillStyle = fill;
+      c.globalAlpha = alpha; c.fillStyle = color;
       for (let i = 0; i < n; i++) {
         const d = Math.abs(i - centre);
-        const rest = ((REST_MIN * Kh) + ((REST_PEAK * Kh) - (REST_MIN * Kh)) * (1 - d / Math.max(1, centre))) * (1 + 0.8 * tension);   // (the bars never shrink away as it builds)
+        const rest = (REST_MIN * Kh) + ((REST_PEAK * Kh) - (REST_MIN * Kh)) * (1 - d / Math.max(1, centre));
         let t = 0;
         if (vals) {
           const lo = binFor(d, fullHalf, bins), hi = Math.max(lo + 1, binFor(d + 1, fullHalf, bins));
@@ -120,19 +122,11 @@ function draw() {
           for (let b = lo; b < hi && b < bins; b++) if (vals[b] > m) m = vals[b];
           t = clamp01((m + 90) / 55);                                   // -90 dB .. -35 dB  ->  0 .. 1
         }
-        if (tension > 0) t = Math.max(t, tension * (0.6 - 0.35 * d / Math.max(1, centre)));   // the build-up holds the bars up, even through the silence just before the drop
         const idx = Math.min(nMax - 1, Math.round(d));
         levels[idx] = t > levels[idx] ? t : levels[idx] * 0.85;         // fast attack, slow decay
         energy += levels[idx];
-        const h = Math.min(H * 0.96, Math.max(rest, levels[idx] * (MAX_H * Kh)) * dpr * (0.4 + 0.6 * alpha) * (1 + 0.45 * tension + 0.6 * burst));
+        const h = Math.max(rest, levels[idx] * (MAX_H * Kh)) * dpr * (0.4 + 0.6 * alpha);
         const x = x0 + i * step, y = mid - h / 2;
-        if (fx > 0.05) {                    // a wider, fainter copy behind each bar reads as a glow without any blur
-          c.globalAlpha = alpha * Math.min(0.5, 0.1 + 0.25 * fx);
-          c.beginPath();
-          c.roundRect ? c.roundRect(x - bw * 0.7, y - h * 0.04, bw * 2.4, h * 1.08, bw * 1.2) : c.rect(x - bw * 0.7, y - h * 0.04, bw * 2.4, h * 1.08);
-          c.fill();
-          c.globalAlpha = alpha;
-        }
         c.beginPath();
         c.roundRect ? c.roundRect(x, y, bw, h, bw / 2) : c.rect(x, y, bw, h);
         c.fill();
@@ -167,7 +161,6 @@ export function vizRetint() {
   if (!wCss) return;                    // not laid out yet; initViz will read it
   const cs = getComputedStyle(document.documentElement);
   color = cs.getPropertyValue('--bars').trim() || cs.getPropertyValue('--accent').trim() || color;
-  rgb = parse(color);
   if (!raf) draw();
 }
 
@@ -179,17 +172,16 @@ export function vizAttach() {
     Tone.getDestination().connect(analyser);
   } catch (e) { analyser = null; }
 }
-// Cues from the music (dubstep only): 'build' starts a build-up that lasts `secs`, 'drop' is the impact.
-export function vizCue(kind, secs = 0) {
-  if (reduced) return;
-  if (kind === 'build') { buildT0 = performance.now(); buildLen = Math.max(200, secs * 1000); burstT0 = 0; }
-  else if (kind === 'drop') { buildLen = 0; burstT0 = performance.now(); }
+// Cues from the music (dubstep only): 'laser' sweeps the beams at `hz` cycles a second for `secs` seconds (one wobble note).
+export function vizCue(kind, hz = 2, secs = 0.2) {
+  if (reduced || kind !== 'laser') return;
+  const now = performance.now();
+  laserT0 = now; laserHz = Math.min(4, hz / 2); laserEnd = now + secs * 1000;
   if (playing && enabled()) loop();
 }
-const clearCues = () => { buildLen = 0; burstT0 = 0; };
 
 export function vizStart() {
-  clearCues();
+  laserEnd = 0; laserLevel = 0;
   playing = true;
   if (!enabled()) return;
   target = 1;
@@ -198,12 +190,12 @@ export function vizStart() {
 }
 // Paused: the audio is frozen, so the bars settle to rest but the strip stays expanded.
 export function vizPause() {
-  clearCues();
+  laserEnd = 0;
   playing = false;
   if (enabled() && !reduced) loop();
 }
 export function vizStop() {
-  clearCues();
+  laserEnd = 0;
   playing = false;
   target = 0;
   if (reduced || !enabled()) { jump(); return; }
