@@ -81,10 +81,10 @@ export function sound(e, time) {
         s.zap.triggerAttackRelease(hz(e.m), long ? (e.d || 1) * unit : unit * 0.8, time, v);
         break;
       }
-      case 'climb': {       // the reverse of the dive in miniature: a soft, round tone swells up an octave over three 16ths and lands on the next note
+      case 'climb': {       // the reverse of the dive in miniature: a soft, round tone swells up an octave and a fourth over three 16ths, finishing just above the next note
         s.climb.detune.cancelScheduledValues(time);
         s.climb.detune.setValueAtTime(-1200, time);
-        s.climb.detune.linearRampToValueAtTime(0, time + 3 * unit);
+        s.climb.detune.linearRampToValueAtTime(500, time + 3 * unit);   // ends a fourth above the note, so the tail finishes higher
         s.climb.triggerAttackRelease(hz(e.m + 12), 3 * unit, time, v);
         break;
       }
