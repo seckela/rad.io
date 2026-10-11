@@ -123,17 +123,19 @@ export function dubstepify(r, v = variant(), len = r.t) {
           if (k === pat.length - 1) out.push({ t: b + off, tr, k: 'zap', m: m + 12, d: 1, v: 0.7 });
         });
       }
-      // The first bar of a drop opens with one long note (8 sixteenths) for the pitch dive, then the pattern's own hits from the 3rd beat on.
+      // The first bar of a drop is one held note: the first half is the pitch dive, which lands on the note, and the second half is a mini
+      // build-up (a short riser and a climbing run) that stops dead as the pattern starts in the next bar.
       const pat = hi ? [] : fill ? FILL : fam[bar % fam.length];
-      const rest8 = pat.filter(x => x[0] >= 8), first = b === c.drop ? [[0, rest8.length ? 8 : 16, 0, pat[0][3]], ...rest8] : pat;   // if nothing follows the opening note in the bar it holds the whole bar
+      const first = b === c.drop ? [[0, 16, 0, pat[0][3]]] : pat;
       for (const [off, len, move, rate] of first) {
-        if (afterDive) {          // a mini build-up like the first one: a short riser and the climbing lead, pulling up and stopping dead as the melody lands
-          out.push({ t: b + off - 6, tr, k: 'climb', v: 1 });   // the riser starts two 16ths before the lead's climb
-          for (let k = 0; k < 4; k++) out.push({ t: b + off - 4 + k, tr, k: 'lead', m: place(a + [0, 2, 4, 7][k] + 2, -1), d: 1, v: 0.45 + 0.15 * k });
-        }
         // The first drop keeps the bass on the chord root (the rhythm and the sound carry it); later drops start moving it.
-        out.push({ t: b + off, tr, k: 'wob', m: fold(r.lead(a + (ci === 0 ? 0 : move))), d: Math.min(len, end - b - off), r: RATE[rate], b: bright, v: 0.9, dv: b === c.drop && off === 0 ? 1 : 0, ...(afterDive ? { fl: 1 } : {}) });   // fl: the note after the dive carries straight on from it
-        afterDive = b === c.drop && off === 0;   // dv: the drop opens with a long pitch dive
+        const dive = b === c.drop && off === 0;
+        out.push({ t: b + off, tr, k: 'wob', m: fold(r.lead(a + (ci === 0 ? 0 : move))), d: Math.min(len, end - b - off), r: RATE[rate], b: bright, v: 0.9, dv: dive ? 1 : 0, ...(afterDive ? { fl: 1 } : {}) });   // dv: the drop opens with a long pitch dive; fl: the note after it carries straight on
+        if (dive) {
+          out.push({ t: b + 8, tr, k: 'climb', d: 7, v: 1 });
+          for (let k = 0; k < 4; k++) out.push({ t: b + 10 + k, tr, k: 'run', m: place(a + [0, 2, 4, 7][k] + 2, -1), d: 1, v: 0.45 + 0.15 * k });
+        }
+        afterDive = dive;
       }
       if (!hi && (half || ci > 0 || bar >= 2)) for (const off of zaps) {   // sharp high tones that sit between the wobble notes
         if (fill && off < 8) continue;

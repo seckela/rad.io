@@ -82,7 +82,7 @@ export function sound(e, time) {
         break;
       }
       case 'climb': {       // the build-up's riser in miniature: swept noise and a rising tone that pull up and stop dead as the melody lands
-        const L = 5 * unit - 0.02;   // stops a 16th before the melody lands, with a hard mute (no release tail): the "eeep"
+        const L = (e.d || 5) * unit - 0.02;   // it stops a 16th before the next bar, with a hard mute (no release tail): the "eeep"
         s.riserBp.frequency.cancelScheduledValues(time);
         s.riserBp.frequency.setValueAtTime(700, time);
         s.riserBp.frequency.exponentialRampToValueAtTime(10000, time + L);
@@ -99,6 +99,7 @@ export function sound(e, time) {
         s.riserTone.triggerAttackRelease(L, time, 1);
         break;
       }
+      case 'run':   s.run.triggerAttackRelease(hz(e.m), unit * 0.7, time, v); break;   // the climbing notes of the mini build-up (no echo, so nothing trails after the stop)
       case 'wob': {         // the growl: a quick pitch dive into the note, and two LFOs locked to the tempo sweeping the formant filters
         const hzNote = hz(e.m);
         s.wob.triggerAttackRelease(hzNote, e.dv ? (e.d || 1) * unit + 0.03 : dur, time, v);   // the dive's note runs right up to the next one
