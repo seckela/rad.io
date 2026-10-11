@@ -2,7 +2,7 @@
 // (boost -> distortion -> mid scoop -> speaker-style rolloff). The rhythm guitar has a palm-muted
 // sampler (short release, darker) and a ringing one; the lead has vibrato, lighter distortion and
 // a dotted echo. The bass is sampled and the drums are synthesized. Samples are shared between tracks.
-export function buildMetalTrack(reverb, bg, bufs) {
+export function buildMetalTrack(reverb, bg, bufs, punk = false) {
   const out = new Tone.PanVol(bg ? 0.3 : 0, bg ? -6 : -3).connect(reverb);
   const group = {};
   for (const name of ['lead', 'bass', 'pad', 'accent', 'perc']) group[name] = new Tone.Volume(0).connect(out);
@@ -12,9 +12,9 @@ export function buildMetalTrack(reverb, bg, bufs) {
   const amp = new Tone.Gain(2);
   amp.chain(
     new Tone.Filter(90, 'highpass'),
-    new Tone.Distortion({ distortion: 0.7, oversample: '4x' }),
-    new Tone.EQ3({ low: 2, mid: -5, high: -3, lowFrequency: 250, highFrequency: 3500 }),
-    new Tone.Filter(4400, 'lowpass', -24),               // speaker-style rolloff
+    new Tone.Distortion({ distortion: punk ? 0.4 : 0.7, oversample: '4x' }),
+    punk ? new Tone.EQ3({ low: 1, mid: -1, high: 2, lowFrequency: 250, highFrequency: 3500 }) : new Tone.EQ3({ low: 2, mid: -5, high: -3, lowFrequency: 250, highFrequency: 3500 }),
+    new Tone.Filter(punk ? 6500 : 4400, 'lowpass', -24),               // speaker-style rolloff
     group.pad,
   );
   const s = {
@@ -24,7 +24,7 @@ export function buildMetalTrack(reverb, bg, bufs) {
     run: new Tone.Sampler({ urls: bufs.guitar, release: 0.1 }),      // short-release lead for fast runs
     bass: new Tone.Sampler({ urls: bufs.bass, release: 0.12 }),
   };
-  s.chug.chain(new Tone.Filter(1800, 'lowpass'), amp);
+  s.chug.chain(new Tone.Filter(punk ? 2600 : 1800, 'lowpass'), amp);
   s.power.connect(amp);
   // Vibrato starts at zero; held lead notes fade it in after the attack, like a player would (see sound()).
   const vibrato = new Tone.Vibrato({ frequency: 5.5, depth: 0 });
@@ -34,12 +34,18 @@ export function buildMetalTrack(reverb, bg, bufs) {
     vibrato,
     new Tone.Gain(2),
     new Tone.Filter(140, 'highpass'),
-    new Tone.Distortion({ distortion: 0.8, oversample: '4x' }),
-    new Tone.EQ3({ low: -2, mid: 3, high: -4, lowFrequency: 300, highFrequency: 3000 }),
-    new Tone.Filter(4400, 'lowpass', -24),                // speaker-style rolloff
+    new Tone.Distortion({ distortion: punk ? 0.5 : 0.8, oversample: '4x' }),
+    new Tone.EQ3({ low: -2, mid: 3, high: punk ? -1 : -4, lowFrequency: 300, highFrequency: 3000 }),
+    new Tone.Filter(punk ? 5600 : 4400, 'lowpass', -24),                // speaker-style rolloff
     new Tone.FeedbackDelay({ delayTime: '8n.', feedback: 0.22, wet: 0.1 }),
     group.lead,
   );
+  if (punk) {
+    // Emo's clean guitar (the verse arpeggios): no distortion, a little chorus and a rolled-off top, into the rhythm guitar's channel.
+    s.clean = new Tone.Sampler({ urls: bufs.guitar, release: 0.5 });
+    s.clean.chain(new Tone.Chorus({ frequency: 1.4, delayTime: 3.5, depth: 0.5, wet: 0.45 }).start(), new Tone.Filter(5200, 'lowpass'), group.pad);
+    s.clean.volume.value = -7;
+  }
   s.bass.chain(new Tone.Filter(1200, 'lowpass'), group.bass);
   s.chug.volume.value = -11; s.power.volume.value = -11; s.lead.volume.value = -5; s.run.volume.value = -5; s.bass.volume.value = -7;
   if (!bg) {
@@ -69,8 +75,8 @@ export function buildMetalTrack(reverb, bg, bufs) {
     s.crash.connect(hp(3500, toBus));
     s.crashM.connect(hp(5000, toBus));
     s.kick.volume.value = -4; s.kickClick.volume.value = -20;
-    s.snareBody.volume.value = -14; s.snare.volume.value = -11;
-    s.hat.volume.value = -21; s.crash.volume.value = -22; s.crashM.volume.value = -32;
+    s.snareBody.volume.value = punk ? -12 : -14; s.snare.volume.value = punk ? -9 : -11;
+    s.hat.volume.value = punk ? -19 : -21; s.crash.volume.value = punk ? -20 : -22; s.crashM.volume.value = -32;
   }
   return { s, group, out };
 }

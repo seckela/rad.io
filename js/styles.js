@@ -32,6 +32,14 @@ export const STYLES = [
     note: 'The lead is always a guitar, so the Lead control is disabled.',
   },
   {
+    id: 'emo', name: 'Emo / Pop Punk', tint: '#e8739a',
+    tagline: 'Big-chorus pop punk',
+    blurb: 'Your code becomes a song: verses, a pre-chorus build, big choruses and a bridge, over four-chord loops. Verses are palm-muted power chords (or a clean, chorused guitar arpeggio), choruses open up into ringing chords with a crash, the bass drives in eighths, the drums use a pop-punk beat with fills into every chorus, and a lead guitar sings the melody over the choruses.',
+    chips: ['176 BPM', 'Major', 'Sampled guitars and bass', 'Clean verses', 'Synth drums'],
+    download: 'About 3 MB of guitar and bass samples (shared with Rock / Metal).',
+    note: 'The lead is always a guitar, so the Lead control is disabled.',
+  },
+  {
     id: 'chiptune', name: 'Chiptune', tint: '#6fd08c',
     tagline: 'Bright 8-bit game music',
     blurb: 'The default melody played on pulse waves, like a classic console soundtrack. Chords become fast arpeggios, the triangle-wave bass bounces between octaves, and a tight beat of noise drums keeps time.',

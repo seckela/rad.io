@@ -4,7 +4,7 @@ import { syncPicker } from './picker.js';
 import { $, view, playBtn } from './dom.js';
 import { getText, setEditorHidden } from './editor.js';
 import { renderView, highlight } from './view.js';
-import { getKey, getScale, getStyle, isChill, isLofi, isMetal, isChip, isAmbient, isSynthwave, isHouse, isTrance, isDubstep, isNeo, isCine, getOpts } from './settings.js';
+import { getKey, getScale, getStyle, isChill, isLofi, isMetal, isEmo, isChip, isAmbient, isSynthwave, isHouse, isTrance, isDubstep, isNeo, isCine, getOpts } from './settings.js';
 import { compose } from '../compose/index.js';
 import { feelOf } from '../compose/feel.js';
 import { seedOf, parseSeed, variant } from '../compose/seed.js';
@@ -117,12 +117,12 @@ export function applyFeel() {
 // Sets the tempo and scale that go with the selected style (both can be changed afterwards).
 export function applyStyleDefaults() {
   const st = $('style').value;
-  $('tempo').value = { chill: 70, lofi: 80, metal: 150, chiptune: 140, ambient: 60, synthwave: 100, house: 124, trance: 140, dubstep: 140, neoclassical: 76, cinematic: 78 }[st] || 130;
+  $('tempo').value = { chill: 70, lofi: 80, metal: 150, emo: 176, chiptune: 140, ambient: 60, synthwave: 100, house: 124, trance: 140, dubstep: 140, neoclassical: 76, cinematic: 78 }[st] || 130;
   $('tempoVal').textContent = $('tempo').value;
   Tone.Transport.bpm.value = +$('tempo').value;
-  $('scale').value = { chill: 'Natural minor', lofi: 'Natural minor', metal: 'Phrygian', chiptune: 'Major', ambient: 'Natural minor', synthwave: 'Natural minor', house: 'Dorian', trance: 'Natural minor', dubstep: 'Natural minor', neoclassical: 'Natural minor', cinematic: 'Natural minor' }[st] || 'Dorian';
+  $('scale').value = { chill: 'Natural minor', lofi: 'Natural minor', metal: 'Phrygian', emo: 'Major', chiptune: 'Major', ambient: 'Natural minor', synthwave: 'Natural minor', house: 'Dorian', trance: 'Natural minor', dubstep: 'Natural minor', neoclassical: 'Natural minor', cinematic: 'Natural minor' }[st] || 'Dorian';
   applyFeel();                  // the seed then moves them within the style's range
-  $('leadsound').disabled = st === 'metal' || st === 'chiptune' || st === 'ambient' || st === 'synthwave' || st === 'house' || st === 'trance' || st === 'dubstep' || st === 'cinematic';   // each of these has its own fixed lead voice
+  $('leadsound').disabled = st === 'metal' || st === 'emo' || st === 'chiptune' || st === 'ambient' || st === 'synthwave' || st === 'house' || st === 'trance' || st === 'dubstep' || st === 'cinematic';   // each of these has its own fixed lead voice
   syncPicker();
 }
 
@@ -131,7 +131,7 @@ export function applyStyleDefaults() {
 export async function loadAudio() {
   if (audio) disposeAudio();
   sampleNote = '';
-  const metal = isMetal(), piano = !metal && !isChip() && !isAmbient() && !isSynthwave() && !isHouse() && !isTrance() && !isDubstep() && !isCine() && $('leadsound').value === 'piano';
+  const emo = isEmo(), metal = isMetal() || emo, piano = !metal && !isChip() && !isAmbient() && !isSynthwave() && !isHouse() && !isTrance() && !isDubstep() && !isCine() && $('leadsound').value === 'piano';
   const label = playBtn.innerHTML;
   if (metal) {
     playBtn.textContent = 'Loading guitars…';
@@ -146,7 +146,7 @@ export async function loadAudio() {
       $('stats').textContent = 'Guitar samples could not be loaded, so the Default style is being used.';
       return;
     }
-    setAudio(buildAudio('metal', false, metalBufs));
+    setAudio(buildAudio(emo ? 'emo' : 'metal', false, metalBufs));
     applyMix();
     playBtn.innerHTML = label;
     return;

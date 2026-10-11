@@ -12,6 +12,8 @@ export const isLofi = () => $('style').value === 'lofi';
 
 export const isMetal = () => $('style').value === 'metal';
 
+export const isEmo = () => $('style').value === 'emo';
+
 export const isChip = () => $('style').value === 'chiptune';
 
 export const isAmbient = () => $('style').value === 'ambient';
@@ -27,4 +29,4 @@ export const isDubstep = () => $('style').value === 'dubstep';
 
 export const getStyle = () => $('style').value;
 
-export const getOpts = () => ({ mode: $('bgmode').value, delay: +$('delay').value, vary: $('vary').checked, chill: isChill(), lofi: isLofi(), metal: isMetal(), chip: isChip(), ambient: isAmbient(), synthwave: isSynthwave(), house: isHouse(), trance: isTrance(), dubstep: isDubstep(), neo: isNeo(), cine: isCine(), gap: +$('gap').value, seed: parseSeed($('seed').value) });
+export const getOpts = () => ({ mode: $('bgmode').value, delay: +$('delay').value, vary: $('vary').checked, chill: isChill(), lofi: isLofi(), metal: isMetal(), chip: isChip(), ambient: isAmbient(), synthwave: isSynthwave(), house: isHouse(), trance: isTrance(), dubstep: isDubstep(), neo: isNeo(), cine: isCine(), emo: isEmo(), gap: +$('gap').value, seed: parseSeed($('seed').value) });

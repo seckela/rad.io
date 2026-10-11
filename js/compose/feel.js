@@ -9,6 +9,7 @@ export const FEEL = {
   chill:     { tempo: [64, 76],   scales: ['Natural minor', 'Natural minor', 'Dorian', 'Lydian'], key: true },
   lofi:      { tempo: [72, 90],   scales: ['Natural minor', 'Dorian', 'Dorian', 'Major', 'Lydian'], key: true },
   metal:     { tempo: [140, 170], scales: ['Phrygian', 'Phrygian', 'Natural minor'], key: false },     // the guitar samples limit the keys
+  emo:       { tempo: [168, 186], scales: ['Major', 'Major', 'Natural minor', 'Natural minor', 'Dorian'], key: false },     // (the guitar samples limit the keys, as in Rock / Metal)
   chiptune:  { tempo: [128, 160], scales: ['Major', 'Major', 'Natural minor', 'Dorian', 'Major pentatonic'], key: true },
   ambient:   { tempo: [60, 70],   scales: ['Natural minor', 'Lydian', 'Dorian', 'Major pentatonic'], key: true },
   synthwave: { tempo: [92, 112],  scales: ['Natural minor', 'Natural minor', 'Dorian', 'Major'], key: true },

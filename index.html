@@ -12,12 +12,12 @@
     "./js/audio/chip-track.js": "./js/audio/chip-track.js?v=f9e18808",
     "./js/audio/cinematic-track.js": "./js/audio/cinematic-track.js?v=b63617a0",
     "./js/audio/dubstep-track.js": "./js/audio/dubstep-track.js?v=717112cb",
-    "./js/audio/engine.js": "./js/audio/engine.js?v=f039372f",
+    "./js/audio/engine.js": "./js/audio/engine.js?v=29073aea",
     "./js/audio/house-track.js": "./js/audio/house-track.js?v=969ce8f9",
     "./js/audio/lofi-track.js": "./js/audio/lofi-track.js?v=4986bb83",
-    "./js/audio/metal-track.js": "./js/audio/metal-track.js?v=4936a880",
+    "./js/audio/metal-track.js": "./js/audio/metal-track.js?v=75093512",
     "./js/audio/neoclassical-track.js": "./js/audio/neoclassical-track.js?v=cf8e5634",
-    "./js/audio/play.js": "./js/audio/play.js?v=87ba4cce",
+    "./js/audio/play.js": "./js/audio/play.js?v=da9c5339",
     "./js/audio/samples.js": "./js/audio/samples.js?v=796f5496",
     "./js/audio/synthwave-track.js": "./js/audio/synthwave-track.js?v=86cd6e7d",
     "./js/audio/track.js": "./js/audio/track.js?v=f2ceed6d",
@@ -29,10 +29,11 @@
     "./js/compose/cinematic.js": "./js/compose/cinematic.js?v=f471287e",
     "./js/compose/default.js": "./js/compose/default.js?v=393971dc",
     "./js/compose/dubstep.js": "./js/compose/dubstep.js?v=edc55ab7",
-    "./js/compose/feel.js": "./js/compose/feel.js?v=67007944",
+    "./js/compose/emo.js": "./js/compose/emo.js?v=caafc31f",
+    "./js/compose/feel.js": "./js/compose/feel.js?v=b6fb405f",
     "./js/compose/groove.js": "./js/compose/groove.js?v=643bf4de",
     "./js/compose/house.js": "./js/compose/house.js?v=b2e6e5f1",
-    "./js/compose/index.js": "./js/compose/index.js?v=9bb95356",
+    "./js/compose/index.js": "./js/compose/index.js?v=34c89cf0",
     "./js/compose/lofi.js": "./js/compose/lofi.js?v=fbbd2f37",
     "./js/compose/melody.js": "./js/compose/melody.js?v=de1305a5",
     "./js/compose/metal.js": "./js/compose/metal.js?v=2e4a802d",
@@ -43,17 +44,17 @@
     "./js/compose/track.js": "./js/compose/track.js?v=fa21d0bc",
     "./js/compose/trance.js": "./js/compose/trance.js?v=65ff0642",
     "./js/main.js": "./js/main.js?v=02d94816",
-    "./js/sample.js": "./js/sample.js?v=f0973329",
+    "./js/sample.js": "./js/sample.js?v=693fa573",
     "./js/scales.js": "./js/scales.js?v=0d3598c0",
-    "./js/styles.js": "./js/styles.js?v=261ac37b",
+    "./js/styles.js": "./js/styles.js?v=4d271717",
     "./js/ui/dom.js": "./js/ui/dom.js?v=365dd800",
     "./js/ui/editor.js": "./js/ui/editor.js?v=02449985",
     "./js/ui/minimal.js": "./js/ui/minimal.js?v=84b48614",
     "./js/ui/picker.js": "./js/ui/picker.js?v=9a4c9a80",
-    "./js/ui/playback.js": "./js/ui/playback.js?v=904b3d62",
-    "./js/ui/settings.js": "./js/ui/settings.js?v=d9e19fe9",
+    "./js/ui/playback.js": "./js/ui/playback.js?v=3f3b445b",
+    "./js/ui/settings.js": "./js/ui/settings.js?v=6aa42733",
     "./js/ui/share.js": "./js/ui/share.js?v=1533d88c",
-    "./js/ui/tips.js": "./js/ui/tips.js?v=fa5a30e9",
+    "./js/ui/tips.js": "./js/ui/tips.js?v=2cf4168d",
     "./js/ui/view.js": "./js/ui/view.js?v=0386df12",
     "./js/ui/viz.js": "./js/ui/viz.js?v=abb460f2"
   }
@@ -198,6 +199,7 @@
         <tr><td>Chillstep style</td><td>About 70 BPM with the melody stretched out and thinned to a few long notes on a steady rhythmic grid that lines up with the drums. Each line is a section with its own pace (mostly slow, sometimes medium, occasionally lively) that opens on its chord root and stays near it, with quiet stepwise filler notes smoothing any leaps; the Melody pace menu (Busy / Medium / Relaxed) shifts all the paces together. A darker piano lead, soft piano chords, a recorded electric bass, and a big reverb (the chords and bass are real instruments because held low synth tones sound like a horn). The harmony follows a steady i–VI–III–VII loop with one change per new line, the bass and chord always change together, and the melody glides to the nearest note of each new chord. The chords are voiced low and compact under the melody and move as little as possible between lines, and the bass restates the root every bar (the chord every second bar) so the harmony never drops out. A steady half-time drum groove plays underneath (kick on 1, snare on 3, swung hats) and the kick gently ducks the pad and bass so the drums stay present.</td></tr>
         <tr><td>Lo-fi style</td><td>About 80 BPM, composed on the same layout as Chillstep (sparse melody on a grid, the i–VI–III–VII chord loop) and then played like a lo-fi beat. The chords get a 9th on top and are played as short stabs that follow a boom-bap kick (kick on 1 with a ghost kick and pickup, snare on 2 and 4 a touch late, swung hats). The bass plays short, round notes on the kick pattern. Timing and volumes are slightly loose. The piano and chords go through a gentle tape wobble, some saturation and a dark lowpass in a small room, with quiet vinyl crackle over the top.</td></tr>
         <tr><td>Rock / Metal style</td><td>About 150 BPM in Phrygian. Each line is a riff section: palm-muted guitar chugs on straight 8ths, a gallop, a syncopated half-time rhythm, or a driving run. The riff keeps going across line breaks. Only one part speeds up at a time: some sections have the lead run up and down the scale in 8ths over a steady rhythm, and others end in a half-bar burst of 16th chugs and double kick while the lead rests. Common letters chug on the section's root note and rarer ones move up the scale, brackets add power chords, the bass is its own part (several bar shapes that rotate, walking notes that follow the words in the line, and a walk up into the next section's root), and the drums follow the riff with a crash and snare roll into each new section, plus accents from the code (`=` adds kicks, math operators add hats, comparisons add ghost snares). A lead guitar with vibrato plays over the other sections, mostly a note per beat or per 8th with stepwise pickup notes; each section centers on a different scale step so it keeps moving. Guitar and bass are real recorded samples through a distortion and speaker-style filter chain.</td></tr>
+        <tr><td>Emo / Pop Punk style</td><td>About 176 BPM, usually major. Each line is a section of a song: verses, a pre-chorus, choruses and a bridge in a seeded order that ends on a chorus (a long line is cut into blocks of eight bars, short lines are joined). Each section loops four chords, one per bar. Verses are palm-muted power chords, or a clean chorused guitar arpeggio in some songs; the pre-chorus builds on a snare; choruses play open power chords with a crash and a lead guitar singing the melody; the bridge drops to half time. The bass drives in eighths and the drums use a rock or pop-punk skate beat with a snare roll into each chorus. Same guitar and bass samples as Rock / Metal.</td></tr>
         <tr><td>Chiptune style</td><td>About 140 BPM in a major scale, built on the default composition and played on simple console-style voices: a quarter-width pulse-wave lead, chords turned into fast arpeggios on a thin pulse wave (one note per 16th, up and back down the chord), and a triangle-wave bass that bounces between its root and the octave on every 8th note. The character-driven drum hits go quiet and a tight beat takes over (kick on 1 and 3 with an occasional pickup, noise snare on 2 and 4, straight 8th hats). Digits and quotes keep their blips and plinks. Everything is synthesized, so nothing downloads.</td></tr>
         <tr><td>Ambient style</td><td>About 60 BPM, built on the Chillstep layout (the same slow, sparse melody and i–VI–III–VII chord loop with one change per new line) but with nothing struck. Each chord change becomes one long, soft drone that lasts until the next change, with a low root and fifth underneath; the melody is thinned to a note every few beats and the notes ring long; bell chimes still mark quotes and semicolons, and every few bars a soft gust of wind chimes (two to four high notes close together, usually falling, ringing together for seconds) drifts through. The voices are slow-fading and synthesized (detuned triangle chords through a dark filter and a slow chorus, a soft sine lead with a long echo, sine bass) in a very large reverb. There are no drums, and nothing downloads.</td></tr>
         <tr><td>Synthwave style</td><td>About 100 BPM in Natural minor, built on the default composition and played like an 80s night-drive track. A bright, detuned saw lead with a dotted echo and chorus plays the melody over a wide detuned saw pad (chords are held at least a beat and a half), the bass is a relentless 16th-note filtered saw on each line's root with the beats accented, and the character-driven drum hits give way to a steady four-on-the-floor beat (kick on every beat, snare on 2 and 4, offbeat hats with quiet 16th ghosts). Digits and quotes keep their blips and plinks. Everything is synthesized, so nothing downloads.</td></tr>
