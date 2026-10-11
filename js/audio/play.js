@@ -5,7 +5,12 @@ import { audio } from './engine.js';
 const WOB_DB = -15;   // the dubstep wobble's level (set in audio/dubstep-track.js)
 const rnd = x => { const y = Math.sin(x * 12.9898) * 43758.5453; return y - Math.floor(y); };
 
+// A debugging aid: open the page with ?mute=run,climb (any event kinds, comma separated) to silence those voices and find which one is making a sound.
+let MUTED = new Set();
+try { MUTED = new Set((new URLSearchParams(location.search).get('mute') || '').split(',').filter(Boolean)); } catch (err) { /* no location */ }
+
 export function sound(e, time) {
+  if (MUTED.has(e.k)) return;
   const { s } = e.tr ? audio.bg : audio.fg;
   const unit = Tone.Time('16n').toSeconds();
   const dur = (e.d || 1) * unit * 0.9;
