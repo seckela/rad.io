@@ -42,6 +42,7 @@ Any static server works if you'd rather not use Python, for example `npx serve`.
 - **Melody pace:** Chillstep, Lo-fi, Ambient and Rock / Metal. Busy, Medium, or Relaxed sets how far apart the lead melody's notes are.
 - **Evolving harmony:** gives each line its own chord and register so the music changes more over a file.
 - **Background:** *Canon* echoes the melody an octave up a beat to two bars later. *Alternating lines* plays odd and even lines at the same time as two tracks. *Off* is a single track. **Canon delay** and **BG volume** adjust the background.
+- **Minimal view:** the button next to Play hides everything but the {rad.io} strip, which fills the page and becomes the equalizer while music plays. Moving the mouse (or tapping) shows Play / Pause, Stop and Full view for a couple of seconds; Esc goes back and Space plays or pauses.
 - **Layer toggles:** mute melody, bass, chords, bells and digits, or percussion.
 
 ## How characters map to sound
@@ -91,6 +92,7 @@ js/
     play.js            Plays one event
   ui/                  Page behaviour
     dom.js             Shared element lookups
+    minimal.js         Minimal view (equalizer only, controls on mouse move)
     settings.js        Reads the style, key, scale and other controls
     editor.js          The code box (CodeJar and Prism, or a plain textarea)
     view.js            The playback view and cursor highlighting

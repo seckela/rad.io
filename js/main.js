@@ -10,6 +10,7 @@ import { initPicker } from './ui/picker.js';
 import { initTips } from './ui/tips.js';
 import { initDebug } from './audio/unlock.js';
 import { initViz } from './ui/viz.js';
+import { initMinimal } from './ui/minimal.js';
 import { playing, paused, lastTotal, applyMix, updateStats, rebuild, applyStyleDefaults, loadAudio, start, stop, pause, resume, seekTo } from './ui/playback.js';
 
 KEYS.forEach((k, i) => $('key').add(new Option(k, i)));
@@ -29,6 +30,7 @@ initPicker();
 initTips();
 initDebug();
 initViz();
+initMinimal();
 
 playBtn.onclick = () => !playing ? start(getStartIndex()) : paused ? resume() : pause();
 $('stop').onclick = stop;
