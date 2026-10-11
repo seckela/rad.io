@@ -1,4 +1,6 @@
 import { groupLeads, gridMelody } from './melody.js';
+import { variant } from './seed.js';
+import { drumGroove } from './groove.js';
 
 const CHILL_SLOW = 1.5;                         // how much chillstep stretches the melody's timeline
 
@@ -11,8 +13,11 @@ const CHILL_SLOW = 1.5;                         // how much chillstep stretches 
 //    it, so leaps happen between sections; stepwise filler notes smooth leaps that remain.
 // Chords and bells are thinned, digits go quiet, and the character-driven percussion is reduced to
 // silent. A steady half-time drum pattern is laid on top by chillDrums().
-export function chillify(r, base) {
+export function chillify(r, base, v = variant()) {
   const S = CHILL_SLOW;
+  // Seeded (see seed.js): what the bass does each bar between chord changes, as [offset in 16ths, semitones above the root]; the first
+  // is the long root, the others add a softer note in the bar. (Lo-fi and Ambient drop these restatements and play their own.)
+  const RESTATE = v.of('restate', [[[0, 0]], [[0, 0]], [[0, 0], [8, 7]], [[0, 0], [10, 0]], [[0, 0], [6, 0], [12, 7]]]);
   const ev = r.events.map(e => {
     const o = { ...e, t: e.t * S };
     if (e.d) o.d = e.d * S;
@@ -80,7 +85,7 @@ export function chillify(r, base) {
     const first = Math.ceil((c.t + 4) / 16) * 16;
     c.d = Math.max(4, Math.min(first, stop) - c.t + 4);
     for (let bt = first, k = 0; bt < stop - 4; bt += 16, k++) {
-      ev.push({ t: bt, tr: 0, k: 'bass', m: c.m, d: Math.min(20, stop - bt + 4), v: 0.34 });
+      RESTATE.forEach(([off, semi], n) => { if (bt + off < stop - 4) ev.push({ t: bt + off, tr: 0, k: 'bass', m: c.m + semi, d: n ? 6 : Math.min(20, stop - bt + 4), v: n ? 0.24 : 0.34 }); });
       if (chord && k % 2 === 1) ev.push({ t: bt, tr: 0, k: 'pad', m: chord.m, d: 10, v: 0.22 });
     }
   });
@@ -97,16 +102,8 @@ export function chillify(r, base) {
   return { events: ev.concat(gridMelody(r, groups, base, true, { legato: true, sticky: true })), t: r.t * S };
 }
 
-// Half-time groove: kick on 1 (plus a syncopated one every other bar), snare on 3, swung 8th hats.
-export function chillDrums(total) {
-  const ev = [];
-  for (let b = 0; b < total; b += 16) {
-    ev.push({ t: b, k: 'kick', v: 0.9, tr: 0 });
-    if ((b / 16) % 2 === 1) ev.push({ t: b + 10, k: 'kick', v: 0.6, tr: 0 });
-    ev.push({ t: b + 8, k: 'snare', v: 0.7, tr: 0 });
-    for (let h = 0; h < 8; h++) {
-      ev.push({ t: b + h * 2 + (h % 2 ? 0.5 : 0), k: 'hat', v: h % 4 === 0 ? 0.4 : h % 2 ? 0.2 : 0.3, tr: 0 });
-    }
-  }
-  return ev;
+// The groove. The seed picks a whole one (see groove.js) from the slow, spacious kinds: half-time, boom-bap, shuffle or sparse; the hats
+// are swung a little.
+export function chillDrums(total, v = variant()) {
+  return drumGroove(total, v.of('drums', ['halftime', 'halftime', 'boombap', 'shuffle', 'sparse']), 0.9, 0.5);
 }
