@@ -58,7 +58,11 @@ export function sound(e, time) {
         else s.pad.triggerAttackRelease(e.m.map(hz), dur, time, v);
         break;
       case 'kick':
-        if (audio.chill && !audio.lofi && !e.tr) for (const [g, dip] of [[s.duckPad, 0.55], [s.duckBass, 0.85]]) {   // dip the sustained tones under the kick
+        if (audio.house && !e.tr) for (const [g, dip] of [[s.duckPad, 0.3], [s.duckBass, 0.35]]) {   // the pump: a deep, quick dip
+          g.gain.cancelScheduledValues(time);
+          g.gain.setValueAtTime(dip, time);
+          g.gain.linearRampToValueAtTime(1, time + 0.2);
+        } else if (audio.chill && !audio.lofi && !e.tr) for (const [g, dip] of [[s.duckPad, 0.55], [s.duckBass, 0.85]]) {   // dip the sustained tones under the kick
           g.gain.cancelScheduledValues(time);
           g.gain.setValueAtTime(dip, time);
           g.gain.linearRampToValueAtTime(1, time + 0.35);
@@ -66,6 +70,7 @@ export function sound(e, time) {
         s.kick.triggerAttackRelease(audio.metal ? 'F1' : 'C1', '16n', time, v ?? 0.9);
         if (s.kickClick) s.kickClick.triggerAttackRelease('64n', time, v ?? 0.9);
         break;
+      case 'ohat':  s.ohat.triggerAttackRelease('16n', time, v ?? 0.6); break;
       case 'hat':   s.hat.triggerAttackRelease('32n', time, v ?? 0.6); break;
       case 'snare':
         s.snare.triggerAttackRelease('16n', time, v ?? 0.7);

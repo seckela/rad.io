@@ -5,15 +5,16 @@ import { metalify, metalDrums } from './metal.js';
 import { chipify, chipDrums } from './chip.js';
 import { ambientify } from './ambient.js';
 import { synthwaveify, synthwaveDrums } from './synthwave.js';
+import { houseify, houseDrums } from './house.js';
 
 // o.mode: 'off' | 'canon' | 'split'
 //  canon: the background repeats the melody `o.delay` units late, an octave up (lead voice only)
 //  split: code lines alternate between foreground and background tracks, each on its own clock
-// o.vary: evolving harmony; o.chill: chillstep feel; o.lofi: lo-fi feel; o.metal: rock/metal feel; o.chip: chiptune feel; o.ambient: ambient feel; o.synthwave: synthwave feel; o.gap: melody pace
+// o.vary: evolving harmony; o.chill: chillstep feel; o.lofi: lo-fi feel; o.metal: rock/metal feel; o.chip: chiptune feel; o.ambient: ambient feel; o.synthwave: synthwave feel; o.house: techno / house feel; o.gap: melody pace
 export function compose(text, key, scale, o) {
-  const { mode, delay, vary, chill, lofi, metal, chip, ambient, synthwave } = o;
+  const { mode, delay, vary, chill, lofi, metal, chip, ambient, synthwave, house } = o;
   const warm = chill || lofi || ambient;      // Lo-fi is composed on top of the Chillstep layout
-  const fix = r => synthwave ? synthwaveify(r) : ambient ? ambientify(r, key, scale, o.gap) : chip ? chipify(r) : metal ? metalify(r, key, scale, o.gap / 2) : lofi ? lofiify(r, key, scale, o.gap) : chill ? chillify(r, o.gap) : r;
+  const fix = r => house ? houseify(r) : synthwave ? synthwaveify(r) : ambient ? ambientify(r, key, scale, o.gap) : chip ? chipify(r) : metal ? metalify(r, key, scale, o.gap / 2) : lofi ? lofiify(r, key, scale, o.gap) : chill ? chillify(r, o.gap) : r;
   const lines = text.split('\n');
   const tracks = [[], []];
   let idx = 0, k = -1;
@@ -42,6 +43,7 @@ export function compose(text, key, scale, o) {
   else if (chill) events = events.concat(chillDrums(total));
   if (chip) events = events.concat(chipDrums(total));
   if (synthwave) events = events.concat(synthwaveDrums(total));
+  if (house) events = events.concat(houseDrums(total));
   if (metal) {
     const grid = metalDrums(total, fg.sections);
     const taken = new Set(grid.map(e => e.k + '@' + Math.round(e.t)));
