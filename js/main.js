@@ -1,6 +1,6 @@
 import { $, src, view, playBtn } from './ui/dom.js';
 import { KEYS, SCALES } from './scales.js';
-import { SAMPLE } from './sample.js';
+import { SAMPLE, EXAMPLES } from './sample.js';
 import { compose } from './compose/index.js';
 import { audio } from './audio/engine.js';
 import { setCode, getText, initEditor, getStartIndex, onTextChange } from './ui/editor.js';
@@ -67,7 +67,19 @@ $('seed-pin').onclick = () => { $('seed').value = formatSeed(seedOf(getText()));
 $('seed-dice').onclick = () => { $('seed').value = formatSeed(Math.floor(Math.random() * 2 ** 32)); seedChanged(); };
 $('seed-auto').onclick = () => { $('seed').value = ''; seedChanged(); };
 $('leadsound').onchange = () => { if (audio) loadAudio(); };
-$('sample').onclick = () => { if (playing) stop(); setCode(SAMPLE); };
+for (const g of EXAMPLES) {
+  const og = document.createElement('optgroup');
+  og.label = g.group;
+  for (const it of g.items) og.append(new Option(it.name, it.id));
+  $('sample').append(og);
+}
+$('sample').onchange = () => {
+  const it = EXAMPLES.flatMap(g => g.items).find(x => x.id === $('sample').value);
+  $('sample').value = '';                      // back to the prompt, so the same example can be picked again
+  if (!it) return;
+  if (playing) stop();
+  setCode(it.text, !it.code);
+};
 
 async function loadFile(f) {
   if (!f) return;
