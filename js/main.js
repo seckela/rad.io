@@ -1,6 +1,6 @@
 import { $, src, view, playBtn } from './ui/dom.js';
 import { KEYS, SCALES } from './scales.js';
-import { SAMPLE } from './sample.js';
+import { SAMPLE, EXAMPLES } from './sample.js';
 import { compose } from './compose/index.js';
 import { audio } from './audio/engine.js';
 import { setCode, getText, initEditor, getStartIndex } from './ui/editor.js';
@@ -57,7 +57,19 @@ $('style').onchange = () => {
 };
 $('gap').onchange = () => { if (playing) rebuild(); else if (isChill() || isLofi()) updateStats(getText().length, compose(getText(), getKey(), getScale(), getOpts()).total); };
 $('leadsound').onchange = () => { if (audio) loadAudio(); };
-$('sample').onclick = () => { if (playing) stop(); setCode(SAMPLE); };
+for (const g of EXAMPLES) {
+  const og = document.createElement('optgroup');
+  og.label = g.group;
+  for (const it of g.items) og.append(new Option(it.name, it.id));
+  $('sample').append(og);
+}
+$('sample').onchange = () => {
+  const it = EXAMPLES.flatMap(g => g.items).find(x => x.id === $('sample').value);
+  $('sample').value = '';                      // back to the prompt, so the same example can be picked again
+  if (!it) return;
+  if (playing) stop();
+  setCode(it.text, !it.code);
+};
 
 async function loadFile(f) {
   if (!f) return;
