@@ -2,6 +2,7 @@ import { composeTrack } from './track.js';
 import { chillify, chillDrums } from './chill.js';
 import { lofiify, lofiDrums } from './lofi.js';
 import { metalify, metalDrums } from './metal.js';
+import { emoify, emoDrums } from './emo.js';
 import { chipify, chipDrums } from './chip.js';
 import { ambientify } from './ambient.js';
 import { synthwaveify, synthwaveDrums } from './synthwave.js';
@@ -16,15 +17,15 @@ import { defaultify, defaultDrums } from './default.js';
 // o.mode: 'off' | 'canon' | 'split'
 //  canon: the background repeats the melody `o.delay` units late, an octave up (lead voice only)
 //  split: code lines alternate between foreground and background tracks, each on its own clock
-// o.vary: evolving harmony; o.chill: chillstep feel; o.lofi: lo-fi feel; o.metal: rock/metal feel; o.chip: chiptune feel; o.ambient: ambient feel; o.synthwave: synthwave feel; o.house: techno / house feel; o.trance: trance feel; o.dubstep: dubstep feel; o.neo: neo-classical feel; o.cine: cinematic feel; o.gap: melody pace
+// o.vary: evolving harmony; o.chill: chillstep feel; o.lofi: lo-fi feel; o.metal: rock/metal feel; o.emo: emo / pop punk feel; o.chip: chiptune feel; o.ambient: ambient feel; o.synthwave: synthwave feel; o.house: techno / house feel; o.trance: trance feel; o.dubstep: dubstep feel; o.neo: neo-classical feel; o.cine: cinematic feel; o.gap: melody pace
 export function compose(text, key, scale, o) {
-  const { mode, delay, vary, chill, lofi, metal, chip, ambient, synthwave, house, trance, dubstep, neo, cine } = o;
+  const { mode, delay, vary, chill, lofi, metal, chip, ambient, synthwave, house, trance, dubstep, neo, cine, emo } = o;
   const sd = o.seed != null ? o.seed : seedOf(text);   // a seed typed in by the user, or the text's own
   // Each style makes its seeded choices through its own variant (see seed.js); the default composition has one too.
-  const style = cine ? 'cinematic' : neo ? 'neoclassical' : dubstep ? 'dubstep' : trance ? 'trance' : house ? 'house' : synthwave ? 'synthwave' : ambient ? 'ambient' : chip ? 'chip' : metal ? 'metal' : lofi ? 'lofi' : chill ? 'chill' : 'default';
+  const style = emo ? 'emo' : cine ? 'cinematic' : neo ? 'neoclassical' : dubstep ? 'dubstep' : trance ? 'trance' : house ? 'house' : synthwave ? 'synthwave' : ambient ? 'ambient' : chip ? 'chip' : metal ? 'metal' : lofi ? 'lofi' : chill ? 'chill' : 'default';
   const v = variant(sd, style), base = variant(sd, 'melody');
   const warm = chill || lofi || ambient || neo || cine;      // Lo-fi is composed on top of the Chillstep layout
-  const fix = r => cine ? cinematicify(r, key, scale, o.gap, v) : neo ? neoclassicalify(r, key, scale, o.gap, v) : trance ? tranceify(r, v) : house ? houseify(r, v) : synthwave ? synthwaveify(r, v) : ambient ? ambientify(r, key, scale, o.gap, v) : chip ? chipify(r, v) : metal ? metalify(r, key, scale, o.gap / 2, v) : lofi ? lofiify(r, key, scale, o.gap, v) : chill ? chillify(r, o.gap, v) : defaultify(r, v);
+  const fix = r => emo ? emoify(r, key, scale, o.gap / 2, v) : cine ? cinematicify(r, key, scale, o.gap, v) : neo ? neoclassicalify(r, key, scale, o.gap, v) : trance ? tranceify(r, v) : house ? houseify(r, v) : synthwave ? synthwaveify(r, v) : ambient ? ambientify(r, key, scale, o.gap, v) : chip ? chipify(r, v) : metal ? metalify(r, key, scale, o.gap / 2, v) : lofi ? lofiify(r, key, scale, o.gap, v) : chill ? chillify(r, o.gap, v) : defaultify(r, v);
   const lines = text.split('\n');
   const tracks = [[], []];
   let idx = 0, k = -1;
@@ -61,8 +62,8 @@ export function compose(text, key, scale, o) {
   if (house) events = events.concat(houseDrums(total, v));
   if (trance) events = events.concat(tranceDrums(total, v));
   if (dubstep) events = events.concat(dubstepDrums(total, v, fg.t));
-  if (metal) {
-    const grid = metalDrums(total, fg.sections, v);
+  if (metal || emo) {
+    const grid = (emo ? emoDrums : metalDrums)(total, fg.sections, v);
     const taken = new Set(grid.map(e => e.k + '@' + Math.round(e.t)));
     events = events.filter(e => !['kick', 'hat', 'snare'].includes(e.k) || !taken.has(e.k + '@' + Math.round(e.t))).concat(grid);
   }

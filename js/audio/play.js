@@ -54,6 +54,7 @@ export function sound(e, time) {
         s.lead.triggerAttackRelease(hz(e.m), audio.piano ? dur * (audio.chill ? 1.3 : 2) : dur, time, audio.piano ? v * (audio.chill ? 0.7 : 0.85) : v);
         break;
       case 'chug':  s.chug.triggerAttackRelease((e.n === 1 ? [e.m] : [e.m, e.m + 7, e.m + 12]).map(hz), dur * 0.6, time, v); break;
+      case 'clean': s.clean.triggerAttackRelease(hz(e.m), dur * 1.5, time, v); break;   // (emo: the clean, chorused guitar)
       case 'power': s.power.triggerAttackRelease([e.m, e.m + 7, e.m + 12].map(hz), dur, time, v); break;
       case 'run':
         if (audio.metal) s.vibrato.depth.setValueAtTime(0, time);
