@@ -7,7 +7,7 @@
 //    in rhythm patterns that change from half to half and fill at the end of every four bars), a kick and a heavy snare on beat 3, hats,
 //    and chord stabs. No lead: the bass is the tune.
 // The chords follow a four-bar loop picked by the seed; the text decides the seed and the highlight. The lengths of the three parts are
-// a quarter, a quarter and a half of a cycle (4, 4 and 8 bars for a cycle of 16), and a long text repeats the cycle.
+// a quarter, a quarter and a half of a cycle (4, 4 and 8 bars for a cycle of 16), and a long text repeats the cycle (without the intro: after a drop the next build-up follows straight on).
 // The kick ducks the pad, stabs and sub (see audio/play.js). Everything is synthesized.
 import { variant } from './seed.js';
 
@@ -36,7 +36,8 @@ export function layout(T) {
   let t0 = 0;
   for (let i = 0; i < n; i++) {
     const len = (base + (i < extra ? 1 : 0)) * 16, q = Math.max(2, Math.round(len / 16 / 4)) * 16;
-    out.push({ t0, build: t0 + q, drop: t0 + 2 * q, end: t0 + len });
+    // Only the first cycle has a soft intro: after a drop the next build-up follows straight on, so the wobble never gives way to quiet tones.
+    out.push(i === 0 ? { t0, build: t0 + q, drop: t0 + 2 * q, end: t0 + len } : { t0, build: t0, drop: t0 + q, end: t0 + len });
     t0 += len;
   }
   return { cycles: out, T: t0 };
