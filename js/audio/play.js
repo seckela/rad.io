@@ -50,6 +50,7 @@ export function sound(e, time) {
       case 'arp':   s.pad.triggerAttackRelease(hz(e.m), dur * 0.8, time, v); break;
       case 'bass':  s.bass.triggerAttackRelease(hz(e.m), dur, time, v); break;
       case 'digit': s.digit.triggerAttackRelease(hz(e.m), dur, time, v); break;
+      case 'chime': s.chime.triggerAttackRelease(hz(e.m), dur, time, v); break;
       case 'bell':  s.bell.triggerAttackRelease(hz(e.m), dur, time, v); break;
       case 'crackle': s.crackle.triggerAttackRelease('64n', time, v); break;
       case 'pad':

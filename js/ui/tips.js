@@ -3,8 +3,8 @@
 import { $ } from './dom.js';
 
 const TIPS = {
-  leadsound: 'What plays the melody: sampled piano, or a plain synth that needs no downloads. Rock / Metal always uses guitar and Chiptune a pulse wave.',
-  gap: 'How busy the melody is. Busy plays a note every few beats, Relaxed leaves more space. Applies to Chillstep, Lo-fi and Rock / Metal.',
+  leadsound: 'What plays the melody: sampled piano, or a plain synth that needs no downloads. Rock / Metal always uses guitar, Chiptune a pulse wave and Ambient a soft sine.',
+  gap: 'How busy the melody is. Busy plays a note every few beats, Relaxed leaves more space. Applies to Chillstep, Lo-fi, Ambient and Rock / Metal.',
   key: 'The home note the music is built around. Changing it moves everything up or down together.',
   scale: 'The set of notes the melody and chords use, which sets the mood. Dorian and Natural minor sound moody, Major sounds bright, Phrygian sounds dark.',
   tempo: 'Speed in beats per minute. You can change it while it plays.',
