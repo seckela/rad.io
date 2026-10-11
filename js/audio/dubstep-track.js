@@ -75,6 +75,10 @@ export function buildDubstepTrack(reverb, bg, dryOut) {
         harmonicity: 1, modulationIndex: 9, oscillator: { type: 'sawtooth' }, modulation: { type: 'square' },
         envelope: { attack: 0.004, decay: 0.1, sustain: 1, release: 0.05 }, modulationEnvelope: { attack: 0.004, decay: 0.1, sustain: 1, release: 0.05 },
       }),
+      dive: new Tone.FMSynth({
+        harmonicity: 3.01, modulationIndex: 30, oscillator: { type: 'sawtooth' }, modulation: { type: 'square' },
+        envelope: { attack: 0.003, decay: 0.1, sustain: 1, release: 0.08 }, modulationEnvelope: { attack: 0.003, decay: 0.1, sustain: 1, release: 0.08 },
+      }),
       riserNoise: new Tone.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.05, decay: 0.1, sustain: 1, release: 0.1 } }),
       riserTone: new Tone.Synth({ oscillator: { type: 'sawtooth' }, envelope: { attack: 0.1, decay: 0.1, sustain: 1, release: 0.1 } }),
       impact: new Tone.MembraneSynth({ pitchDecay: 0.25, octaves: 5, envelope: { attack: 0.001, decay: 1.2, sustain: 0, release: 0.4 } }),
@@ -91,8 +95,12 @@ export function buildDubstepTrack(reverb, bg, dryOut) {
     s.pad.volume.value = -22;        s.pad.connect(fx.padLp);
     s.stab.volume.value = -22;       s.stab.connect(fx.stabLp);
     s.zap.volume.value = -21;        s.zap.connect(fx.zapHp);
+    fx.diveHp = new Tone.Filter(180, 'highpass');
+    fx.diveDist = new Tone.Distortion({ distortion: 0.35, wet: 0.5 });
+    fx.diveHp.connect(fx.diveDist); fx.diveDist.connect(duckBass);
+    s.dive.volume.value = -9;        s.dive.connect(fx.diveHp);
     s.sub.volume.value = -7;         s.sub.connect(duckBass);
-    s.wob.volume.value = -15;        s.wob.connect(fx.wobHp);
+    s.wob.volume.value = -15;           s.wob.connect(fx.wobHp);
     s.riserNoise.volume.value = -20; s.riserNoise.connect(fx.riserBp);
     s.riserTone.volume.value = -26;  s.riserTone.connect(group.accent);
     s.impact.volume.value = -3;      s.impact.connect(group.accent);

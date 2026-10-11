@@ -2,6 +2,7 @@ import { audio } from './engine.js';
 
 // Deterministic pseudo-random value in [0, 1), so the "human" variation is the same every time the
 // same code is played.
+const WOB_DB = -15;   // the dubstep wobble's level (set in audio/dubstep-track.js)
 const rnd = x => { const y = Math.sin(x * 12.9898) * 43758.5453; return y - Math.floor(y); };
 
 export function sound(e, time) {
@@ -84,18 +85,27 @@ export function sound(e, time) {
         const hzNote = hz(e.m);
         s.wob.triggerAttackRelease(hzNote, dur, time, v);
         s.wob.detune.cancelScheduledValues(time);
-        if (e.dv) {         // the first note of a drop falls three octaves into place over eight 16ths, with the FM going from a bright, metallic ring (high index, inharmonic ratio) down to the normal growl
-          const fall = 8 * unit;
-          s.wob.detune.setValueAtTime(3600, time);
-          s.wob.detune.exponentialRampToValueAtTime(1, time + fall * 0.7);
-          s.wob.detune.setValueAtTime(0, time + fall * 0.7 + 0.001);
-          s.wob.modulationIndex.cancelScheduledValues(time);
-          s.wob.modulationIndex.setValueAtTime(28, time);
-          s.wob.modulationIndex.linearRampToValueAtTime(9, time + fall * 0.7);
-          s.wob.harmonicity.cancelScheduledValues(time);
-          s.wob.harmonicity.setValueAtTime(2.5, time);
-          s.wob.harmonicity.linearRampToValueAtTime(1, time + fall * 0.7);
+        s.wob.volume.cancelScheduledValues(time);
+        if (e.dv) {         // the drop's opening: a separate bright, metallic FM voice falls three octaves onto the wobble's pitch, while the wobble itself swells in underneath, so the two meet on the same note
+          const fall = 8 * unit, hzD = hzNote;
+          s.dive.detune.cancelScheduledValues(time);
+          s.dive.detune.setValueAtTime(3600, time);
+          s.dive.detune.exponentialRampToValueAtTime(1, time + fall * 0.9);
+          s.dive.detune.setValueAtTime(0, time + fall * 0.9 + 0.001);
+          s.dive.modulationIndex.cancelScheduledValues(time);
+          s.dive.modulationIndex.setValueAtTime(40, time);
+          s.dive.modulationIndex.linearRampToValueAtTime(12, time + fall);
+          s.dive.volume.cancelScheduledValues(time);
+          s.dive.volume.setValueAtTime(-7, time);
+          s.dive.volume.setValueAtTime(-7, time + fall * 0.6);
+          s.dive.volume.linearRampToValueAtTime(-40, time + fall * 1.05);
+          s.dive.triggerAttackRelease(hzD, fall * 1.05, time, 1);
+          s.wob.volume.setValueAtTime(WOB_DB - 18, time);
+          s.wob.volume.setValueAtTime(WOB_DB - 18, time + fall * 0.4);
+          s.wob.volume.linearRampToValueAtTime(WOB_DB, time + fall);
+          s.wob.detune.setValueAtTime(0, time);
         } else {
+          s.wob.volume.setValueAtTime(WOB_DB, time);
           s.wob.detune.setValueAtTime(500, time);
           s.wob.detune.exponentialRampToValueAtTime(1, time + 0.07);
           s.wob.detune.setValueAtTime(0, time + 0.08);
