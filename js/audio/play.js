@@ -82,18 +82,20 @@ export function sound(e, time) {
         break;
       }
       case 'climb': {       // the build-up's riser in miniature: swept noise and a rising tone that pull up and stop dead as the melody lands
-        const L = 6 * unit - 0.02;
+        const L = 5 * unit - 0.02;   // stops a 16th before the melody lands, with a hard mute (no release tail): the "eeep"
         s.riserBp.frequency.cancelScheduledValues(time);
         s.riserBp.frequency.setValueAtTime(700, time);
         s.riserBp.frequency.exponentialRampToValueAtTime(10000, time + L);
         s.riserNoise.volume.setValueAtTime(-13, time);
-        s.riserNoise.volume.setValueAtTime(-20, time + L + 0.15);   // louder than the build's own riser, then back
+        s.riserNoise.volume.setValueAtTime(-90, time + L);
+        s.riserNoise.volume.setValueAtTime(-20, time + L + 0.3);   // louder than the build's own riser, hard-muted at the end, then back to normal
         s.riserNoise.triggerAttackRelease(L, time, 1);
         s.riserTone.frequency.cancelScheduledValues(time);
         s.riserTone.frequency.setValueAtTime(330, time);
         s.riserTone.frequency.exponentialRampToValueAtTime(3000, time + L);
         s.riserTone.volume.setValueAtTime(-18, time);
-        s.riserTone.volume.setValueAtTime(-26, time + L + 0.15);
+        s.riserTone.volume.setValueAtTime(-90, time + L);
+        s.riserTone.volume.setValueAtTime(-26, time + L + 0.3);
         s.riserTone.triggerAttackRelease(L, time, 1);
         break;
       }
