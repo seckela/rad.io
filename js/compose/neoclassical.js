@@ -34,8 +34,10 @@ export function neoclassicalify(r, key, scale, base, v = variant()) {
   const fig = triplets ? v.of('figure-t', TRIPLETS) : v.of('figure', EIGHTHS);
   const bassFam = v.of('bass', ['held', 'held', 'fifth', 'rock']);
   const stringsAbove = v.of('strings', [12, 12, 7]);
-  // Which chord pieces the cello takes the melody in (the piano keeps the figure): every other one, every third, or the second half.
-  const celloIn = v.of('cello', ['odd', 'odd', 'third', 'late']);
+  // Which stretches the cello takes the melody in (the piano keeps the figure). The track is cut into blocks of two or three chord pieces
+  // (eight to twelve bars or so), and the cello has every other block, every third, or the second half. Between two piano blocks it comes
+  // in for a few notes leading into the next one (see below).
+  const celloIn = v.of('cello', ['odd', 'odd', 'third', 'late']), blockLen = v.of('cello-len', [2, 2, 3]);
   const res = chillify(r, base, v);
   const tail = 16;
   const total = res.t + tail;
@@ -82,7 +84,7 @@ export function neoclassicalify(r, key, scale, base, v = variant()) {
   const extra = [];
   const step = triplets ? 16 / 12 : 2, per = triplets ? 12 : 8;
   pieces.forEach(c => {
-    const start = c.start, stop = c.stop, tones = voice(c.deg);
+    const start = c.start, stop = c.stop, tones = c.tones = voice(c.deg);
     const a0 = arc(start / total);
     // The bowed bass: the chord's root in the octave above Chillstep's sub-bass (so it can be heard on small speakers) until the next chord.
     const root = 43 + ((((r.pad(c.deg) % 12) + 12) % 12 - 43 % 12) + 12) % 12;
@@ -113,7 +115,18 @@ export function neoclassicalify(r, key, scale, base, v = variant()) {
 
   // The melody: the Chillstep notes, an octave or two higher so they sing above the figure, each ringing on into the next. In the pieces
   // where the cello takes over, the same notes are played an octave lower in its range (the voice is chosen in audio/play.js).
-  const cellos = i => celloIn === 'odd' ? i % 2 === 1 : celloIn === 'third' ? i % 3 === 2 : i >= Math.ceil(pieces.length / 2);
+  const blocks = Math.ceil(pieces.length / blockLen);
+  const cellos = i => { const b = Math.floor(i / blockLen); return celloIn === 'odd' ? b % 2 === 1 : celloIn === 'third' ? b % 3 === 2 : b >= Math.ceil(blocks / 2); };
+  // The pickups: where a piano block runs into another piano block, the cello plays three notes of the incoming chord, falling, in the
+  // last bar, the last one ringing on into the new chord.
+  const pickups = [];
+  pieces.forEach((c, i) => {
+    const next = pieces[i + 1];
+    if (!next || (i + 1) % blockLen !== 0 || cellos(i) || cellos(i + 1) || c.stop - c.start < 12) return;
+    const fit = m => { while (m < 55) m += 12; while (m > 69) m -= 12; return m; };
+    const notes = next.tones.map(fit).sort((a, b) => b - a);
+    [[-7, 3], [-4.5, 3], [-2, 6]].forEach(([off, d], q) => pickups.push({ t: c.stop + off, tr: c.tr, k: 'lead', m: notes[q], d, v: 0.4 + 0.2 * arc(c.stop / total), cello: true }));
+  });
   for (const e of ev) {
     if (e.k !== 'lead') continue;
     let m = e.m;
@@ -125,5 +138,5 @@ export function neoclassicalify(r, key, scale, base, v = variant()) {
     e.d = Math.max(e.d || 2, 4);
     e.v = Math.min(1, (e.v || 0.5) * (0.7 + 0.5 * arc(e.t / total)));
   }
-  return { events: ev.concat(extra), t: total };
+  return { events: ev.concat(extra, pickups), t: total };
 }
