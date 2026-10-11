@@ -35,12 +35,10 @@ let pulse = null;                        // { kind: 'dive' | 'rise', t0, ms }
 // The pulse leaves the bars it has passed coloured: the dive paints a cool gradient (magenta at the edges to cyan in the middle) as it falls
 // and holds it; the rise then repaints them warm (orange to magenta) as it climbs out; when the rise is over everything fades back to the
 // style's colour.
-let flashT0 = 0;                         // the strobe (an option): when the last flash began
 let hold = false, holdT = 0, fade = 0;   // hold: the dive's colours are still on the bars; fade: when the colours began fading out
 const diveHue = u => Math.round(180 + 120 * u), riseHue = u => Math.round((390 - 90 * u) % 360);
 let rgb = null;                          // the bar colour as [r, g, b] if it is a #rrggbb value
 const parse = c => { const m = /^#([0-9a-f]{6})$/i.exec(c); return m ? [0, 2, 4].map(i => parseInt(m[1].substr(i, 2), 16)) : null; };
-const toWhite = t => rgb ? `rgb(${rgb.map(v => Math.round(v + (255 - v) * t)).join(',')})` : color;
 const clamp01 = x => Math.min(1, Math.max(0, x));
 const ease = x => x * x * (3 - 2 * x);
 
@@ -97,10 +95,6 @@ function draw() {
   }
   if (hold && !pulse && nowMs - holdT > 3500) hold = false;      // never leave the colours stuck on if the rise doesn't come
   if (fade) { tfade = 1 - (nowMs - fade) / 400; if (tfade <= 0) { fade = 0; tfade = 1; } }
-  // The strobe: a short white flash of the bars and the strip on the beat of a snare fill (two a bar, never more than about 2.5 a second).
-  const flash = $('strobe').checked && flashT0 ? Math.exp(-(nowMs - flashT0) / 110) : 0;
-  if (flash > 0.03) { c.globalAlpha = 0.28 * flash; c.fillStyle = toWhite(0.8); c.fillRect(0, 0, W, H); c.globalAlpha = 1; }
-  const baseFill = flash > 0.05 ? toWhite(Math.min(0.9, flash)) : color;
   const rightX = idleRight + (wCss - idleRight) * e;                   // right edge of the right brace
   drawBraces(c, 0, rightX);
   if (title) title.style.opacity = String(1 - clamp01(p / 0.35));
@@ -119,7 +113,7 @@ function draw() {
       const bw = (BAR * Kw) * dpr, step = ((BAR * Kw) + (GAP * Kw)) * dpr, centre = (n - 1) / 2, fullHalf = (nMax - 1) / 2;
       let vals = null, bins = 0;
       if (playing && analyser) { vals = analyser.getValue(); bins = vals.length; }
-      c.globalAlpha = alpha; c.fillStyle = baseFill;
+      c.globalAlpha = alpha; c.fillStyle = color;
       for (let i = 0; i < n; i++) {
         const d = Math.abs(i - centre);
         const rest = (REST_MIN * Kh) + ((REST_PEAK * Kh) - (REST_MIN * Kh)) * (1 - d / Math.max(1, centre));
@@ -148,10 +142,10 @@ function draw() {
           const hue = 160 + 120 * clamp01(0.5 + dir * u / 0.3) + 20;            // 180 (cyan) .. 300 (magenta)
           c.fillStyle = `hsl(${Math.round(hue)} 100% ${Math.round(58 + 34 * boost * boost)}%)`;
         } else if (trail !== null) {
-          c.fillStyle = baseFill;
+          c.fillStyle = color;
           if (amt < 1) { c.beginPath(); c.roundRect ? c.roundRect(x0 + i * step, mid - h / 2, bw, h, bw / 2) : c.rect(x0 + i * step, mid - h / 2, bw, h); c.fill(); c.globalAlpha = alpha * amt; }
           c.fillStyle = `hsl(${trail} 100% 60%)`;
-        } else c.fillStyle = baseFill;
+        } else c.fillStyle = color;
         const x = x0 + i * step, y = mid - h / 2;
         c.beginPath();
         c.roundRect ? c.roundRect(x, y, bw, h, bw / 2) : c.rect(x, y, bw, h);
@@ -203,14 +197,13 @@ export function vizAttach() {
 // Cues from the music (dubstep only): 'dive' is the drop's pitch dive (it lasts `secs`), 'rise' the rise after it.
 export function vizCue(kind, secs = 0.5) {
   if (reduced) return;
-  if (kind === 'flash') { if ($('strobe').checked) { flashT0 = performance.now(); if (playing && enabled()) loop(); } return; }
   pulse = { kind, t0: performance.now(), ms: Math.max(100, secs * 1000) };
   if (kind === 'dive') { hold = false; fade = 0; }
   if (playing && enabled()) loop();
 }
 
 export function vizStart() {
-  pulse = null; hold = false; fade = 0; flashT0 = 0;
+  pulse = null; hold = false; fade = 0;
   playing = true;
   if (!enabled()) return;
   target = 1;
