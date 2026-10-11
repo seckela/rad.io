@@ -31,6 +31,18 @@ def fib(n):
 
 for i, x in enumerate(fib(12)):
     print(f"fib({i}) = {x}")
+
+def is_prime(n):
+    if n < 2:
+        return False
+    for d in range(2, int(n ** 0.5) + 1):
+        if n % d == 0:
+            return False
+    return True
+
+# Which of the first twenty Fibonacci numbers are prime?
+primes = [x for x in fib(20) if is_prime(x)]
+print("prime Fibonacci numbers:", primes)
 `;
 
 const HOPE = `"Hope" is the thing with feathers -
@@ -42,6 +54,11 @@ And sweetest - in the Gale - is heard -
 And sore must be the storm -
 That could abash the little Bird
 That kept so many warm -
+
+I've heard it in the chillest land -
+And on the strangest Sea -
+Yet - never - in Extremity,
+It asked a crumb - of me.
 `;
 
 const CLOTHS = `Had I the heavens' embroidered cloths,
@@ -55,12 +72,29 @@ Tread softly because you tread on my dreams.
 `;
 
 const DARCY = `In vain have I struggled. It will not do. My feelings will not be repressed. You must allow me to tell you how ardently I admire and love you.
+
+Elizabeth's astonishment was beyond expression. She stared, coloured, doubted, and was silent. This he considered sufficient encouragement; and the avowal of all that he felt, and had long felt for her, immediately followed.
 `;
 
 const GRACE = `Amazing grace! How sweet the sound
 That saved a wretch like me!
 I once was lost, but now am found,
 Was blind, but now I see.
+
+'Twas grace that taught my heart to fear,
+And grace my fears relieved;
+How precious did that grace appear
+The hour I first believed.
+
+Through many dangers, toils and snares,
+I have already come;
+'Tis grace hath brought me safe thus far,
+And grace will lead me home.
+
+The Lord has promised good to me,
+His word my hope secures;
+He will my shield and portion be,
+As long as life endures.
 `;
 
 const AULD_LANG_SYNE = `Should auld acquaintance be forgot,
@@ -72,6 +106,16 @@ For auld lang syne, my dear,
 for auld lang syne,
 we'll tak a cup o' kindness yet,
 for auld lang syne.
+
+And surely ye'll be your pint-stoup,
+and surely I'll be mine!
+And we'll tak a cup o' kindness yet,
+for auld lang syne.
+
+We twa hae run about the braes,
+and pou'd the gowans fine;
+But we've wander'd mony a weary fit,
+sin' auld lang syne.
 `;
 
 const WANNA_BE = `Ha ha ha ha ha
