@@ -2,29 +2,66 @@
   "name": "rad-io",
   "displayName": "rad.io: Listen to your code",
   "description": "Turn the file you are editing into music. Every character becomes part of a track, and the editor follows along as it plays.",
-  "version": "0.0.1",
+  "version": "0.0.6",
   "publisher": "seckela",
   "license": "MIT",
-  "engines": { "vscode": "^1.80.0" },
-  "categories": ["Other"],
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other"
+  ],
   "main": "./extension.js",
   "activationEvents": [],
   "contributes": {
     "commands": [
-      { "command": "radio.playFile", "title": "Play this file", "category": "rad.io" },
-      { "command": "radio.playSelection", "title": "Play the selection", "category": "rad.io" },
-      { "command": "radio.playFromCursor", "title": "Play from the cursor", "category": "rad.io" },
-      { "command": "radio.stop", "title": "Stop", "category": "rad.io" },
-      { "command": "radio.showPanel", "title": "Show the player", "category": "rad.io" }
+      {
+        "command": "radio.playFile",
+        "title": "Play this file",
+        "category": "rad.io"
+      },
+      {
+        "command": "radio.playSelection",
+        "title": "Play the selection",
+        "category": "rad.io"
+      },
+      {
+        "command": "radio.playFromCursor",
+        "title": "Play from the cursor",
+        "category": "rad.io"
+      },
+      {
+        "command": "radio.stop",
+        "title": "Stop",
+        "category": "rad.io"
+      },
+      {
+        "command": "radio.showPanel",
+        "title": "Show the player",
+        "category": "rad.io"
+      }
     ],
     "menus": {
       "editor/context": [
-        { "command": "radio.playSelection", "when": "editorHasSelection", "group": "radio@1" },
-        { "command": "radio.playFromCursor", "when": "!editorHasSelection", "group": "radio@1" }
+        {
+          "command": "radio.playSelection",
+          "when": "editorHasSelection",
+          "group": "radio@1"
+        },
+        {
+          "command": "radio.playFromCursor",
+          "when": "!editorHasSelection",
+          "group": "radio@1"
+        }
       ]
     },
     "keybindings": [
-      { "command": "radio.playFile", "key": "ctrl+alt+r", "mac": "cmd+alt+r", "when": "editorTextFocus" }
+      {
+        "command": "radio.playFile",
+        "key": "ctrl+alt+r",
+        "mac": "cmd+alt+r",
+        "when": "editorTextFocus"
+      }
     ],
     "configuration": {
       "title": "rad.io",
@@ -33,8 +70,39 @@
           "type": "boolean",
           "default": true,
           "description": "Highlight the character that is playing in the editor, and scroll to keep it in view."
+        },
+        "radio.theme": {
+          "type": "string",
+          "enum": [
+            "editor",
+            "radio"
+          ],
+          "enumDescriptions": [
+            "Use the editor's colours and font, so the player blends in (default).",
+            "Use rad.io's own dark look."
+          ],
+          "default": "editor",
+          "description": "How the player is styled."
         }
       }
+    },
+    "viewsContainers": {
+      "panel": [
+        {
+          "id": "radio",
+          "title": "rad.io",
+          "icon": "icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "radio": [
+        {
+          "type": "webview",
+          "id": "radio.player",
+          "name": "Player"
+        }
+      ]
     }
   }
 }

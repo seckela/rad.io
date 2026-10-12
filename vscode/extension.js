@@ -4,7 +4,7 @@ const vscode = require('vscode');
 const fs = require('fs');
 const path = require('path');
 
-let panel = null, ready = false, queued = null, playing = false, status = null, follow = null, decos = null;
+let view = null, ready = false, queued = null, playing = false, status = null, follow = null, decos = null;
 
 // Where the app's files are: media/ inside a packaged extension (see build.py), or the repository above this folder when running from
 // source in an Extension Development Host.
@@ -12,6 +12,9 @@ function appRoot(ctx) {
   const packed = path.join(ctx.extensionPath, 'media');
   return fs.existsSync(path.join(packed, 'index.html')) ? packed : path.resolve(ctx.extensionPath, '..');
 }
+
+// The setting radio.theme: "editor" (the default) takes the editor's colours and font; "radio" keeps rad.io's own look.
+const nativeTheme = () => vscode.workspace.getConfiguration('radio').get('theme') !== 'radio';
 
 function pageHtml(ctx, webview) {
   const root = appRoot(ctx);
@@ -30,29 +33,36 @@ function pageHtml(ctx, webview) {
   let h = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
   h = h.replace('<head>', `<head>\n<base href="${base}">\n<meta http-equiv="Content-Security-Policy" content="${csp}">`);
   h = h.replace(/<link rel="manifest"[^>]*>/, '');
-  h = h.replace('<body>', '<body class="vscode">');
+  h = h.replace('<body>', `<body class="vscode${nativeTheme() ? ' vs-native' : ''}">`);
   h = h.replace('</body>', '<script type="module" src="js/vscode-bridge.js"></script>\n</body>');
   return h;
 }
 
+// The player lives in a view of its own (a tab in the bottom panel next to the terminal, which can be dragged to the side bars), not in an editor tab. The page loads when the view is first opened and is kept alive while it is hidden.
+let ctxRef = null;
+const provider = {
+  resolveWebviewView(v) {
+    view = v;
+    ready = false;
+    v.webview.options = { enableScripts: true, localResourceRoots: [vscode.Uri.file(appRoot(ctxRef))] };
+    v.webview.html = pageHtml(ctxRef, v.webview);
+    v.webview.onDidReceiveMessage(m => onMessage(ctxRef, m));
+    v.onDidDispose(() => { view = null; ready = false; setPlaying(false); });
+  },
+};
+
 function ensurePanel(ctx, reveal = true) {
-  if (panel) { if (reveal) panel.reveal(vscode.ViewColumn.Beside, true); return panel; }
-  panel = vscode.window.createWebviewPanel('radio', 'rad.io', { viewColumn: vscode.ViewColumn.Beside, preserveFocus: true },
-    { enableScripts: true, retainContextWhenHidden: true, localResourceRoots: [vscode.Uri.file(appRoot(ctx))] });
-  ready = false;
-  panel.webview.html = pageHtml(ctx, panel.webview);
-  panel.webview.onDidReceiveMessage(m => onMessage(ctx, m));
-  panel.onDidDispose(() => { panel = null; ready = false; setPlaying(false); });
-  return panel;
+  if (view) { if (reveal) view.show(true); }
+  else if (reveal) vscode.commands.executeCommand('workbench.view.extension.radio');   // (opens the drawer, which loads the page)
 }
 
 function send(ctx, msg) {
   ensurePanel(ctx);
-  if (ready) panel.webview.postMessage(msg); else queued = msg;       // (the page tells us when it has loaded)
+  if (view && ready) view.webview.postMessage(msg); else queued = msg;       // (the page tells us when it has loaded)
 }
 
 function onMessage(ctx, m) {
-  if (m.type === 'ready') { ready = true; if (queued) { panel.webview.postMessage(queued); queued = null; } }
+  if (m.type === 'ready') { ready = true; if (queued) { view.webview.postMessage(queued); queued = null; } }
   else if (m.type === 'state') setPlaying(m.playing);
   else if (m.type === 'at') showAt(m.i, m.tr);
   else if (m.type === 'blocked') vscode.window.setStatusBarMessage('rad.io: ' + m.message, 6000);
@@ -112,6 +122,7 @@ function play(ctx, mode) {
 }
 
 function activate(ctx) {
+  ctxRef = ctx;
   decos = {
     charType: vscode.window.createTextEditorDecorationType({ backgroundColor: new vscode.ThemeColor('editor.findMatchBackground'), border: '1px solid', borderColor: new vscode.ThemeColor('editor.findMatchBorder'), borderRadius: '2px' }),
     lineType: vscode.window.createTextEditorDecorationType({ isWholeLine: true, backgroundColor: new vscode.ThemeColor('editor.lineHighlightBackground') }),
@@ -120,15 +131,17 @@ function activate(ctx) {
   status.show();
   setPlaying(false);
   ctx.subscriptions.push(
+    vscode.window.registerWebviewViewProvider('radio.player', provider, { webviewOptions: { retainContextWhenHidden: true } }),
     status, decos.charType, decos.lineType,
     vscode.commands.registerCommand('radio.playFile', () => play(ctx, 'file')),
     vscode.commands.registerCommand('radio.playSelection', () => play(ctx, 'selection')),
     vscode.commands.registerCommand('radio.playFromCursor', () => play(ctx, 'cursor')),
-    vscode.commands.registerCommand('radio.stop', () => { if (panel) panel.webview.postMessage({ type: 'stop' }); setPlaying(false); }),
+    vscode.commands.registerCommand('radio.stop', () => { if (view) view.webview.postMessage({ type: 'stop' }); setPlaying(false); }),
+    vscode.workspace.onDidChangeConfiguration(ev => { if (ev.affectsConfiguration('radio.theme') && view && ready) view.webview.postMessage({ type: 'theme', native: nativeTheme() }); }),
     vscode.commands.registerCommand('radio.showPanel', () => ensurePanel(ctx)),
   );
 }
 
-function deactivate() { if (panel) panel.dispose(); }
+function deactivate() {}
 
 module.exports = { activate, deactivate };

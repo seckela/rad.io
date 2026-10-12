@@ -12,7 +12,33 @@ Thirteen styles are included: an upbeat **Default**, a calm **Chillstep** for ba
 
 ## VS Code extension (proof of concept)
 
-The `vscode/` folder holds an extension that plays the file you are editing in a panel beside it, with the editor following along (the playing character is highlighted). See `vscode/README.md`. The page side of it is `js/vscode-bridge.js`, which does nothing outside VS Code.
+The `vscode/` folder holds an extension that plays the file you are editing. A **rad.io** tab opens in the bottom panel (next to Terminal and Problems), the extension hands it your text, and the editor follows along: the character that is playing is highlighted and kept in view. It is not published yet, so install it from this repository. (`vscode/README.md` has the same notes.)
+
+### Setup
+
+You need VS Code 1.80 or later and Python 3 (to build the install file; no npm needed).
+
+1. Build the install file from the repository root: `python3 vscode/build.py`. This copies the web app into `vscode/media/` and writes `vscode/rad-io-<version>.vsix`.
+2. In VS Code open the Extensions view, choose **...** > **Install from VSIX...**, and pick that file (or run `code --install-extension vscode/rad-io-<version>.vsix`).
+3. Run **Developer: Reload Window**.
+
+To update, rebuild and install again. Uninstall the old copy first if the version number has not changed, or VS Code may keep the old one.
+
+To run it from source instead (for development), open the `vscode/` folder in VS Code and press `F5`; it uses the web app one folder up.
+
+### Using it
+
+Open the Command Palette and type "rad.io":
+
+- **Play this file** (`Cmd+Alt+R`, `Ctrl+Alt+R` elsewhere) plays the active file from the start.
+- **Play the selection** (also in the editor's right-click menu) plays just the selected text.
+- **Play from the cursor** plays the file starting at the cursor.
+- **Stop** stops playback; the **rad.io** button in the status bar toggles play and stop.
+- **Show the player** opens the panel without playing, for the style, tempo, key, scale, background voice, layers and seed (the same controls as the web app).
+
+The first time, click **Play** in the rad.io panel once: audio cannot start without a click inside it, and the status bar says so if a command was not enough. Keep the tab open (it can sit behind Terminal) while the music plays. Drag the tab to the sidebar if you prefer it there. Drag the panel down to a thin strip (under about 190 px tall) and the player shrinks to a mini player: just the equalizer and the Play / Pause and Stop buttons. Drag it back up for the full controls. In a side bar or a narrow panel the player is a compact strip: the equalizer, Play / Stop, the Style menu and the track's length. The **Settings** button (sliders icon, next to Stop) unfolds the style details, tempo, key, scale, layers and seed, and remembers your choice. The player follows your VS Code theme (colours, font and light or dark), so it blends in with the editor; the equalizer and buttons use the theme's link and button colours, and the style card no longer takes each style's own colour. The setting `radio.theme` chooses the look: `editor` (the default) follows your theme, `radio` keeps rad.io's own dark look; it applies as soon as you change it. The setting `radio.followPlayback` turns off the highlight in the editor.
+
+Piano, guitar, cello and violin samples are fetched from the web the first time a style needs them, so those styles need a connection (without one they fall back to synthesized voices). The page side of the extension is `js/vscode-bridge.js`, which does nothing outside VS Code.
 
 ## Getting started
 
