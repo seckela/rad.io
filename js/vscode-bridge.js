@@ -4,6 +4,7 @@
 import { $, playBtn } from './ui/dom.js';
 import { setCode, getText } from './ui/editor.js';
 import { onHighlight } from './ui/view.js';
+import { vizRetint } from './ui/viz.js';
 import { applyFeel, start, stop, updateStats, playing } from './ui/playback.js';
 import { compose } from './compose/index.js';
 import { getKey, getScale, getOpts } from './ui/settings.js';
@@ -22,6 +23,9 @@ if (typeof acquireVsCodeApi === 'function') {
   const showMore = on => { document.body.classList.toggle('vs-more', on); more.setAttribute('aria-expanded', String(on)); };
   showMore(!!(vs.getState() || {}).more);
   more.onclick = () => { const on = !document.body.classList.contains('vs-more'); showMore(on); vs.setState({ ...(vs.getState() || {}), more: on }); };
+
+  // VS Code switches a class on <body> (vscode-dark, vscode-light, ...) when the theme changes; the equalizer reads its colour once, so refresh it.
+  new MutationObserver(() => requestAnimationFrame(vizRetint)).observe(document.body, { attributes: true, attributeFilter: ['class', 'data-vscode-theme-id'] });
 
   onHighlight((i, tr) => post({ type: 'at', i, tr }));
   new MutationObserver(() => post({ type: 'state', playing })).observe($('stop'), { attributes: true, attributeFilter: ['hidden'] });
