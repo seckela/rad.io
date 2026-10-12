@@ -35,8 +35,7 @@ function pageHtml(ctx, webview) {
   return h;
 }
 
-// The player lives in a view of its own (a "drawer" in the activity bar, which can be dragged to the bottom panel or the secondary
-// side bar), not in an editor tab. The page loads when the view is first opened and is kept alive while it is hidden.
+// The player lives in a view of its own (a tab in the bottom panel next to the terminal, which can be dragged to the side bars), not in an editor tab. The page loads when the view is first opened and is kept alive while it is hidden.
 let ctxRef = null;
 const provider = {
   resolveWebviewView(v) {

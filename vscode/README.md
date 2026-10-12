@@ -1,6 +1,6 @@
 # rad.io for VS Code (proof of concept)
 
-Listen to the file you're editing. The extension adds a **rad.io** drawer to the activity bar (the player lives there, not in an editor tab; drag it to the bottom panel or the secondary side bar if you prefer), hands it your text, and the editor follows along: the character that is playing is highlighted and kept in view.
+Listen to the file you're editing. The extension adds a **rad.io** tab to the bottom panel, next to Terminal and Problems (the player lives there, not in an editor tab; drag it to the sidebar or the secondary side bar if you prefer), hands it your text, and the editor follows along: the character that is playing is highlighted and kept in view.
 
 ## Commands (Command Palette, "rad.io")
 
@@ -18,7 +18,7 @@ All the controls of the web app (the 13 styles, key, scale, tempo, background vo
 
 From source: open this folder (`vscode/`) in VS Code and press `F5` (Run Extension). It uses the web app one folder up.
 
-As an installable file: `python3 vscode/build.py` copies the app into `vscode/media/` and writes `vscode/rad-io-0.0.1.vsix`; install it with **Extensions: Install from VSIX...**.
+As an installable file: `python3 vscode/build.py` copies the app into `vscode/media/` and writes `vscode/rad-io-0.0.2.vsix`; install it with **Extensions: Install from VSIX...**.
 
 ## Notes and limits
 
