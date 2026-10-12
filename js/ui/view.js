@@ -77,7 +77,12 @@ function paintLine(li) {
   flush();
 }
 
+// An optional listener told where playback is (the VS Code extension uses it to follow along in the real editor).
+let hook = null;
+export const onHighlight = f => { hook = f; };
+
 export function highlight(i, tr) {
+  if (hook) hook(i, tr);
   const li = lineOf[i], old = cur[tr];
   cur[tr] = { li, col: i - view._starts[li] };
   paintLine(li);
