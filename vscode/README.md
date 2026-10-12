@@ -20,7 +20,7 @@ In a side bar or a narrow panel the player is a compact strip: the equalizer, Pl
 
 ## Theme
 
-The player follows your VS Code theme (colours, font and light or dark), so it blends in with the editor; the equalizer and buttons use the theme's link and button colours, and the style card no longer takes each style's own colour.
+The player follows your VS Code theme (colours, font and light or dark), so it blends in with the editor; the equalizer and buttons use the theme's link and button colours, and the style card no longer takes each style's own colour. The setting `radio.theme` chooses the look: `editor` (the default) follows your theme, `radio` keeps rad.io's own dark look; it applies as soon as you change it.
 
 ## Mini player
 

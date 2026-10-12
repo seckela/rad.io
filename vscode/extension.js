@@ -13,6 +13,9 @@ function appRoot(ctx) {
   return fs.existsSync(path.join(packed, 'index.html')) ? packed : path.resolve(ctx.extensionPath, '..');
 }
 
+// The setting radio.theme: "editor" (the default) takes the editor's colours and font; "radio" keeps rad.io's own look.
+const nativeTheme = () => vscode.workspace.getConfiguration('radio').get('theme') !== 'radio';
+
 function pageHtml(ctx, webview) {
   const root = appRoot(ctx);
   const base = webview.asWebviewUri(vscode.Uri.file(root)).toString().replace(/\/?$/, '/');
@@ -30,7 +33,7 @@ function pageHtml(ctx, webview) {
   let h = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
   h = h.replace('<head>', `<head>\n<base href="${base}">\n<meta http-equiv="Content-Security-Policy" content="${csp}">`);
   h = h.replace(/<link rel="manifest"[^>]*>/, '');
-  h = h.replace('<body>', '<body class="vscode">');
+  h = h.replace('<body>', `<body class="vscode${nativeTheme() ? ' vs-native' : ''}">`);
   h = h.replace('</body>', '<script type="module" src="js/vscode-bridge.js"></script>\n</body>');
   return h;
 }
@@ -134,6 +137,7 @@ function activate(ctx) {
     vscode.commands.registerCommand('radio.playSelection', () => play(ctx, 'selection')),
     vscode.commands.registerCommand('radio.playFromCursor', () => play(ctx, 'cursor')),
     vscode.commands.registerCommand('radio.stop', () => { if (view) view.webview.postMessage({ type: 'stop' }); setPlaying(false); }),
+    vscode.workspace.onDidChangeConfiguration(ev => { if (ev.affectsConfiguration('radio.theme') && view && ready) view.webview.postMessage({ type: 'theme', native: nativeTheme() }); }),
     vscode.commands.registerCommand('radio.showPanel', () => ensurePanel(ctx)),
   );
 }

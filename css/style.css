@@ -141,9 +141,10 @@ body.mini .mini-bar.show { opacity:1; pointer-events:auto; }
 /* Inside the VS Code extension's panel the real editor holds the text, so the page's own code box and playback view are hidden. */
 body.vscode #src, body.vscode #editor, body.vscode #view, body.vscode .hint, body.vscode .actions-left, body.vscode label:has(#file), body.vscode .meta span:last-child { display:none !important; }
 
-/* Inside VS Code the page takes the editor's theme: VS Code gives every webview its colours and font as --vscode-* variables, and they are
+/* Inside VS Code the page takes the editor's theme (unless the setting radio.theme asks for rad.io's own look, which leaves the page as it is, with
+   body.vs-native off): VS Code gives every webview its colours and font as --vscode-* variables, and they are
    mapped onto the page's own here (with the page's usual colours as fallbacks), so it follows the theme, dark or light, as it changes. */
-html:has(body.vscode) {
+html:has(body.vscode.vs-native) {
   --bg:var(--vscode-input-background, #14151a);
   --panel:color-mix(in srgb, var(--vscode-foreground, #d9dce6) 5%, transparent);
   --line:var(--vscode-widget-border, var(--vscode-panel-border, #2b2e3a));
@@ -154,18 +155,18 @@ html:has(body.vscode) {
   --link:var(--vscode-textLink-foreground, #f2b24c);
   --bars:var(--vscode-textLink-foreground, #f2b24c) !important;   /* the equalizer (its colour otherwise follows the style) */
 }                                                                 /* (these sit on <html>, which is where the equalizer reads its colours) */
-body.vscode { background:transparent; font:var(--vscode-font-size, 13px)/1.5 var(--vscode-font-family, system-ui, sans-serif); }
-body.vscode .detail { --tint:var(--vscode-focusBorder, var(--accent)) !important; }
-body.vscode h1, body.vscode .masthead h1 { color:var(--link); }
-body.vscode .panel { border-radius:4px; }
-body.vscode select, body.vscode button, body.vscode input[type=text] { border-radius:2px; }
-body.vscode button.primary { font-weight:400; }
-body.vscode button.primary:hover { background:var(--vscode-button-hoverBackground, var(--accent)); }
-body.vscode #stop, body.vscode #vs-more[aria-expanded="true"] { color:var(--link); border-color:var(--link); }
-body.vscode #stop:hover { background:color-mix(in srgb, var(--link) 14%, transparent); border-color:var(--link); }
-body.vscode #vs-more[aria-expanded="true"] { background:color-mix(in srgb, var(--link) 14%, transparent); }
-body.vscode select:focus-visible, body.vscode button:focus-visible, body.vscode input:focus-visible { outline:1px solid var(--vscode-focusBorder, var(--accent)); outline-offset:1px; }
-body.vscode footer a { color:var(--link); }
+body.vscode.vs-native { background:transparent; font:var(--vscode-font-size, 13px)/1.5 var(--vscode-font-family, system-ui, sans-serif); }
+body.vscode.vs-native .detail { --tint:var(--vscode-focusBorder, var(--accent)) !important; }
+body.vscode.vs-native h1, body.vscode.vs-native .masthead h1 { color:var(--link); }
+body.vscode.vs-native .panel { border-radius:4px; }
+body.vscode.vs-native select, body.vscode.vs-native button, body.vscode.vs-native input[type=text] { border-radius:2px; }
+body.vscode.vs-native button.primary { font-weight:400; }
+body.vscode.vs-native button.primary:hover { background:var(--vscode-button-hoverBackground, var(--accent)); }
+body.vscode.vs-native #stop, body.vscode.vs-native #vs-more[aria-expanded="true"] { color:var(--link); border-color:var(--link); }
+body.vscode.vs-native #stop:hover { background:color-mix(in srgb, var(--link) 14%, transparent); border-color:var(--link); }
+body.vscode.vs-native #vs-more[aria-expanded="true"] { background:color-mix(in srgb, var(--link) 14%, transparent); }
+body.vscode.vs-native select:focus-visible, body.vscode.vs-native button:focus-visible, body.vscode.vs-native input:focus-visible { outline:1px solid var(--vscode-focusBorder, var(--accent)); outline-offset:1px; }
+body.vscode.vs-native footer a { color:var(--link); }
 
 /* The VS Code player lives in a side bar or a panel, often a narrow one, so it is cut down to a strip (equalizer, Play / Stop, a Settings
    button, the Style menu, and the stats), with the style card, the controls and the seed folded away until Settings is opened. */

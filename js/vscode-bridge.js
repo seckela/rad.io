@@ -32,6 +32,7 @@ if (typeof acquireVsCodeApi === 'function') {
 
   window.addEventListener('message', async ({ data: m }) => {
     if (!m) return;
+    if (m.type === 'theme') { document.body.classList.toggle('vs-native', !!m.native); requestAnimationFrame(vizRetint); return; }
     if (m.type === 'stop') { if (playing) stop(); return; }
     if (m.type !== 'play' && m.type !== 'load') return;
     if (playing) stop();
