@@ -18,7 +18,7 @@ All the controls of the web app (the 13 styles, key, scale, tempo, background vo
 
 From source: open this folder (`vscode/`) in VS Code and press `F5` (Run Extension). It uses the web app one folder up.
 
-As an installable file: `python3 vscode/build.py` copies the app into `vscode/media/` and writes `vscode/rad-io-0.0.2.vsix`; install it with **Extensions: Install from VSIX...**.
+As an installable file: `python3 vscode/build.py` copies the app into `vscode/media/` and writes `vscode/rad-io-<version>.vsix`; install it with **Extensions: Install from VSIX...**, then run **Developer: Reload Window**. When updating, uninstall the old copy first if the version number is unchanged.
 
 ## Notes and limits
 
