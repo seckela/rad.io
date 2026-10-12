@@ -140,3 +140,15 @@ body.mini .mini-bar.show { opacity:1; pointer-events:auto; }
 
 /* Inside the VS Code extension's panel the real editor holds the text, so the page's own code box and playback view are hidden. */
 body.vscode #src, body.vscode #editor, body.vscode #view, body.vscode .hint, body.vscode .actions-left, body.vscode label:has(#file), body.vscode .meta span:last-child { display:none !important; }
+
+/* A short VS Code panel (dragged down to a strip) becomes a mini player: the equalizer and the Play / Pause and Stop buttons. */
+@media (max-height: 190px) {
+  body.vscode { overflow:hidden; }
+  body.vscode main { max-width:none; min-height:100vh; box-sizing:border-box; padding:6px 14px; display:flex; align-items:center; gap:16px; }
+  body.vscode header { flex:1 1 auto; min-width:0; margin:0; padding:0; }
+  body.vscode header p, body.vscode footer, body.vscode main > section:not(:first-of-type) { display:none; }
+  body.vscode .masthead { --mh:min(52px, calc(100vh - 16px)); margin:0; }
+  body.vscode main > section:first-of-type { flex:0 0 auto; margin:0; padding:0; border:0; background:none; box-shadow:none; }
+  body.vscode .picker, body.vscode .controls, body.vscode #mini-on, body.vscode .picker-head { display:none; }
+  body.vscode .transport { margin:0; }
+}

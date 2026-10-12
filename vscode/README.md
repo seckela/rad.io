@@ -14,6 +14,10 @@ Listen to the file you're editing. The extension adds a **rad.io** tab to the bo
 
 All the controls of the web app (the 13 styles, key, scale, tempo, background voice, layers, seed) are in the panel. The setting `radio.followPlayback` turns the highlight off.
 
+## Mini player
+
+Drag the panel down to a thin strip (under about 190 px tall) and the player shrinks to a mini player: just the equalizer and the Play / Pause and Stop buttons. Drag it back up for the full controls.
+
 ## Running it
 
 From source: open this folder (`vscode/`) in VS Code and press `F5` (Run Extension). It uses the web app one folder up.

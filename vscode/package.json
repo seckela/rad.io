@@ -2,7 +2,7 @@
   "name": "rad-io",
   "displayName": "rad.io: Listen to your code",
   "description": "Turn the file you are editing into music. Every character becomes part of a track, and the editor follows along as it plays.",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "publisher": "seckela",
   "license": "MIT",
   "engines": {
