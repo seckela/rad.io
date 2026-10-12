@@ -13,6 +13,16 @@ if (typeof acquireVsCodeApi === 'function') {
   const post = m => vs.postMessage(m);
   let loaded = null;                       // the text last handed over, so a repeat play doesn't reset the seed's tempo, scale and key
 
+  // The Settings button folds the style card, the controls and the seed away or brings them back (the choice is remembered).
+  const more = document.createElement('button');
+  more.id = 'vs-more'; more.type = 'button'; more.title = 'Settings: style details, tempo, key, scale, layers and seed';
+  more.setAttribute('aria-label', 'Settings');
+  more.innerHTML = '<svg class="ico" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M2 4.5h7M12 4.5h2M2 11.5h2M7 11.5h7"/><circle cx="10.5" cy="4.5" r="1.6"/><circle cx="5.5" cy="11.5" r="1.6"/></svg>';
+  $('stop').after(more);
+  const showMore = on => { document.body.classList.toggle('vs-more', on); more.setAttribute('aria-expanded', String(on)); };
+  showMore(!!(vs.getState() || {}).more);
+  more.onclick = () => { const on = !document.body.classList.contains('vs-more'); showMore(on); vs.setState({ ...(vs.getState() || {}), more: on }); };
+
   onHighlight((i, tr) => post({ type: 'at', i, tr }));
   new MutationObserver(() => post({ type: 'state', playing })).observe($('stop'), { attributes: true, attributeFilter: ['hidden'] });
 

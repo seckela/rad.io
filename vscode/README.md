@@ -14,6 +14,10 @@ Listen to the file you're editing. The extension adds a **rad.io** tab to the bo
 
 All the controls of the web app (the 13 styles, key, scale, tempo, background voice, layers, seed) are in the panel. The setting `radio.followPlayback` turns the highlight off.
 
+## Narrow and short layouts
+
+In a side bar or a narrow panel the player is a compact strip: the equalizer, Play / Stop, the Style menu and the track's length. The **Settings** button (sliders icon, next to Stop) unfolds the style details, tempo, key, scale, layers and seed, and remembers your choice.
+
 ## Mini player
 
 Drag the panel down to a thin strip (under about 190 px tall) and the player shrinks to a mini player: just the equalizer and the Play / Pause and Stop buttons. Drag it back up for the full controls.
