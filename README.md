@@ -10,6 +10,10 @@ It's a static page (plain ES modules, no bundler) built on [Tone.js](https://ton
 
 Thirteen styles are included: an upbeat **Default**, a calm **Chillstep** for background listening, a dusty **Lo-fi** beat for studying, a **Rock / Metal** style with sampled electric guitar and bass, an **Emo / Pop Punk** style built as a song with verses and big choruses, a bright **Chiptune** style with console-style synth voices, a slow, drumless **Ambient** style, a neon **Synthwave** style, a four-on-the-floor **Techno / House** style, an uplifting **Trance** style, a **Dubstep** style with build-ups and drops, a **Neo-classical** style of rolling piano figures and strings, and a **Cinematic** style that builds to a trailer-style climax. Pick one from the Style menu; a card underneath says what it offers.
 
+## VS Code extension (proof of concept)
+
+The `vscode/` folder holds an extension that plays the file you are editing in a panel beside it, with the editor following along (the playing character is highlighted). See `vscode/README.md`. The page side of it is `js/vscode-bridge.js`, which does nothing outside VS Code.
+
 ## Getting started
 
 You need a modern browser, an internet connection (Tone.js, Prism, CodeJar, and the piano, guitar, and bass samples load from CDNs), and Python 3 or any other static file server.

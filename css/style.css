@@ -137,3 +137,6 @@ body.mini .mini-bar.show { opacity:1; pointer-events:auto; }
 .seedrow { display:inline-flex; align-items:center; gap:6px; flex-wrap:wrap; }
 .seedrow input[type=text] { width:11ch; letter-spacing:.04em; }
 .actions-left { display:inline-flex; align-items:center; gap:6px; flex-wrap:wrap; }
+
+/* Inside the VS Code extension's panel the real editor holds the text, so the page's own code box and playback view are hidden. */
+body.vscode #src, body.vscode #editor, body.vscode #view, body.vscode .hint, body.vscode .actions-left, body.vscode label:has(#file), body.vscode .meta span:last-child { display:none !important; }
