@@ -20,7 +20,7 @@ for name in ['index.html', 'css', 'js', 'icons']:
     (shutil.copytree if src.is_dir() else shutil.copy)(src, media / name)
 
 pkg = json.loads((here / 'package.json').read_text())
-files = ['package.json', 'extension.js', 'README.md'] + sorted(p.relative_to(here).as_posix() for p in media.rglob('*') if p.is_file())
+files = ['package.json', 'extension.js', 'README.md', 'icon.svg'] + sorted(p.relative_to(here).as_posix() for p in media.rglob('*') if p.is_file())
 exts = sorted({pathlib.Path(f).suffix.lstrip('.').lower() for f in files} | {'vsixmanifest'})
 types = {'js': 'application/javascript', 'json': 'application/json', 'md': 'text/markdown', 'html': 'text/html', 'css': 'text/css',
          'svg': 'image/svg+xml', 'png': 'image/png', 'ico': 'image/x-icon', 'webmanifest': 'application/manifest+json', 'vsixmanifest': 'text/xml'}
