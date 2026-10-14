@@ -10,9 +10,9 @@ It's a static page (plain ES modules, no bundler) built on [Tone.js](https://ton
 
 Thirteen styles are included: an upbeat **Default**, a calm **Chillstep** for background listening, a dusty **Lo-fi** beat for studying, a **Rock / Metal** style with sampled electric guitar and bass, an **Emo / Pop Punk** style built as a song with verses and big choruses, a bright **Chiptune** style with console-style synth voices, a slow, drumless **Ambient** style, a neon **Synthwave** style, a four-on-the-floor **Techno / House** style, an uplifting **Trance** style, a **Dubstep** style with build-ups and drops, a **Neo-classical** style of rolling piano figures and strings, and a **Cinematic** style that builds to a trailer-style climax. Pick one from the Style menu; a card underneath says what it offers.
 
-## VS Code extension (proof of concept)
+## VS Code extension
 
-The `vscode/` folder holds an extension that plays the file you are editing. A **rad.io** tab opens in the bottom panel (next to Terminal and Problems), the extension hands it your text, and the editor follows along: the character that is playing is highlighted and kept in view. It is not published yet, so install it from this repository. (`vscode/README.md` has the same notes.)
+The `vscode/` folder holds an extension that plays the file you are editing. A **rad.io** tab opens in the bottom panel (next to Terminal and Problems), the extension hands it your text, and the editor follows along: the character that is playing is highlighted and kept in view. It is being prepared for the VS Code Marketplace; until it is published, install it from this repository. (`vscode/README.md` is the Marketplace page and `vscode/PUBLISHING.md` has the publishing steps.)
 
 ### Setup
 
@@ -205,3 +205,7 @@ python3 tools/stamp.py
 ```
 
 before uploading (`python3 tools/stamp.py --check` reports whether `index.html` is up to date without changing it). Browsers without import map support just load the plain URLs, as before.
+
+## Licence
+
+[MIT](LICENSE). The instrument samples keep their own licences (see the credits above and `vscode/NOTICE.md`).
