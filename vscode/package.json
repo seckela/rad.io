@@ -2,17 +2,56 @@
   "name": "rad-io",
   "displayName": "rad.io: Listen to your code",
   "description": "Turn the file you are editing into music. Every character becomes part of a track, and the editor follows along as it plays.",
-  "version": "0.0.6",
-  "publisher": "seckela",
+  "version": "0.1.0",
+  "publisher": "MikhailThomas",
   "license": "MIT",
+  "preview": true,
+  "icon": "icon.png",
+  "galleryBanner": {
+    "color": "#14151a",
+    "theme": "dark"
+  },
+  "homepage": "https://github.com/seckela/rad.io/tree/main/vscode#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/seckela/rad.io.git",
+    "directory": "vscode"
+  },
+  "bugs": {
+    "url": "https://github.com/seckela/rad.io/issues"
+  },
+  "keywords": [
+    "music",
+    "audio",
+    "sonification",
+    "code",
+    "generative",
+    "fun",
+    "player",
+    "rad.io"
+  ],
   "engines": {
     "vscode": "^1.80.0"
   },
   "categories": [
     "Other"
   ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": true
+    },
+    "virtualWorkspaces": true
+  },
   "main": "./extension.js",
   "activationEvents": [],
+  "scripts": {
+    "vscode:prepublish": "python3 build.py --media --vendor",
+    "package": "vsce package",
+    "publish": "vsce publish"
+  },
+  "devDependencies": {
+    "@vscode/vsce": "^3.0.0"
+  },
   "contributes": {
     "commands": [
       {
